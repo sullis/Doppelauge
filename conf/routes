@@ -1,0 +1,10 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+
+# apidoc
+#GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.ApiDocController.get
+#GET     /api/v1/api-docs/:path                  no.samordnaopptak.apidoc.ApiDocController.getPath(path: String)
+
+GET     /api/v1/api-docs                        controllers.ApiDocController.get
+GET     /api/v1/api-docs/:path                  controllers.ApiDocController.getPath(path: String)
+
