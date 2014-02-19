@@ -35,7 +35,7 @@ object JsonMatcher{
   private def getWantedNumObjectElements(matcher: JsObject): Int =
     matcher.value(___numElements).asInstanceOf[JsNumber].value.toInt
 
-  // Seq(1, ___numElements, __ignoreOrder, 2, 3) -> Seq(1,3)
+  // Seq(1, ___numElements, 2, __ignoreOrder, 3) -> Seq(1,3)
   private def getValuesWithoutNumsAndIgnores(values: Seq[JsValue]): Seq[JsValue] =
     if (values.isEmpty)
       values
@@ -86,7 +86,7 @@ object JsonMatcher{
       matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)}.\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException)
 
     else if (hasIgnoreOrder)
-      cleanMatcher.forall( (matchValue: JsValue) =>
+      cleanMatcher.forall( (matchValue: JsValue) => // I think this one will return falsely true when there's similar elements.
         if (matchValue == ___allowOtherValues)
           true
         else if (json.value.exists(matchJson(matchValue, _, false))==false) {
