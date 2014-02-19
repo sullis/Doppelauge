@@ -1,0 +1,14 @@
+language: scala
+scala:
+  - 2.10.3
+jdk:
+  - openjdk7
+notifications:
+  irc:
+    channels:
+      - "ircnet.eversible.com#so30"
+    channel_key: '03os'
+    on_success: always
+    on_failure: always
+    skip_join: true
+script: ./scripts/ci/run_build.sh
