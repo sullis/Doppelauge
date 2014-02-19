@@ -86,7 +86,7 @@ object JsonMatcher{
       matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)}.\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException)
 
     else if (hasIgnoreOrder)
-      cleanMatcher.forall( (matchValue: JsValue) => // I think this one will return falsely true when there's similar elements.
+      cleanMatcher.forall( (matchValue: JsValue) =>
         if (matchValue == ___allowOtherValues)
           true
         else if (json.value.exists(matchJson(matchValue, _, false))==false) {

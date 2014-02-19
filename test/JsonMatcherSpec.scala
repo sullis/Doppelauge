@@ -262,7 +262,7 @@ class JsonMatcherSpec extends Specification {
       ) should throwA[JsonMatcherException]
     }
 
-    "fail match array with wrong order" in {
+    "fail to match array with wrong order" in {
       matchJson(
         Json.arr(2,3),
         Json.arr(3,2)
@@ -295,6 +295,27 @@ class JsonMatcherSpec extends Specification {
       )
     }
 
+    "fail to match array with several similar elements" in {
+      matchJson(
+        Json.arr(2,3,5, ___ignoreOrder),
+        Json.arr(2,3,5,5)
+      ) should throwA[JsonMatcherException]
+
+      matchJson(
+        Json.arr(2,3,5),
+        Json.arr(2,3,5,5)
+      ) should throwA[JsonMatcherException]
+
+      matchJson(
+        Json.arr(2,3,5,5, ___ignoreOrder),
+        Json.arr(2,3,5)
+      ) should throwA[JsonMatcherException]
+
+      matchJson(
+        Json.arr(2,3,5),
+        Json.arr(2,3,5,5)
+      ) should throwA[JsonMatcherException]
+    }
 
     // array and objects tests
 
