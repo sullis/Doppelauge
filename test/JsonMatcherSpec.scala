@@ -1,4 +1,4 @@
-package test.lib
+package test
 
 import org.specs2.mutable._
 
@@ -285,6 +285,13 @@ class JsonMatcherSpec extends Specification {
         Json.arr(9,2,3)
           //     ^
           //     ignored
+      )
+    }
+
+    "match array with wrong order, but legal anyway because of ___ignoreOrder" in {
+      matchJson(
+        Json.arr(2,3,5, ___ignoreOrder),
+        Json.arr(5,2,3)
       )
     }
 

@@ -3,3 +3,28 @@
 * To select which files to publish, edit ApplicationBuild.main in project/Build.scala
 
 
+Example:
+
+
+    GET /api/v1/users/{id}
+
+    DESCRIPTION
+      Get user
+
+    PARAMETERS 
+      id: String <- Parameter comment
+
+    ERRORS
+      400 User not found
+      400 Syntax Error
+
+    RESULT
+      User
+
+    User:
+      id: String
+      firstName: String  <- Attribute comment
+      properties: Properties
+
+    Properties:
+      id: String
