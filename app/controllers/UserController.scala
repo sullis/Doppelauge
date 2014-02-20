@@ -20,7 +20,7 @@ object UserController extends Controller {
     GET /api/v1/user
 
     DESCRIPTION
-      Get main swagger json documentation
+      Get user
 
     RESULT
       User
