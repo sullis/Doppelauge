@@ -149,7 +149,7 @@ class ApiDocController extends Controller {
     apiDocs
   }
 
-  @no.samordnaopptak.apidoc.ApiDoc(doc="""
+  @ApiDoc(doc="""
     GET /api/v1/api-docs
 
     DESCRIPTION
@@ -159,7 +159,7 @@ class ApiDocController extends Controller {
     Ok(SwaggerUtil.getMain("/api/v1/", apiDocsFromAnnotations))
   }
 
-  @no.samordnaopptak.apidoc.ApiDoc(doc="""
+  @ApiDoc(doc="""
     GET /api/v1/api-docs/{path}
 
     DESCRIPTION

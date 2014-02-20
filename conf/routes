@@ -6,3 +6,6 @@
 GET     /api/v1/api-docs                        controllers.ApiDocController.get
 GET     /api/v1/api-docs/:path                  controllers.ApiDocController.getPath(path: String)
 
+# user
+
+GET     /api/v1/user                            controllers.UserController.get
