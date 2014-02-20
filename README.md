@@ -171,6 +171,33 @@ Defining types, not based on a class:
 
 
 
+Defining a type with unknown number of elements:
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- Parameter comment
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+
+      RESULT
+        User
+
+      User: !
+        id: String
+        lastName: String
+        ...
+    """)
+    def getUser(id: String) = ...
+
+
+
 
 License
 -------
