@@ -1,36 +1,174 @@
 
-* To publish, write "publishSigned" in play console.
-* To select which files to publish, edit ApplicationBuild.main in project/Build.scala
+API-doc
+=========
 
-
-Example:
-
-
-    GET /api/v1/users/{id}
-
-    DESCRIPTION
-      Get user
-
-    PARAMETERS 
-      id: String <- Parameter comment
-
-    ERRORS
-      400 User not found
-      400 Syntax Error
-
-    RESULT
-      User
-
-    User:
-      id: String
-      firstName: String  <- Attribute comment
-      properties: Properties
-
-    Properties:
-      id: String
+Non-cluttering swagger doc for scala playframework.
 
 
 
-![Build Status](https://magnum.travis-ci.com/sun-opsys/api-doc.png?token=???&branch=master)
+QUICK START
+===========
 
-https://magnum.travis-ci.com/sun-opsys/api-doc
+1. execute "play run" in the terminal.
+
+2. Run your local copy of swagger, and point your browser there.
+
+3. Insert http://localhost:9000/api-docs into swagger.
+
+
+
+Examples
+==========
+
+Basic usage:
+
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- The user id
+        names: Array String <- All names in an array of strings
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+    """)
+    def getUser(id: String) = ...
+
+
+
+Define parameter types:
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{phone}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String(path)   <- 'path' parameter type (default, unless the parameter name is 'body')
+        body: String        <- 'body' parameter type.
+        phone: String(query) <- 'query' parameter type
+        email: String(form)   <- 'form' parameter type
+    """)
+    def getUser(id: String) = ...
+
+
+
+Defining types:
+
+    case class User(id: String, firstName: String)
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- Parameter comment
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+
+      RESULT
+        User
+
+      User:
+        id: String
+        firstName: String  <- The first name of the user.
+    """)
+    def getUser(id: String) = ...
+
+
+
+
+
+Defining types, based on an existing class:
+
+    case class User(id: String, firstName: String)
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- Parameter comment
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+
+      RESULT
+        User
+
+      User(-firstName, +lastName):
+        id: String
+        lastName: String
+    """)
+    def getUser(id: String) = ...
+
+
+
+
+Defining types, based on a class defined elsewhere:
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- Parameter comment
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+
+      RESULT
+        User
+
+      User: models.user.User(-firstName, +lastName)
+        id: String
+        lastName: String
+    """)
+    def getUser(id: String) = ...
+
+
+
+
+Defining types, not based on a class:
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- Parameter comment
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+
+      RESULT
+        User
+
+      User: !
+        id: String
+        lastName: String
+    """)
+    def getUser(id: String) = ...
+
+
+
+
