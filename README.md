@@ -11,9 +11,7 @@ QUICK START
 
 1. execute "play run" in the terminal.
 
-2. Run your local copy of swagger, and point your browser there.
-
-3. Insert http://localhost:9000/api-docs into swagger.
+2. Insert http://localhost:9000/api-docs into the swagger ui.
 
 
 
