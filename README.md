@@ -4,6 +4,15 @@ API-doc
 
 Non-cluttering swagger doc for scala playframework.
 
+This API-doc does the following validation checks:
+
+  * All endpoints must be documented
+  * The endpoints in the api docs must match the endpoints in conf/routes
+  * All used datatypes must be defined
+  * Datatypes must have corresponding scala classes.
+  * The fields in datatypes must be the same as the fields in the corresponding scala classes.
+  * Datatypes can only be defined once
+
 
 
 QUICK START
@@ -197,8 +206,34 @@ Defining a type with unknown number of elements:
 
 
 
+Notes
+=========
+
+* Scala classes must be specified with full path. (I.e. you have to write "controllers.User", not "User".)
+  The only exception is if the classes is in the "models" package. (I.e. it is possible to write "User" instead of "models.User").
+
+* In order to run validation checks on the api docs, it is necessary to call `ApiDocController.validate("/api/v1/")`.
+  If using specs2, it might be a good idea to put the following code (or something similar) into tests/ApiDocControllerSpec.scala:
+
+`
+
+    package test
+
+    import org.specs2.mutable.Specification
+    import play.api.test._
+    import play.api.test.Helpers._
+
+
+    class ApiDocControllerSpec extends Specification {
+      "Validate swagger api docs" in {
+          controllers.ApiDocController.validate("/api/v1/")
+      }
+    }
+`
+
+
 License
--------
+==========
 
 Copyright 2013-2014 SUN/OPSYS at University of Oslo.
 
