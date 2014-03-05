@@ -96,7 +96,7 @@ Defining types:
 
 
 
-Defining types, based on an existing class:
+Defining types, based on an almost matching existing class:
 
     case class User(id: String, firstName: String)
 
@@ -117,6 +117,36 @@ Defining types, based on an existing class:
         User
 
       User(-firstName, +lastName):
+        id: String
+        lastName: String
+    """)
+    def getUser(id: String) = ...
+
+
+
+
+Defining types, based on an almost matching existing class, using @JsonIgnore:
+
+    import com.fasterxml.jackson.annotation._
+    case class User(id: String, @JsonIgnore firstName: String)
+
+    @no.samordnaopptak.apidoc.ApiDoc(doc="""
+      GET /api/v1/users/{id}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String <- Parameter comment
+
+      ERRORS
+        400 User not found
+        400 Syntax Error
+
+      RESULT
+        User
+
+      User(+lastName):
         id: String
         lastName: String
     """)
