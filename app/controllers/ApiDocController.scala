@@ -138,7 +138,7 @@ class ApiDocController extends Controller {
 
     val routeEntries = getRouteEntries()
 
-    validate(routeEntries)
+    //validate(routeEntries)
 
     val apiDocAnnotations = routeEntries.map(routeEntry =>
       getMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod)
