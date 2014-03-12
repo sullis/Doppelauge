@@ -426,7 +426,7 @@ object ApiDocUtil{
       if ( ! apidoc.keys.contains("datatype"))
         ret = ret ++ apidoc
     )
-    validateJson(ret)
+    //validateJson(ret)
     ret
   }
 
