@@ -288,10 +288,26 @@ class JsonMatcherSpec extends Specification {
       )
     }
 
-    "match array with wrong order, but legal anyway because of ___ignoreOrder" in {
+    "match array with wrong order deep down. ___ignoreOrder at toplevel doesn't change that" in {
       matchJson(
-        Json.arr(2,3,5, ___ignoreOrder),
-        Json.arr(5,2,3)
+        Json.arr(2,Json.arr(8,9),5, ___ignoreOrder),
+        Json.arr(2,Json.arr(9,8),5)
+      ) should throwA[JsonMatcherException]
+    }
+
+    "match array with wrong order, but legal anyway because of ignoreArrayOrder option" in {
+      matchJson(
+        Json.arr(2,3,5),
+        Json.arr(5,2,3),
+        ignoreArrayOrder = true
+      )
+    }
+
+    "match array with wrong order deep down, but legal anyway because of ignoreArrayOrder option (which works recursively)" in {
+      matchJson(
+        Json.arr(2,Json.arr(8,9),5),
+        Json.arr(2,Json.arr(9,8),5),
+        ignoreArrayOrder = true
       )
     }
 
