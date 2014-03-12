@@ -45,6 +45,7 @@ class ApiDocController extends Controller {
       routeEntry.scalaClass != "controllers.Application"
     ).toList
 
+
   // "/api/v1/acl"                 -> /api/v1/acl
   // "/api/v1/acl/"                -> /api/v1/acl
   // "/api/v1/acl/$service<[^/]+>" -> /api/v1/acl
@@ -81,8 +82,9 @@ class ApiDocController extends Controller {
   // "/api/v1/acl/{service}", "/api/v1/acl/"                -> false
   // "/api/v1/acl/{service}", "/api/v1/acl"                 -> false
   def hasSameUri(autoUriBase: String, autoUriParm: String, confUri: String): Boolean = {
-    autoUriBase == findConfUriBase(confUri) &&
-    autoUriParm == findConfUriParm(confUri)
+    true
+    //autoUriBase == findConfUriBase(confUri) &&
+    //autoUriParm == findConfUriParm(confUri)
   }
 
   class MethodMismatchException(val message: String) extends Exception(message)
