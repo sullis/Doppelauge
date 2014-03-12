@@ -6,8 +6,8 @@ import play.api.libs.json._
 
 
 object JsonMatcher{
-  private val very_verbose = false
-  private val verbose = very_verbose || false
+  var very_verbose = false
+  var verbose = very_verbose || false
 
   class JsonMatcherException(message: String) extends Exception(message)
 
