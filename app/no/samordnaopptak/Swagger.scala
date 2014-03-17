@@ -242,7 +242,7 @@ object SwaggerUtil{
     }
   }
 
-  private def validateThatAllDatatypesDefined(resourcePathGroup: String, jsonApiDocs: List[JsObject], dataTypes: List[JsObject]): Unit = {
+  private def validateThatAllDatatypesAreDefined(resourcePathGroup: String, jsonApiDocs: List[JsObject], dataTypes: List[JsObject]): Unit = {
     val definedTypes: Set[String] = dataTypes.flatMap(_.keys).toSet ++ ApiDocUtil.atomTypes
     val usedTypes: Set[String] = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
     val undefinedTypes = usedTypes -- definedTypes
@@ -261,7 +261,7 @@ object SwaggerUtil{
     val dataTypes = apidocs.map(ApiDocUtil.getDataTypes(_))
     validateUniqueDataTypes(dataTypes)
 
-    validateThatAllDatatypesDefined(resourcePathGroup, jsonApiDocs, dataTypes)
+    validateThatAllDatatypesAreDefined(resourcePathGroup, jsonApiDocs, dataTypes)
 
     header ++
     Json.obj(
@@ -290,7 +290,7 @@ object SwaggerUtil{
         "description" -> "This is the studieadmin API"
       ),
       "apis" -> JsArray(
-        allResourcePathGroups("/api/v1/", apidocs).toList.sorted.map(resourcePathGroup => {
+        allResourcePathGroups(basePath, apidocs).toList.sorted.map(resourcePathGroup => {
           Json.obj(
             "path" -> s"/$resourcePathGroup",
             "description" -> s"Operations on $resourcePathGroup")
