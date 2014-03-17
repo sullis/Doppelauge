@@ -28,14 +28,6 @@ class SwaggerSpec extends Specification {
       SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users") must equalTo("users")
     }
 
-    "Get all resource paths" in {
-      play.api.test.Helpers.running(FakeApplication()) {
-        SwaggerUtil.allResourcePaths(ApiDocSamples.allUsers) must equalTo(Set("/users"))
-        SwaggerUtil.allResourcePaths(ApiDocSamples.allAcls) must equalTo(Set("/acl", "/dasacls"))
-        SwaggerUtil.allResourcePaths(ApiDocSamples.all) must equalTo(Set("/acl", "/dasacls", "/users"))
-      }
-    }
-
     "Get all resource path groups for /api/v1/" in {
       play.api.test.Helpers.running(FakeApplication()) {
         val basePath = "/api/v1/"
@@ -67,7 +59,12 @@ class SwaggerSpec extends Specification {
               "operations" -> Json.arr(Json.obj(
                 "method" -> "PUT",
                 ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users/{id}")
+              "path" -> "/../../../api/v1/users/{id}"),
+            Json.obj(
+              "operations" -> Json.arr(Json.obj(
+                "method" -> "PUT",
+                ___numElements -> 7)),
+              "path" -> "/../../../api/v1/users/{id}/hepp/{id2}")
           ),
           ___allowOtherFields
         ),

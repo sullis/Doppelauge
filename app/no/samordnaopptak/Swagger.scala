@@ -186,12 +186,6 @@ object SwaggerUtil{
       )
     )
 
-  def allResourcePaths(apidocs: List[String]): Set[String] =
-    apidocs.map(
-      ApiDocUtil.getJson(_)
-    ).map(jsonApiDoc =>
-      getResourcePath((jsonApiDoc \ "uri").as[String])
-    ).toSet
 
   /*
    "/api/v1/", List("/api/v1/a", "/api/v1/a/c", "/api/v1/b") -> List("a,b")

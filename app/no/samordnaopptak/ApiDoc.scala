@@ -69,27 +69,20 @@ object ApiDocUtil{
   def loadInnerClass(className: String): java.lang.Class[_] =
     loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className.split('.').toList)
 
-  // "/api/v1/acl/{service}" -> /api/v1/acl
-  // "/api/v1/acl/",         -> /api/v1/acl
-  // "/api/v1/acl",          -> /api/v1/acl
-  def findUriBase(uri: String) =
-    if (uri.endsWith("}") || (uri.endsWith("/"))) {
-      val last = uri.lastIndexOf('/')
-      uri.take(last)
-    } else
-      uri
 
-
-  // "/api/v1/acl/{service}" -> "service"
-  // "/api/v1/acl/",         -> ""
-  // "/api/v1/acl",          -> ""
-  def findUriParm(autoUri: String) = {
-    if (autoUri.endsWith("}")) {
-      val last = autoUri.lastIndexOf('{')
-      autoUri.drop(last+1).dropRight(1)
+  // "/api/v1/acl/{service}" -> List("service")
+  // "/api/v1/acl/{service}" -> List("service", "hest")
+  // "/api/v1/acl/",         -> List()
+  // "/api/v1/acl",          -> List()
+  def findUriParm(autoUri: String): List[String] =
+    if (autoUri=="")
+      List()
+    else if (autoUri.startsWith("{")) {
+      val next = autoUri.indexOf('}')
+      autoUri.substring(1, next) :: findUriParm(autoUri.drop(next+1))
     } else
-      ""
-  }
+      findUriParm(autoUri.drop(1))
+
 
 
   def validateDataTypeFields(className: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
@@ -295,14 +288,12 @@ object ApiDocUtil{
         val pos = key.indexOf(' ')
         val method = key.substring(0,pos).trim
         val uri = key.drop(pos).trim
-        val uriBase = findUriBase(uri)
-        val uriParm = findUriParm(uri)
+        val uriParms = findUriParm(uri)
 
         Json.obj(
           "method" -> method,
           "uri"    -> uri,
-          "uriBase" -> uriBase,
-          "uriParm" -> uriParm
+          "uriParms" -> uriParms
         )
       }
 
@@ -397,7 +388,7 @@ object ApiDocUtil{
 
 
   private def validateJson(json: JsObject) = {
-    val uriParm = (json \ "uriParm").as[String]
+    val uriParms = (json \ "uriParms").as[List[String]]
     val pathParms = if (!json.keys.contains("parameters"))
                       Set()
                     else
@@ -405,17 +396,13 @@ object ApiDocUtil{
                          kv => ((kv._2)\"paramType")==JsString("path")
                       ).keys
 
-    if (pathParms.size>1)
-      throw new MismatchPathParametersException(s"Only one path parameter is supported (for now): ${pathParms.toList}")
+    if (uriParms.size != pathParms.size)
+      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\njson: $json).""")
 
-    else if (uriParm=="" && pathParms.size>0)
-      throw new MismatchPathParametersException(s"""The path parameter "${pathParms.head}" is missing in the URL. Maybe it is a query or body parameter? ({${pathParms.head}})\njson: $json).""")
-
-    else if (uriParm!="" && pathParms.size==0)
-      throw new MismatchPathParametersException(s"""The URL parameter "${uriParm}" is not defined as a parameter.""")
-
-    else if (uriParm!="" && pathParms.size==1 && uriParm!=pathParms.head)
-      throw new MismatchPathParametersException(s"""Mismatch between name of path parameters: "$uriParm" vs. "${pathParms.head}"""")
+    pathParms.foreach(pathParm =>
+      if (!uriParms.contains(pathParm))
+        throw new MismatchPathParametersException(s"""The path parameter "${pathParm}" is not defined in the path.""")
+    )
   }
 
 
@@ -426,7 +413,7 @@ object ApiDocUtil{
       if ( ! apidoc.keys.contains("datatype"))
         ret = ret ++ apidoc
     )
-    //validateJson(ret)
+    validateJson(ret)
     ret
   }
 

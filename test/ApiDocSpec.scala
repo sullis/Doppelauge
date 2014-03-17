@@ -69,6 +69,20 @@ object ApiDocSamples{
       String
   """
 
+  val doc3b = """
+    PUT /api/v1/users/{id}/hepp/{id2}
+
+    DESCRIPTION
+      Put a hepp user
+
+    PARAMETERS
+      id: String <- ID of the user
+      id2: String <- ID2 of the user
+
+    RESULT
+      String
+  """
+
   val doc4 = """
     GET /api/v1/acl
 
@@ -221,7 +235,7 @@ object ApiDocSamples{
       unrelated: String
   """
 
-  val allUsers = List(doc1,doc2,doc3)
+  val allUsers = List(doc1,doc2,doc3,doc3b)
   val allAcls = List(doc4,doc5)
   val all = allUsers ++ allAcls
 
@@ -245,14 +259,11 @@ class ApiDocSpec extends Specification {
       }
     }
 
-    "Check that string substraction functions works" in {
-      ApiDocUtil.findUriBase("/api/v1/acl/{service}") must equalTo("/api/v1/acl")
-      ApiDocUtil.findUriBase("/api/v1/acl/")          must equalTo("/api/v1/acl")
-      ApiDocUtil.findUriBase("/api/v1/acl")           must equalTo("/api/v1/acl")
-
-      ApiDocUtil.findUriParm("/api/v1/acl/{service}") must equalTo("service")
-      ApiDocUtil.findUriParm("/api/v1/acl/")          must equalTo("")
-      ApiDocUtil.findUriParm("/api/v1/acl")           must equalTo("")
+    "Check that the findUriParm function works" in {
+      ApiDocUtil.findUriParm("/api/v1/acl/{service}") must equalTo(List("service"))
+      ApiDocUtil.findUriParm("/api/v1/acl/{service}/{hest}") must equalTo(List("service", "hest"))
+      ApiDocUtil.findUriParm("/api/v1/acl/")          must equalTo(List())
+      ApiDocUtil.findUriParm("/api/v1/acl")           must equalTo(List())
     }
 
     "Validate data type fields, with no added or removed fields" in {
@@ -367,8 +378,7 @@ class ApiDocSpec extends Specification {
         Json.obj(
           "method" -> "GET",
           "uri"    -> "/api/v1/users/{id}",
-          "uriBase" -> "/api/v1/users",
-          "uriParm" -> "id",
+          "uriParms" -> Json.arr("id"),
           "shortDescription" -> "Get all users",
           "longDescription" -> """More detailed description of "Get all users"""",
           "parameters" -> Json.obj(

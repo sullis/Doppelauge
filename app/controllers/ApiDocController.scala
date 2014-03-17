@@ -46,45 +46,27 @@ class ApiDocController extends Controller {
     ).toList
 
 
-  // "/api/v1/acl"                 -> /api/v1/acl
-  // "/api/v1/acl/"                -> /api/v1/acl
-  // "/api/v1/acl/$service<[^/]+>" -> /api/v1/acl
-  def findConfUriBase(confUri: String) = {
-    if (confUri.endsWith(">")) {
-      val last = confUri.lastIndexOf('$')
-      confUri.take(last-1)
-    } else if (confUri.endsWith("/"))
-      confUri.dropRight(1)
-    else
-      confUri
-  }
-
-  // "/api/v1/acl/$service<[^/]+>" -> "service"
-  // "/api/v1/acl/",         -> ""
-  // "/api/v1/acl",          -> ""
-  def findConfUriParm(confUri: String) = {
-    if (confUri.endsWith(">")) {
-      val last = confUri.lastIndexOf('<')
-      val secondLast = confUri.lastIndexOf('$')
-      //println("conf: "+confUri+", "+secondLast+", "+last)
-      confUri.substring(secondLast+1, last)
-    } else
+  // "/api/v1/acl/$service<[^/]+>" -> "/api/v1/acl/{service}"
+  private def getAutoUriFromConfUri(confUri: String): String =
+    if (confUri=="")
       ""
-  }
+    else if (confUri.startsWith("$")) {
+      val pos = confUri.indexOf("<")
+      "{" + confUri.substring(1, pos) + "}" + getAutoUriFromConfUri(confUri.drop(pos+7))
+    } else
+      confUri.take(1) + getAutoUriFromConfUri(confUri.drop(1))
 
-  // "/api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>" -> true
-  // "/api/v1/acl/",          "/api/v1/acl/$service<[^/]+>" -> false
-  // "/api/v1/acl",           "/api/v1/acl/$service<[^/]+>" -> false
-  // "/api/v1/acl",           "/api/v1/acl"                 -> true
-  // "/api/v1/acl",           "/api/v1/acl/"                -> true
-  // "/api/v1/acl/",          "/api/v1/acl"                 -> true
-  // "/api/v1/acl/",          "/api/v1/acl/"                -> true
-  // "/api/v1/acl/{service}", "/api/v1/acl/"                -> false
-  // "/api/v1/acl/{service}", "/api/v1/acl"                 -> false
-  def hasSameUri(autoUriBase: String, autoUriParm: String, confUri: String): Boolean = {
-    true
-    //autoUriBase == findConfUriBase(confUri) &&
-    //autoUriParm == findConfUriParm(confUri)
+
+  def hasSameUri(autoUri: String, confUri: String): Boolean = {
+    val autos = autoUri.split("/")
+    val confs = getAutoUriFromConfUri(confUri).split("/")
+
+    autos.size == confs.size &&
+    autos.zip(confs).forall(g => {
+      val auto = g._1
+      val conf = g._2
+      auto == conf
+    })
   }
 
   class MethodMismatchException(val message: String) extends Exception(message)
@@ -121,14 +103,12 @@ class ApiDocController extends Controller {
       val json = ApiDocUtil.getJson(annotation.doc)
       val jsonMethod = (json\"method").as[String]
       val jsonUri = (json\"uri").as[String]
-      val jsonUriBase = (json\"uriBase").as[String]
-      val jsonUriParm = (json\"uriParm").as[String]
 
       if (jsonMethod != routeEntry.restMethod)
         throw new MethodMismatchException(s"Conflicting REST method declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n"+
                                           s"autodoc: $jsonMethod. conf/routes: ${routeEntry.restMethod}")
 
-      if (!hasSameUri(jsonUriBase, jsonUriParm, routeEntry.uri))
+      if (!hasSameUri(jsonUri, routeEntry.uri))
         throw new UriMismatchException(s"Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n"+
                                        s"autodoc: $jsonUri. conf/routes: ${routeEntry.uri}")
     })
@@ -138,7 +118,7 @@ class ApiDocController extends Controller {
 
     val routeEntries = getRouteEntries()
 
-    //validate(routeEntries)
+    validate(routeEntries)
 
     val apiDocAnnotations = routeEntries.map(routeEntry =>
       getMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod)

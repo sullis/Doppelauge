@@ -81,34 +81,46 @@ class ApiDocControllerSpec extends Specification {
 
   "ApiDoc controller" should {
 
-    "Check that string substraction function works" in {
+    "Check that the hasSameUri function works" in {
       val controller = new ApiDocController
+      controller.hasSameUri("/api/v1/acl", "/api/v1/acl" )must beTrue
+      controller.hasSameUri("/1api/v1/acl", "/api/v1/acl" )must beFalse
+      controller.hasSameUri("/api/v1/acl", "/api/v1/acl2" )must beFalse
+      controller.hasSameUri("/api/v1/acl", "/api/v1" )must beFalse
+      controller.hasSameUri("/1api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>" )must beFalse
 
-      controller.findConfUriBase("/api/v1/acl/$service<[^/]+>") must equalTo("/api/v1/acl")
-      controller.findConfUriBase("/api/v1/acl/")          must equalTo("/api/v1/acl")
-      controller.findConfUriBase("/api/v1/acl")           must equalTo("/api/v1/acl")
+      controller.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>" )must beTrue
+      controller.hasSameUri("/api/v1/acl",          "/api/v1/acl/$service<[^/]+>" )must beFalse
+      controller.hasSameUri("/api/v1/acl",          "/api/v1/acl/$service<[^/]+>" )must beFalse
+      controller.hasSameUri("/api/v1/acl",          "/api/v1/acl"                 )must beTrue
+      controller.hasSameUri("/api/v1/acl",          "/api/v1/acl/"                )must beTrue
+      controller.hasSameUri("/api/v1/acl",          "/api/v1/acl"                 )must beTrue
+      controller.hasSameUri("/api/v1/acl",          "/api/v1/acl/"                )must beTrue
+      controller.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl/"                )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl"                 )must beFalse
 
-      controller.findConfUriParm("/api/v1/acl/$service<[^/]+>") must equalTo("service")
-      controller.findConfUriParm("/api/v1/acl/")          must equalTo("")
-      controller.findConfUriParm("/api/v1/acl")           must equalTo("")
+      // one parameter in the middle of the uri:
 
-      controller.hasSameUri("/api/v1/acl", "", "/api/v1/acl" )must beTrue
-      controller.hasSameUri("/1api/v1/acl", "", "/api/v1/acl" )must beFalse
-      controller.hasSameUri("/api/v1/acl", "", "/api/v1/acl2" )must beFalse
-      controller.hasSameUri("/api/v1/acl", "", "/api/v1" )must beFalse
-      controller.hasSameUri("/1api/v1/acl", "service", "/api/v1/acl/$service<[^/]+>" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" )must beTrue
+      controller.hasSameUri("/api/v1/acl/{service}/hepp/", "/api/v1/acl/$service<[^/]+>/hepp/" )must beTrue
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp/" )must beTrue
+      controller.hasSameUri("/api/v1/acl/{service}/hepp/", "/api/v1/acl/$service<[^/]+>/hepp" )must beTrue
 
-      controller.hasSameUri("/api/v1/acl", "service", "/api/v1/acl/$service<[^/]+>" )must beTrue
-      controller.hasSameUri("/api/v1/acl", "",          "/api/v1/acl/$service<[^/]+>" )must beFalse
-      controller.hasSameUri("/api/v1/acl", "",          "/api/v1/acl/$service<[^/]+>" )must beFalse
-      controller.hasSameUri("/api/v1/acl", "",          "/api/v1/acl"                 )must beTrue
-      controller.hasSameUri("/api/v1/acl", "",          "/api/v1/acl/"                )must beTrue
-      controller.hasSameUri("/api/v1/acl", "",         "/api/v1/acl"                 )must beTrue
-      controller.hasSameUri("/api/v1/acl", "",         "/api/v1/acl/"                )must beTrue
-      controller.hasSameUri("/api/v1/acl", "service", "/api/v1/acl/"                )must beFalse
-      controller.hasSameUri("/api/v1/acl", "service", "/api/v1/acl"                 )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp2", "/api/v1/acl/$service<[^/]+>/hepp" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service2}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" )must beFalse
+      controller.hasSameUri("/api/v1/acl2/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" )must beFalse
+      controller.hasSameUri("/2api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp2" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp/2" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service2<[^/]+>/hepp/" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl2/$service<[^/]+>/hepp/" )must beFalse
+      controller.hasSameUri("/api/v1/acl/{service}/hepp", "/api2/v1/acl/$service<[^/]+>/hepp/" )must beFalse
 
+      // two parameters in the middle of the uri:
+      controller.hasSameUri("/api/v1/acl/{service}/{hepp}", "/api/v1/acl/$service<[^/]+>/$hepp<[^/]+>" )must beTrue
+      controller.hasSameUri("/api/v1/acl/{service}/gakk/{hepp}", "/api/v1/acl/$service<[^/]+>/gakk/$hepp<[^/]+>" )must beTrue
     }
+
 
     "validate that the validate method that validates if method and uri in conf/routes and autodoc matches works" in {
       inCleanEnvironment() {
