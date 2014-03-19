@@ -56,6 +56,49 @@ class JsonMatcherSpec extends Specification {
     }
 
 
+    "match anyString and anyNumber" in {
+      // string
+      matchJson(
+        Json.obj("a" -> ___anyString),
+        Json.obj("a" -> "b")
+      )
+      matchJson(
+        Json.obj("a" -> ___anyString),
+        Json.obj("a" -> 5)
+      ) should throwA[JsonMatcherException] 
+
+      // number
+      matchJson(
+        Json.obj("a" -> ___anyNumber),
+        Json.obj("a" -> 5)
+      )
+      matchJson(
+        Json.obj("a" -> ___anyNumber),
+        Json.obj("a" -> "b")
+      ) should throwA[JsonMatcherException]
+
+      // object
+      matchJson(
+        Json.obj("a" -> ___anyObject),
+        Json.obj("a" -> Json.obj())
+      )
+      matchJson(
+        Json.obj("a" -> ___anyObject),
+        Json.obj("a" -> 5)
+      ) should throwA[JsonMatcherException] 
+
+      // array
+      matchJson(
+        Json.obj("a" -> ___anyArray),
+        Json.obj("a" -> Json.arr())
+      )
+      matchJson(
+        Json.obj("a" -> ___anyArray),
+        Json.obj("a" -> 5)
+      ) should throwA[JsonMatcherException] 
+   }
+
+
 
     // simple array tests
 

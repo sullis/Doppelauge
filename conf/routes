@@ -9,3 +9,5 @@ GET     /api/v1/api-docs/:path                  controllers.ApiDocController.get
 # user
 
 GET     /api/v1/user                            controllers.UserController.get
+
+# GET        /api/v1/studyprogrammes/:id/fields  controllers.ApiDocController.getPath(id: String)

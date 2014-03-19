@@ -14,7 +14,10 @@ object JsonMatcher{
   private val ___allowOtherJsonsKey = "________allowothers________"
   private val ___ignoreOrderJsonKey = "________ignoreOrder________"
   val ___numElements = "________numFields________"
-  val ___anyString = JsString("________numFields________")
+  val ___anyString = JsString("________anyString________")
+  val ___anyNumber = JsString("________anyNumber________")
+  val ___anyObject = JsString("________anyObject________")
+  val ___anyArray  = JsString("________anyArray_________")
 
   val ___allowOtherValues: JsString = JsString(___allowOtherJsonsKey)
   val ___ignoreOrder: JsString = JsString(___ignoreOrderJsonKey)
@@ -138,9 +141,12 @@ object JsonMatcher{
       println("matching "+pp(matcher)+", vs. "+pp(json))
 
     val success = (matcher, json) match{
+      case (`___anyString`, j: JsString) => true
+      case (`___anyNumber`, j: JsNumber) => true
+      case (`___anyObject`, j: JsObject) => true
+      case (`___anyArray`, j: JsArray) => true
       case (m: JsObject, j: JsObject) => matchJsonObjects(m,j,throwException,ignoreArrayOrder)
       case (m: JsArray,  j: JsArray)  => matchJsonArrays(m,j,throwException,ignoreArrayOrder)
-      case (`___anyString`, j: JsString) => true
       case (m: JsValue,  j: JsValue)  => if (m==j) true else matchJsonFailed(s"Doesn't match: ${pp(matcher)} VS. ${pp(json)}", throwException)
     }
 
