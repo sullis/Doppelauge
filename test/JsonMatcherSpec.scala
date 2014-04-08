@@ -99,6 +99,48 @@ class JsonMatcherSpec extends Specification {
    }
 
 
+    "match regexp strings" in {
+      matchJson(
+        Json.obj("a" -> RegExp("b")),
+        Json.obj("a" -> "b")
+      )
+
+      matchJson(
+        Json.obj("a" -> RegExp("b")),
+        Json.obj("a" -> "cbh")
+      )
+
+      matchJson(
+        Json.obj("a" -> RegExp("^b")),
+        Json.obj("a" -> "bh")
+      )
+
+      matchJson(
+        Json.obj("a" -> RegExp("b")),
+        Json.obj("a" -> "c")
+      ) should throwA[JsonMatcherException] 
+
+      matchJson(
+        Json.obj("a" -> RegExp("^b")),
+        Json.obj("a" -> "cbh")
+      ) should throwA[JsonMatcherException] 
+
+      matchJson(
+        Json.obj("a" -> RegExp("^b$")),
+        Json.obj("a" -> "cbh")
+      ) should throwA[JsonMatcherException] 
+
+      matchJson(
+        Json.obj("a" -> RegExp("^b$")),
+        Json.obj("a" -> "b")
+      )
+
+      matchJson(
+        RegExp("^b$"),
+        JsString("b")
+      )
+    }
+
 
     // simple array tests
 

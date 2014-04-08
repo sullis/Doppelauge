@@ -19,6 +19,14 @@ object JsonMatcher{
   val ___anyObject = JsString("________anyObject________")
   val ___anyArray  = JsString("________anyArray_________")
 
+  case class RegExp(pattern: String) extends JsUndefined("") {
+    val regexp = new scala.util.matching.Regex(pattern)
+
+    def apply(jsString: JsString): Boolean = {
+      regexp.findFirstIn(jsString.value) != None
+    }
+  }
+
   val ___allowOtherValues: JsString = JsString(___allowOtherJsonsKey)
   val ___ignoreOrder: JsString = JsString(___ignoreOrderJsonKey)
   val ___allowOtherFields: (String,Json.JsValueWrapper) = ___allowOtherJsonsKey -> Json.toJsFieldJsValueWrapper(___allowOtherJsonsKey)
@@ -28,7 +36,7 @@ object JsonMatcher{
 
   private def matchJsonFailed(message: String, throwException: Boolean): Boolean =
     if (throwException)
-      throw new JsonMatcherException(message+"\n\n *** Set JsonMatcher.verbose to true to get more details. ***\n\n")
+      throw new JsonMatcherException(message+"\n\n *** Set JsonMatcher.verbose (or JsonMatcher.very_verbose) to true to get more details. ***\n\n")
     else
       false
 
@@ -145,6 +153,8 @@ object JsonMatcher{
       case (`___anyNumber`, j: JsNumber) => true
       case (`___anyObject`, j: JsObject) => true
       case (`___anyArray`, j: JsArray) => true
+      case (r: RegExp,     j: JsString) => if (r(j)) true else matchJsonFailed(s""""${j.value}" doesn't match the regexp "${r.pattern}".""", throwException)
+      case (r: RegExp,     j: JsValue) => matchJsonFailed(s"""RegExp matcher expected a string. Not-string value: "$j"""", throwException)
       case (m: JsObject, j: JsObject) => matchJsonObjects(m,j,throwException,ignoreArrayOrder)
       case (m: JsArray,  j: JsArray)  => matchJsonArrays(m,j,throwException,ignoreArrayOrder)
       case (m: JsValue,  j: JsValue)  => if (m==j) true else matchJsonFailed(s"Doesn't match: ${pp(matcher)} VS. ${pp(json)}", throwException)
