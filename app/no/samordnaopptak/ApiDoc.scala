@@ -70,10 +70,10 @@ object ApiDocUtil{
     loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className.split('.').toList)
 
 
-  // "/api/v1/acl/{service}" -> List("service")
-  // "/api/v1/acl/{service}" -> List("service", "hest")
-  // "/api/v1/acl/",         -> List()
-  // "/api/v1/acl",          -> List()
+  // "/api/v1/acl/{service}"        -> List("service")
+  // "/api/v1/acl/{service}/{hest}" -> List("service", "hest")
+  // "/api/v1/acl/",                -> List()
+  // "/api/v1/acl",                 -> List()
   def findUriParm(autoUri: String): List[String] =
     if (autoUri=="")
       List()
@@ -113,6 +113,9 @@ object ApiDocUtil{
           }
       }
     }
+
+    if(class_.getConstructors.isEmpty)
+      throw new Exception(s"Class $class does not have any constructors.")
 
     val classFields = getClassFieldNames(
       class_.getConstructors.head.getParameterAnnotations().toList,
