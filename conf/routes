@@ -3,11 +3,11 @@
 
 # apidoc
 
-GET     /api/v1/api-docs                        controllers.ApiDocController.get
-GET     /api/v1/api-docs/:path                  controllers.ApiDocController.getPath(path: String)
+GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.controllers.ApiDocController.get
+GET     /api/v1/api-docs/:path                  no.samordnaopptak.apidoc.controllers.ApiDocController.getPath(path: String)
 
 # user
 
-GET     /api/v1/user                            controllers.UserController.get
+GET     /useradmin/api/v1/user                            no.samordnaopptak.apidoc.controllers.UserController.get
+GET     /user2admin/api/v1/user                           no.samordnaopptak.apidoc.controllers.UserController.get2
 
-# GET        /api/v1/studyprogrammes/:id/fields  controllers.ApiDocController.getPath(id: String)

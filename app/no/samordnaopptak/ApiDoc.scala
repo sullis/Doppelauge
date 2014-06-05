@@ -115,7 +115,7 @@ object ApiDocUtil{
     }
 
     if(class_.getConstructors.isEmpty)
-      throw new Exception(s"Class $class does not have any constructors.")
+      throw new Exception(s"Class $class_ does not have any constructors.")
 
     val classFields = getClassFieldNames(
       class_.getConstructors.head.getParameterAnnotations().toList,

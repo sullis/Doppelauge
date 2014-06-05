@@ -1,4 +1,4 @@
-package controllers
+package no.samordnaopptak.apidoc.controllers
 
 
 import play.api.mvc._
@@ -11,6 +11,9 @@ import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
 class ApiDocController extends Controller {
 
   case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scalaMethod: String)
+
+  private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
+
 
   // code in this method copied from the swagger play2 module.
   private def getRestClassName(annoDocField3: String) = {
@@ -138,7 +141,7 @@ class ApiDocController extends Controller {
       Get main swagger json documentation
   """)
   def get() = {
-    Ok(SwaggerUtil.getMain("/api/v1/", apiDocsFromAnnotations))
+    Ok(SwaggerUtil.getMain("/", apiDocsFromAnnotations)).withHeaders(AccessControlAllowOrigin)
   }
 
   @ApiDoc(doc="""
@@ -151,7 +154,7 @@ class ApiDocController extends Controller {
       path: String
   """)
   def getPath(path: String) = {
-    Ok(SwaggerUtil.getJson("/api/v1/", apiDocsFromAnnotations, path))
+    Ok(SwaggerUtil.getJson("/", apiDocsFromAnnotations, path)).withHeaders(AccessControlAllowOrigin)
   }
 }
 

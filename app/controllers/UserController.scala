@@ -1,4 +1,4 @@
-package controllers
+package no.samordnaopptak.apidoc.controllers
 
 
 import play.api.mvc._
@@ -14,10 +14,12 @@ case class UserData(firstName: String, lastName: String)
 object UserController extends Controller {
   val controller = new ApiDocController
 
+  private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
+
   val user = User("1235f",UserData("CommonFirstName", "CommonLastName"))
 
   @ApiDoc(doc="""
-    GET /api/v1/user
+    GET /useradmin/api/v1/user
 
     DESCRIPTION
       Get user
@@ -25,11 +27,11 @@ object UserController extends Controller {
     RESULT
       User
 
-    User: controllers.User
+    User: no.samordnaopptak.apidoc.controllers.User
       id: String
       data: UserData
 
-    UserData: controllers.UserData
+    UserData: no.samordnaopptak.apidoc.controllers.UserData
       firstName: String
       lastName: String
   """)
@@ -40,6 +42,25 @@ object UserController extends Controller {
         "firstName" -> user.data.firstName,
         "lastName" -> user.data.lastName
       )
-    ))
+    )).withHeaders(AccessControlAllowOrigin)
+  }
+
+  @ApiDoc(doc="""
+    GET /user2admin/api/v1/user
+
+    DESCRIPTION
+      Get user
+
+    RESULT
+      User
+  """)
+  def get2()  = Action { request =>
+    Ok(Json.obj(
+      "id" -> user.id,
+      "data" -> Json.obj(
+        "firstName" -> user.data.firstName,
+        "lastName" -> user.data.lastName
+      )
+    )).withHeaders(AccessControlAllowOrigin)
   }
 }

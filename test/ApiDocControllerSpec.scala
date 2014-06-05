@@ -4,13 +4,13 @@ import play.api.Play.current
 
 import org.specs2.mutable._
 
-import controllers.routes
+import no.samordnaopptak.apidoc.controllers.routes
 
 import play.api.test._
 import play.api.test.Helpers._
 import play.api.libs.json._
 
-import controllers.ApiDocController
+import no.samordnaopptak.apidoc.controllers.ApiDocController
 import no.samordnaopptak.apidoc.JsonMatcher._
 import no.samordnaopptak.apidoc.{ApiDoc, SwaggerUtil}
 
@@ -158,7 +158,7 @@ class ApiDocControllerSpec extends Specification {
 
     "Call Swagger.getJson on all annotated resource path groups, in order to run validation checks on them" in {
       inCleanEnvironment() {
-        ApiDocController.validate("/api/v1/")
+        ApiDocController.validate("/")
       }
     }
 
@@ -173,8 +173,8 @@ class ApiDocControllerSpec extends Specification {
             "info" -> Json.obj(___allowOtherFields),
             "apis" -> Json.arr(
               Json.obj(
-                "path" -> "/api-docs",
-                "description" -> "Operations on api-docs"),
+                "path" -> "/api",
+                "description" -> "Operations on api"),
               ___allowOtherValues
             ),
             ___allowOtherFields
@@ -189,10 +189,10 @@ class ApiDocControllerSpec extends Specification {
         val controller = new ApiDocController
 
         checkResult(
-          controller.getPath("api-docs"),
+          controller.getPath("api"),
           Json.obj(
             "models" -> Json.obj(___allowOtherFields),
-            "resourcePath" -> "/api-docs",
+            "resourcePath" -> "/api",
             "apis" -> Json.arr(
               Json.obj(
                 "operations" -> Json.arr(Json.obj(

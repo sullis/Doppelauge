@@ -191,13 +191,14 @@ object SwaggerUtil{
    "/api/v1/", List("/api/v1/a", "/api/v1/a/c", "/api/v1/b") -> List("a,b")
    */
   def allResourcePathGroups(basePath: String, apidocs: List[String]): Set[String] = {
-    apidocs.map(
+    val ret =apidocs.map(
       ApiDocUtil.getJson(_)
     ).map(jsonApiDoc =>
       (jsonApiDoc \ "uri").as[String]
     ).map(
       getResourcePathGroup(basePath, _)
     ).toSet
+    ret
   }
 
   private def flattenJsObjects(objs: List[JsObject]): JsObject =
@@ -244,8 +245,8 @@ object SwaggerUtil{
 
   private def validateThatAllDatatypesAreDefined(resourcePathGroup: String, jsonApiDocs: List[JsObject], dataTypes: List[JsObject]): Unit = {
     val definedTypes: Set[String] = dataTypes.flatMap(_.keys).toSet ++ ApiDocUtil.atomTypes
-    val usedTypes: Set[String] = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
-    val undefinedTypes = usedTypes -- definedTypes
+    val usedTypes: Set[String]    = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
+    val undefinedTypes            = usedTypes -- definedTypes
 
     if (undefinedTypes.size>0)
       throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$resourcePathGroup": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
