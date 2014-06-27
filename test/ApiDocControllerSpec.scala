@@ -13,6 +13,7 @@ import play.api.libs.json._
 import no.samordnaopptak.apidoc.controllers.ApiDocController
 import no.samordnaopptak.apidoc.JsonMatcher._
 import no.samordnaopptak.apidoc.{ApiDoc, SwaggerUtil}
+import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
 
 
 class ApiDocControllerSpec extends Specification {
@@ -126,31 +127,31 @@ class ApiDocControllerSpec extends Specification {
       inCleanEnvironment() {
         val controller = new ApiDocController
 
-        val routeEntries = controller.getRouteEntries()
+        val routeEntries = RoutesHelper.getRouteEntries()
         controller.validate(routeEntries)
 
         {
-          val validRouteEntry = controller.RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc")
+          val validRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc")
           controller.validate(validRouteEntry::routeEntries)
         }
 
         {
-          val errorRouteEntry = controller.RouteEntry("GET", "/api/v1/flapp", "test.ApiDocControllerSpec", "errorDoc")
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/flapp", "test.ApiDocControllerSpec", "errorDoc")
           controller.validate(errorRouteEntry::routeEntries) should throwA[controller.UriMismatchException]
         }
 
         {
-          val errorRouteEntry = controller.RouteEntry("PUT", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc")
+          val errorRouteEntry = RouteEntry("PUT", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc")
           controller.validate(errorRouteEntry::routeEntries) should throwA[controller.MethodMismatchException]
         }
 
         {
-          val errorRouteEntry = controller.RouteEntry("GET", "/api/v1/users", "test.ApiDocControllerSpec", "errorDoc")
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/users", "test.ApiDocControllerSpec", "errorDoc")
           controller.validate(errorRouteEntry::routeEntries) should throwA[controller.UriMismatchException]
         }
 
         {
-          val errorRouteEntry = controller.RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc2")
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc2")
           controller.validate(errorRouteEntry::routeEntries) should throwA[controller.UriMismatchException]
         }
       }
