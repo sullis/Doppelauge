@@ -95,7 +95,7 @@ object JsonMatcher{
       matchJsonFailed(s"${pp(json)} contains less fields than ${pp(matcher)}.", throwException)
 
     else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size<cleanJson.size)
-      matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)}.\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException)
+      matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)} (${cleanMatcher.size}<${cleanJson.size}).\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException)
 
     else if (hasIgnoreOrder)
       cleanMatcher.forall( (matchValue: JsValue) =>
