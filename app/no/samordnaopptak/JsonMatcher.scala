@@ -86,29 +86,30 @@ object JsonMatcher{
       throw new Exception("Matcher contains both ___allowOthers and ___numElements")
 
     val cleanMatcher = getValuesWithoutNumsAndIgnores(matcher.value)
+    val cleanJson = getValuesWithoutNumsAndIgnores(json.value)
 
-    if (hasNumElements && getWantedNumArrayElements(matcher)!=json.value.size)
+    if (hasNumElements && getWantedNumArrayElements(matcher)!=cleanJson.size)
       matchJsonFailed(s"${pp(json)} contains wrong number of elements. Should contain ${getWantedNumArrayElements(matcher)}.", throwException)
 
-    else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size>json.value.size)
+    else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size>cleanJson.size)
       matchJsonFailed(s"${pp(json)} contains less fields than ${pp(matcher)}.", throwException)
 
-    else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size<json.value.size)
+    else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size<cleanJson.size)
       matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)}.\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException)
 
     else if (hasIgnoreOrder)
       cleanMatcher.forall( (matchValue: JsValue) =>
         if (matchValue == ___allowOtherValues)
           true
-        else if (json.value.exists(matchJson(matchValue, _, false, ignoreArrayOrder))==false) {
+        else if (cleanJson.exists(matchJson(matchValue, _, false, ignoreArrayOrder))==false) {
           if (verbose && json.value.size==1)
-            matchJson(json.value.head, matchValue, true, ignoreArrayOrder)
-          matchJsonFailed(s"${pp(json)} doesn't contain the value ${pp(matchValue)}", throwException)
+            matchJson(cleanJson.head, matchValue, true, ignoreArrayOrder)
+          matchJsonFailed(s"""${pp(json)} doesn't contain the value "${pp(matchValue)}"""", throwException)
         }else
           true
       )
     else
-      matchOrderedJsonArrays(json, hasAllowOthers, cleanMatcher, json.value, throwException)
+      matchOrderedJsonArrays(json, hasAllowOthers, cleanMatcher, cleanJson, throwException)
   }
 
   private def matchJsonObjects(matcher: JsObject, json: JsObject, throwException: Boolean = true, ignoreArrayOrder: Boolean = false): Boolean = {
@@ -136,7 +137,7 @@ object JsonMatcher{
           else if (key == ___allowOtherJsonsKey)
             true
           else if (json.keys.contains(key)==false)
-            matchJsonFailed(s"${pp(json)} doesn't contain the key $key", throwException)
+            matchJsonFailed(s"""${pp(json)} doesn't contain the key "$key"""", throwException)
           else
             matchJson(value, json.\(key), throwException, ignoreArrayOrder)
       })
