@@ -400,7 +400,7 @@ object ApiDocUtil{
                       ).keys
 
     if (uriParms.size != pathParms.size)
-      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\njson: $json).""")
+      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParms\njson: $json).""")
 
     pathParms.foreach(pathParm =>
       if (!uriParms.contains(pathParm))
