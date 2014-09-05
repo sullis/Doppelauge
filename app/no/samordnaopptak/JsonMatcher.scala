@@ -52,7 +52,7 @@ object JsonMatcher{
       values
     else if (values.head==JsString(___numElements))
       values.tail.tail
-    else if (values.head==JsString(___ignoreOrderJsonKey))
+    else if (values.head==___ignoreOrder)
       getValuesWithoutNumsAndIgnores(values.tail)
     else
       Seq(values.head) ++ getValuesWithoutNumsAndIgnores(values.tail)
