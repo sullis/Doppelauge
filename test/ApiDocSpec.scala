@@ -268,27 +268,27 @@ class ApiDocSpec extends Specification {
 
     "Validate data type fields, with no added or removed fields" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "attributes", "unrelated"),        Set(), Set())
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id"),                                   Set(), Set()) should throwA[ApiDocUtil.MismatchFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "attributes", "unrelated", "id2"), Set(), Set()) should throwA[ApiDocUtil.MismatchFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated"),        Set(), Set())
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id"),                                   Set(), Set()) should throwA[ApiDocUtil.MismatchFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated", "id2"), Set(), Set()) should throwA[ApiDocUtil.MismatchFieldException]
       }
     }
 
     "Validate data type fields, with added field" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "id2", "attributes", "unrelated"),        Set("id2"), Set())
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "id2", "attributes", "unrelated"),        Set("id"),  Set()) should throwA[ApiDocUtil.AlreadyDefinedFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "attributes", "unrelated"),               Set("id2"), Set()) should throwA[ApiDocUtil.MismatchFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "id2", "id3", "attributes", "unrelated"), Set("id2"), Set()) should throwA[ApiDocUtil.MismatchFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "id2", "attributes", "unrelated"),        Set("id2"), Set())
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "id2", "attributes", "unrelated"),        Set("id"),  Set()) should throwA[ApiDocUtil.AlreadyDefinedFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated"),               Set("id2"), Set()) should throwA[ApiDocUtil.MismatchFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "id2", "id3", "attributes", "unrelated"), Set("id2"), Set()) should throwA[ApiDocUtil.MismatchFieldException]
       }
     }
 
     "Validate data type fields, with removed field" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("attributes", "unrelated"),              Set(),     Set("id"))
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id","attributes", "unrelated"),         Set("id"), Set("id"))  should throwA[ApiDocUtil.AlreadyDefinedFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("unrelated"),                            Set(),     Set("id"))  should throwA[ApiDocUtil.MismatchFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", Set("id", "attributes", "unrelated"),        Set(),     Set("id2")) should throwA[ApiDocUtil.UnknownFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("attributes", "unrelated"),              Set(),     Set("id"))
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id","attributes", "unrelated"),         Set("id"), Set("id"))  should throwA[ApiDocUtil.AlreadyDefinedFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("unrelated"),                            Set(),     Set("id"))  should throwA[ApiDocUtil.MismatchFieldException]
+        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated"),        Set(),     Set("id2")) should throwA[ApiDocUtil.UnknownFieldException]
       }
     }
 

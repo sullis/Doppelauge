@@ -85,7 +85,7 @@ object ApiDocUtil{
 
 
 
-  def validateDataTypeFields(className: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
+  def validateDataTypeFields(className: String, dataTypeName: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
 
     val class_ = try{
       loadInnerClass(className)
@@ -115,7 +115,7 @@ object ApiDocUtil{
     }
 
     if(class_.getConstructors.isEmpty)
-      throw new Exception(s"Class $class_ does not have any constructors.")
+      throw new Exception(s"""While evaluating "${dataTypeName}": Class $class_ does not have any constructors.""")
 
     val classFields = getClassFieldNames(
       class_.getConstructors.head.getParameterAnnotations().toList,
@@ -123,18 +123,18 @@ object ApiDocUtil{
     ).toSet
 
     if ( (removedFields &~ classFields).size > 0)
-      throw new UnknownFieldException(s"One or more removedFields are not defined for class '$className': " + (removedFields &~ classFields) + ". classFields: "+classFields)
+      throw new UnknownFieldException(s"""While evaluating "${dataTypeName}": One or more removedFields are not defined for class '$className': """ + (removedFields &~ classFields) + ". classFields: "+classFields)
 
     if ( (addedFields & classFields).size > 0)
-      throw new AlreadyDefinedFieldException(s"One or more addedFields are already defined for class '$className': "+(addedFields & classFields))
+      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more addedFields are already defined for class '$className': """+(addedFields & classFields))
 
     if ( (addedFields & removedFields).size > 0)
-      throw new AlreadyDefinedFieldException(s"One or more fields are both present in addedFields and removedFields (for '$className'): "+(addedFields & removedFields))
+      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more fields are both present in addedFields and removedFields (for '$className'): """+(addedFields & removedFields))
 
     val modifiedClassFields = classFields ++ addedFields -- removedFields
 
     if ( fields != modifiedClassFields)
-      throw new MismatchFieldException(s"The ApiDoc datatype does not match the class '$className'. Mismatched fields: "+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)))
+      throw new MismatchFieldException(s"""While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: """+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)))
   }
 
   private def getIndentLength(line: String) =
@@ -274,7 +274,7 @@ object ApiDocUtil{
 
       if (signature != "!") {
         val (className, addedFields, removedFields) = parseScalaTypeSignature(signature)
-        validateDataTypeFields(className, fieldNames, addedFields, removedFields)
+        validateDataTypeFields(className, name, fieldNames, addedFields, removedFields)
       }
 
       Json.obj(
