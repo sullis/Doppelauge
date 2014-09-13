@@ -106,6 +106,9 @@ class ApiDocController extends Controller {
       Get swagger documentation json for a resource path
       You can add more detailed information here.
 
+    ERRORS
+      404 Path not found
+
     PARAMETERS
       path: String
   """)

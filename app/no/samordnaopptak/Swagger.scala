@@ -133,7 +133,8 @@ object SwaggerUtil{
           "summary" -> apidoc \ "shortDescription",
           "notes" -> apidoc \ "longDescription",
           "type"  -> (if (apidoc.keys.contains("result")) (apidoc \ "result" \ "type") else "void"),
-          "nickname" -> "", // ???
+          "nickname" -> "habla",
+          //"nickname" -> "", // ???
           //"allowMultiple" -> true, // ???
           "parameters" -> JsArray(
             if (apidoc.keys.contains("parameters"))

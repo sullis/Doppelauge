@@ -28,6 +28,10 @@ object UserController extends Controller {
     RESULT
       User
 
+    ERRORS
+      404 User not found
+      400 Syntax Error
+
     User: no.samordnaopptak.apidoc.controllers.User
       id: String
       data: UserData
@@ -52,6 +56,10 @@ object UserController extends Controller {
     DESCRIPTION
       Get user
       You can add more detailed information here.
+
+    ERRORS
+      404 User not found
+      400 Syntax Error
 
     RESULT
       User
