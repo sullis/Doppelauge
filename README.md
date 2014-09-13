@@ -20,8 +20,11 @@ QUICK START
 
 1. execute "play run" in the terminal.
 
-2. Insert http://localhost:9000/api/v1/api-docs into the swagger ui.
+2. Go to this address in your browser:
 
+   file:///<this-directory>/public/swagger/index.html?http://localhost:9000/api/v1/api-docs
+
+   (remember to replace "<this-directory>" with the full path of the directory of this file)
 
 
 Examples
