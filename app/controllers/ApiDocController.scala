@@ -93,6 +93,7 @@ class ApiDocController extends Controller {
 
     DESCRIPTION
       Get main swagger json documentation
+      You can add more detailed information here.
   """)
   def get() = {
     Ok(SwaggerUtil.getMain("/", apiDocsFromAnnotations)).withHeaders(AccessControlAllowOrigin)
@@ -103,6 +104,7 @@ class ApiDocController extends Controller {
 
     DESCRIPTION
       Get swagger documentation json for a resource path
+      You can add more detailed information here.
 
     PARAMETERS
       path: String

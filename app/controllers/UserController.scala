@@ -23,6 +23,7 @@ object UserController extends Controller {
 
     DESCRIPTION
       Get user
+      You can add more detailed information here.
 
     RESULT
       User
@@ -50,6 +51,7 @@ object UserController extends Controller {
 
     DESCRIPTION
       Get user
+      You can add more detailed information here.
 
     RESULT
       User
