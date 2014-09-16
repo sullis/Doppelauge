@@ -60,10 +60,11 @@ Define parameter types:
         Get user
 
       PARAMETERS 
-        id: String(path)   <- 'path' parameter type (default, unless the parameter name is 'body')
-        body: String        <- 'body' parameter type.
-        phone: String(query) <- 'query' parameter type
-        email: String(form)   <- 'form' parameter type
+        id: String(path)                 <- 'path' parameter type (default, unless the parameter name is 'body')
+        body: String                     <- 'body' parameter type.
+        phone: String(query)             <- 'query' parameter type
+        mobile: String(query, optional)  <- Optional 'query' parameter type
+        email: String(form)              <- 'form' parameter type
     """)
     def getUser(id: String) = ...
 

@@ -25,6 +25,10 @@ object UserController extends Controller {
       Get user
       You can add more detailed information here.
 
+    PARAMETERS
+      offset: Int (query, optional) <- default = 0
+      limit: Int (query) <- default = 0
+
     RESULT
       User
 

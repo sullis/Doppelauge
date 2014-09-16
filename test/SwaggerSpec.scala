@@ -153,7 +153,7 @@ class SwaggerSpec extends Specification {
        "summary" : "Get all users",
        "notes" : "More detailed description of \"Get all users\"",
        "type" : "User",
-       "nickname" : "",
+       "nickname" : "habla",
        "parameters" : [ {
          "name" : "id",
          "required" : true,
@@ -169,7 +169,7 @@ class SwaggerSpec extends Specification {
          "name" : "q",
          "paramType" : "query",
          "type" : "String",
-         "required" : true
+         "required" : false
        }, {
          "name" : "body",
          "required" : true,

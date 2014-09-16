@@ -141,12 +141,12 @@ object SwaggerUtil{
               (apidoc \ "parameters").asInstanceOf[JsObject].value.toSeq.map(_ match{
                   case (name,attributes) => jsonWithoutUndefined(Json.obj(
                     "name" -> name,
-                    "required" -> true,
                     "type" -> attributes \ "type",
                     "description" -> attributes \ "comment",
-                    "paramType" -> attributes \ "paramType"
+                    "paramType" -> attributes \ "paramType",
+                    "required" -> (attributes \ "required")
                   ))
-                })
+              })
             else
               List()
           ),

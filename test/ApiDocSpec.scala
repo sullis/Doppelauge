@@ -26,7 +26,7 @@ object ApiDocSamples{
     PARAMETERS
       id: String <- ID of the user
       id2: String (header)
-      q: String (query)
+      q: String (query, optional)
       body: User 
 
     ERRORS
@@ -352,7 +352,7 @@ class ApiDocSpec extends Specification {
           "PARAMETERS" -> Json.arr(
             "id: String <- ID of the user",
             "id2: String (header)",
-            "q: String (query)",
+            "q: String (query, optional)",
             "body: User"),
           "ERRORS" -> Json.arr(
             "400 What?",
@@ -386,25 +386,29 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "comment" -> "ID of the user",
               "isArray" -> false,
-              "paramType" -> "path"
+              "paramType" -> "path",
+              "required" -> true
             ),
             "id2" -> Json.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
-              "paramType" -> "header"
+              "paramType" -> "header",
+              "required" -> true
             ),
             "q" -> Json.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
-              "paramType" -> "query"
+              "paramType" -> "query",
+              "required" -> false
             ),
             "body" -> Json.obj(
               "type" -> "User",
               "noComment" -> true,
               "isArray" -> false,
-              "paramType" -> "body"
+              "paramType" -> "body",
+              "required" -> true
             )),
           "errors" -> Json.arr(
             Json.obj(
@@ -433,19 +437,22 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "comment" -> "The ID of the user",
               "isArray" -> false,
-              "paramType" -> "path"
+              "paramType" -> "path",
+              "required" -> true
             ),
             "attributes" -> Json.obj(
               "type" -> "Attributes",
               "noComment" -> true,
               "isArray" -> true,
-              "paramType" -> "path"
+              "paramType" -> "path",
+              "required" -> true
             ),
             "something" -> Json.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
-              "paramType" -> "path"
+              "paramType" -> "path",
+              "required" -> true
             )
           ),
           "Attributes" -> Json.obj(
@@ -453,7 +460,8 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> true,
-              "paramType" -> "path"
+              "paramType" -> "path",
+              "required" -> true
             ),
             "..." -> Json.obj(
               "type" -> "etc.",

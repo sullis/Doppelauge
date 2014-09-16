@@ -149,13 +149,21 @@ object ApiDocUtil{
       val typetype    = if (isArray) typetypetype.drop(6).trim else typetypetype                     // typetype = "String (header)"
       val hasParmType = typetype.endsWith(")")
       val firstSpace  = typetype.indexOf(' ')
-      val type_       = if (hasParmType) typetype.take(firstSpace).trim else typetype.trim           // type_ = "String"
-      val paramType    = if (hasParmType)                                                            // paramType = "header"
+      val type_       = if (hasParmType) typetype.take(firstSpace).trim else typetype.trim           // type_ = "String"                           
+      var paramType    = if (hasParmType)                                                            // paramType = "header"
                            typetype.drop(firstSpace).dropWhile(_!='(').drop(1).dropRight(1).trim 
                         else if (parmName=="body")
                            "body"
                         else
                            "path"
+      val optional   = if (hasParmType==false)
+                         false
+                       else if (!paramType.contains(','))
+                         false
+                       else 
+                         (paramType.split(',')(1)==" optional")
+
+      paramType = paramType.split(',')(0) // "query, optional" -> "query"
 
       if ( ! Set("body", "path", "query", "header", "form").contains(paramType))
         throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "form". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
@@ -185,7 +193,8 @@ object ApiDocUtil{
               else
                 "comment" -> comment,
               "isArray" -> typeInfo.isArray,
-              "paramType" -> typeInfo.paramType
+              "paramType" -> typeInfo.paramType,
+              "required"  -> !typeInfo.optional
             )
           }
         })
