@@ -61,11 +61,11 @@ class ApiDocControllerSpec extends Specification {
     true
   }
 
-  def getFutureResult(result: play.api.mvc.SimpleResult) =
+  def getFutureResult(result: play.api.mvc.Result) =
     play.api.mvc.Action { result } (FakeRequest())
 
   def checkResult(
-    result: play.api.mvc.SimpleResult,
+    result: play.api.mvc.Result,
     matcher: JsValue,
     statusCode: Int = OK,
     mustNotContain: List[String] = List()

@@ -1,6 +1,5 @@
 import sbt._
 import Keys._
-import play.Project._
 import com.typesafe.config._
 import java.io.PrintWriter
 
@@ -9,13 +8,12 @@ object ApplicationBuild extends Build {
   val appName         = "api-doc"
   val appVersion      = "%s".format("git describe --tags --long --always".!!.trim)
 
-  val appDependencies = Seq(
-    // Add your project dependencies here,
-    jdbc,
-    anorm
-  )
+  val appDependencies = Seq()
 
-  val main = play.Project(appName, appVersion, appDependencies).settings(
+  val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
+    version := appVersion,
+    libraryDependencies ++= appDependencies,
+
     // Add your own project settings here
     organization := "no.samordnaopptak",
     
@@ -40,6 +38,7 @@ object ApplicationBuild extends Build {
         }
       }
     }
+
   )
 
   def writeToFile(fileName: String, value: String) = {
