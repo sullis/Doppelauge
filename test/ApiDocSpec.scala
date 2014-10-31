@@ -103,6 +103,33 @@ object ApiDocSamples{
       String
   """
 
+  val doc6 = """
+    PATCH /api/v1/users/{id}
+
+    DESCRIPTION
+      Patch a user
+
+    PARAMETERS
+      id: String <- ID of the user
+
+    RESULT
+      String
+  """
+
+  val doc6b = """
+    PATCH /api/v1/users/{id}/hepp/{id2}
+
+    DESCRIPTION
+      Patch a hepp user
+
+    PARAMETERS
+      id: String <- ID of the user
+      id2: String <- ID2 of the user
+
+    RESULT
+      String
+  """
+
   val docWithExtraDataType = """
     GET /api/v1/acl
 
@@ -235,7 +262,7 @@ object ApiDocSamples{
       unrelated: String
   """
 
-  val allUsers = List(doc1,doc2,doc3,doc3b)
+  val allUsers = List(doc1,doc2,doc3,doc3b,doc6,doc6b)
   val allAcls = List(doc4,doc5)
   val all = allUsers ++ allAcls
 

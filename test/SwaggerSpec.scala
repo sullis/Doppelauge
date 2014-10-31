@@ -64,6 +64,16 @@ class SwaggerSpec extends Specification {
               "operations" -> Json.arr(Json.obj(
                 "method" -> "PUT",
                 ___numElements -> 7)),
+              "path" -> "/../../../api/v1/users/{id}/hepp/{id2}"),
+            Json.obj(
+              "operations" -> Json.arr(Json.obj(
+                "method" -> "PATCH",
+                ___numElements -> 7)),
+              "path" -> "/../../../api/v1/users/{id}"),
+            Json.obj(
+              "operations" -> Json.arr(Json.obj(
+                "method" -> "PATCH",
+                ___numElements -> 7)),
               "path" -> "/../../../api/v1/users/{id}/hepp/{id2}")
           ),
           ___allowOtherFields
