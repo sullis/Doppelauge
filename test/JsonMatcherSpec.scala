@@ -56,7 +56,7 @@ class JsonMatcherSpec extends Specification {
     }
 
 
-    "match anyString and anyNumber" in {
+    "match anyString, anyNumber, and so forth" in {
       // string
       matchJson(
         Json.obj("a" -> ___anyString),
@@ -94,6 +94,16 @@ class JsonMatcherSpec extends Specification {
       )
       matchJson(
         Json.obj("a" -> ___anyArray),
+        Json.obj("a" -> 5)
+      ) should throwA[JsonMatcherException] 
+
+      // boolean
+      matchJson(
+        Json.obj("a" -> ___anyBoolean),
+        Json.obj("a" -> true)
+      )
+      matchJson(
+        Json.obj("a" -> ___anyBoolean),
         Json.obj("a" -> 5)
       ) should throwA[JsonMatcherException] 
    }
