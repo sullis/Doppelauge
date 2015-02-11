@@ -10,6 +10,7 @@ import play.api.test._
 import play.api.test.Helpers._
 import play.api.libs.json._
 
+import no.samordnaopptak.apidoc.TestByAnnotation
 import no.samordnaopptak.apidoc.controllers.ApiDocController
 import no.samordnaopptak.apidoc.JsonMatcher._
 import no.samordnaopptak.apidoc.{ApiDoc, SwaggerUtil}
@@ -81,6 +82,11 @@ class ApiDocControllerSpec extends Specification {
 
 
   "ApiDoc controller" should {
+
+    "pass the annotation tests" in { // First run the smallest unit tests.
+      TestByAnnotation.TestObject(new ApiDocController)
+      true
+    }
 
     "Check that the hasSameUri function works" in {
       val controller = new ApiDocController

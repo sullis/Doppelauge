@@ -5,6 +5,8 @@ import play.api.mvc._
 import play.api.libs.json._
 import play.api.Play.current
 
+import no.samordnaopptak.apidoc.TestByAnnotation.Test
+
 import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
 
@@ -14,6 +16,29 @@ class ApiDocController extends Controller {
 
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
 
+  @Test(code="""
+     self.hasSameUri("/api/v1/acl", "/api/v1/acl")   === true
+     self.hasSameUri("/1api/v1/acl", "/api/v1/acl")  =/= true
+     self.hasSameUri("/api/v1/acl", "/api/v1/acl" )  === true
+     self.hasSameUri("/1api/v1/acl", "/api/v1/acl" ) =/= true
+     self.hasSameUri("/api/v1/acl", "/api/v1/acl2" ) =/= true
+     self.hasSameUri("/api/v1/acl", "/api/v1"      ) =/= true
+
+     self.hasSameUri("/1api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>") =/= true
+
+     self.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>" ) === true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/$service<[^/]+> " ) =/= true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/$service<[^/]+> " ) =/= true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl"                  ) === true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/"                 ) === true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl"                  ) === true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/"                 ) === true
+     self.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl/"                ) =/= true
+     self.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl"                 ) =/= true
+
+      // one parameter in the middle of the uri:
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" ) === true
+  """)
   def hasSameUri(autoUri: String, confUri: String): Boolean = {
     val autos = autoUri.split("/")
     val confs = RoutesHelper.getAutoUriFromConfUri(confUri).split("/")
