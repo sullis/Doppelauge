@@ -35,10 +35,15 @@ object RoutesHelper{
   def getRouteEntries(): List[RouteEntry] =
     play.api.Play.routes.get.documentation.map(doc =>
       RouteEntry(doc._1, doc._2, getRestClassName(doc._3), getRestMethodName(doc._3))
+    ).map(routeEntry => {
+      //println("routeEntry: "+routeEntry)
+      routeEntry
+    }
     ).filter(routeEntry =>
       routeEntry.scalaClass != "controllers.Assets" &&
       routeEntry.scalaClass != "controllers.StaticFile" &&
-      routeEntry.scalaClass != "controllers.Application"
+      routeEntry.scalaClass != "controllers.Application" &&
+      !routeEntry.uri.contains("<.+>")
     ).toList
 
   // "/api/v1/acl/$service<[^/]+>" -> "/api/v1/acl/{service}"

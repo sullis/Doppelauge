@@ -1,6 +1,9 @@
 package no.samordnaopptak.apidoc.controllers
 
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+
 import play.api.mvc._
 import play.api.libs.json._
 import play.api.Play.current
@@ -76,5 +79,19 @@ object UserController extends Controller {
         "lastName" -> user.data.lastName
       )
     )).withHeaders(AccessControlAllowOrigin)
+  }
+
+  // TODO: Optional arguments. This api-doc does not match the content of routes. But at least it compiles now.
+  @ApiDoc(doc="""
+    GET /
+
+    DESCRIPTION
+      Static assets
+
+    ERRORS
+      401 Unauthorized: No access
+  """)
+  def at(path: String, file: String) = Action.async { request =>
+    Future(Ok(Json.obj("OK" -> "jadda")).withHeaders(AccessControlAllowOrigin))
   }
 }
