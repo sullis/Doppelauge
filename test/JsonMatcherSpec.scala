@@ -462,6 +462,71 @@ class JsonMatcherSpec extends Specification {
                                          "d","e","f",Json.arr("f","g")),
                  "hitsTotal" -> 1)
       )
+
     }
+
+    "Error message must contain the path" in {
+      try{
+        matchJson(
+          Json.obj(
+            "a" -> Json.obj(
+              "b" -> 3
+            )
+          ),
+          Json.obj(
+            "a" -> Json.obj(
+            "b" -> 4
+            )
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          e.path === "a.b"
+          e.getMessage().contains("a.b") must beTrue
+        }
+      }
+    }
+
+    "Error message must contain the path, more extensive test" in {
+      try{
+        matchJson(
+          Json.obj(
+            "a" -> Json.obj(
+              "b" -> Json.arr(
+                1,
+                Json.obj(
+                  "c" -> Json.obj(
+                    "d" -> 1
+                  )
+                )
+              )
+            )
+          ),
+          Json.obj(
+            "a" -> Json.obj(
+              "b" -> Json.arr(
+                1,
+                Json.obj(
+                  "c" -> Json.obj(
+                    "d" -> 2
+                  )
+                )
+              )
+            )
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          //println("message: "+e.getMessage())
+          e.path === "a.b(1).c.d"
+          e.getMessage().contains("a.b(1).c.d") must beTrue
+          true
+        }
+      }
+    }
+
+
   }
 }
