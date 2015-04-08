@@ -17,7 +17,9 @@ case class UserData(firstName: String, lastName: String)
 object UserController extends Controller {
   val controller = new ApiDocController
 
+  /*
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
+   */
 
   val user = User("1235f",UserData("CommonFirstName", "CommonLastName"))
 
@@ -54,7 +56,7 @@ object UserController extends Controller {
         "firstName" -> user.data.firstName,
         "lastName" -> user.data.lastName
       )
-    )).withHeaders(AccessControlAllowOrigin)
+    ))
   }
 
   @ApiDoc(doc="""
@@ -78,20 +80,6 @@ object UserController extends Controller {
         "firstName" -> user.data.firstName,
         "lastName" -> user.data.lastName
       )
-    )).withHeaders(AccessControlAllowOrigin)
-  }
-
-  // TODO: Optional arguments. This api-doc does not match the content of routes. But at least it compiles now.
-  @ApiDoc(doc="""
-    GET /
-
-    DESCRIPTION
-      Static assets
-
-    ERRORS
-      401 Unauthorized: No access
-  """)
-  def at(path: String, file: String) = Action.async { request =>
-    Future(Ok(Json.obj("OK" -> "jadda")).withHeaders(AccessControlAllowOrigin))
+    ))
   }
 }

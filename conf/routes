@@ -1,10 +1,14 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 
+
+
 # apidoc
 
-GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.controllers.ApiDocController.get
+GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.controllers.ApiDocController.get()
 GET     /api/v1/api-docs/:path                  no.samordnaopptak.apidoc.controllers.ApiDocController.getPath(path: String)
+
+
 
 # user
 
@@ -14,6 +18,5 @@ GET     /user2admin/api/v1/user                           no.samordnaopptak.apid
 
 
 # Map static resources
-GET     /                               no.samordnaopptak.apidoc.controllers.UserController.at(path="/public", file = "index.html")
-GET     /*file                          no.samordnaopptak.apidoc.controllers.UserController.at(path="/public", file)
 
+GET     /*file                          controllers.Assets.at(path="/public", file)

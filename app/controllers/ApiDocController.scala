@@ -13,9 +13,12 @@ import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
 
 class ApiDocController extends Controller {
 
-
+/*
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
-
+  private val AccessControlAllowMethods = ("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT")
+  private val AccessControlAllowHeaders = ("Access-Control-Allow-Headers", "Content-Type");
+ */
+  
   @Test(code="""
      self.hasSameUri("/api/v1/acl", "/api/v1/acl")   === true
      self.hasSameUri("/1api/v1/acl", "/api/v1/acl")  =/= true
@@ -121,7 +124,7 @@ class ApiDocController extends Controller {
       You can add more detailed information here.
   """)
   def get() = {
-    Ok(SwaggerUtil.getMain("/", apiDocsFromAnnotations)).withHeaders(AccessControlAllowOrigin)
+    Ok(SwaggerUtil.getMain("/", apiDocsFromAnnotations))
   }
 
   @ApiDoc(doc="""
@@ -138,7 +141,7 @@ class ApiDocController extends Controller {
       path: String
   """)
   def getPath(path: String) = {
-    Ok(SwaggerUtil.getJson("/", apiDocsFromAnnotations, path)).withHeaders(AccessControlAllowOrigin)
+    Ok(SwaggerUtil.getJson("/", apiDocsFromAnnotations, path))
   }
 }
 
@@ -148,6 +151,7 @@ object ApiDocController extends Controller {
   def get()  = Action { request =>
     controller.get()
   }
+
   def getPath(path: String)  = Action { request =>
     controller.getPath(path)
   }

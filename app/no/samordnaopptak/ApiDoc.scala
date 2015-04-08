@@ -292,7 +292,7 @@ object ApiDocUtil{
     }
 
     def getApidoc(): JsObject = {
-      if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ")) {
+      if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ") || key.startsWith("OPTIONS ")) {
 
         if (!elements.isEmpty)
           throw new Exception(s"""Elements for "$key" are not empty: $elements""")
