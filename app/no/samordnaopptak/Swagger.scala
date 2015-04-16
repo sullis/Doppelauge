@@ -2,6 +2,9 @@ package no.samordnaopptak.apidoc
 
 import play.api.libs.json._
 
+import TestByAnnotation.Test
+
+
 /*
 {
   "apiVersion":"1",
@@ -94,9 +97,12 @@ object SwaggerUtil{
     })
   )
 
-  // /api/v1/users/     -> /users
-  // /api/v1/users/{id} -> /users
-  // /api/v1/users      -> /users
+  @Test(code="""
+     self.getResourcePath("/api/v1/users/")     === "/users"
+     self.getResourcePath("/api/v1/users/{id}") === "/users"
+     self.getResourcePath("/api/v1/users")      === "/users"
+     self.getResourcePath("/users")             === "/users"
+  """)
   def getResourcePath(uri: String): String = {
     val last = uri.lastIndexOf('/')
     val secondLast = uri.substring(0,last).lastIndexOf('/')
@@ -111,10 +117,15 @@ object SwaggerUtil{
       uri.drop(last)
   }
 
-  // /api/v1/users/habla/happ  -> /users
-  // /api/v1/users/habla/{id}  -> /users
-  // /api/v1/users/{id}        -> /users
-  // /api/v1/users             -> /users
+  @Test(code="""
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/happ") === "users"
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/")     === "users"
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/{id}") === "users"
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla")      === "users"
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users/{id}")       === "users"
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users/")           === "users"
+     self.getResourcePathGroup("/api/v1/", "/api/v1/users")            === "users"
+  """)
   def getResourcePathGroup(basePath: String, uri: String): String = {
     val fullPathTail = uri.drop(basePath.length)
     val firstSlash = fullPathTail.indexOf('/')
@@ -188,9 +199,11 @@ object SwaggerUtil{
     )
 
 
-  /*
-   "/api/v1/", List("/api/v1/a", "/api/v1/a/c", "/api/v1/b") -> List("a,b")
-   */
+  @Test(code="""
+      self.allResourcePathGroups("/api/v1/", test.lib.ApiDocSamples.allUsers) === Set("users")
+      self.allResourcePathGroups("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
+      self.allResourcePathGroups("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "users")
+  """)
   def allResourcePathGroups(basePath: String, apidocs: List[String]): Set[String] = {
     val ret =apidocs.map(
       ApiDocUtil.getJson(_)

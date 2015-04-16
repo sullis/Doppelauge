@@ -4,38 +4,22 @@ import org.specs2.mutable._
 import play.api.test._
 import play.api.libs.json._
 
+import no.samordnaopptak.apidoc.TestByAnnotation
 import no.samordnaopptak.apidoc.{SwaggerUtil}
 import no.samordnaopptak.apidoc.JsonMatcher._
+
 
 class SwaggerSpec extends Specification {
 
   "Swagger" should {
 
-    "Filter out correct resource path from uri" in {
-      SwaggerUtil.getResourcePath("/api/v1/users/") must equalTo("/users")
-      SwaggerUtil.getResourcePath("/api/v1/users/{id}") must equalTo("/users")
-      SwaggerUtil.getResourcePath("/api/v1/users") must equalTo("/users")
-      SwaggerUtil.getResourcePath("/users") must equalTo("/users")
-    }
-
-    "Filter out correct resource path group from basepath and uri" in {
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/happ") must equalTo("users")
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/") must equalTo("users")
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/{id}") must equalTo("users")
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users/habla") must equalTo("users")
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users/{id}") must equalTo("users")
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users/") must equalTo("users")
-      SwaggerUtil.getResourcePathGroup("/api/v1/", "/api/v1/users") must equalTo("users")
-    }
-
-    "Get all resource path groups for /api/v1/" in {
+    "pass the annotation tests" in { // First run the smallest unit tests.
       play.api.test.Helpers.running(FakeApplication()) {
-        val basePath = "/api/v1/"
-        SwaggerUtil.allResourcePathGroups(basePath,ApiDocSamples.allUsers) must equalTo(Set("users"))
-        SwaggerUtil.allResourcePathGroups(basePath,ApiDocSamples.allAcls) must equalTo(Set("acl"))
-        SwaggerUtil.allResourcePathGroups(basePath,ApiDocSamples.all) must equalTo(Set("acl", "users"))
+        TestByAnnotation.TestObject(SwaggerUtil)
       }
+      true
     }
+
 
     "Get all /users Apis" in {
       matchJson(
@@ -243,6 +227,6 @@ class SwaggerSpec extends Specification {
         }
       )
     }
-  }
 
+  }
 }
