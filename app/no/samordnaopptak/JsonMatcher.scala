@@ -105,7 +105,7 @@ object JsonMatcher{
       matchJsonFailed(s"${pp(json)} contains less fields than ${pp(matcher)}.", throwException, path)
 
     else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size<cleanJson.size)
-      matchJsonFailed(s"${pp(json)} ccontains more fields than ${pp(matcher)} (Diff: ${cleanMatcher.size}<${cleanJson.size}).\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException, path)
+      matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)} (Diff: ${cleanMatcher.size}<${cleanJson.size}).\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException, path)
 
     else if (hasIgnoreOrder)
       cleanMatcher.forall( (matchValue: JsValue) =>
@@ -130,16 +130,24 @@ object JsonMatcher{
     if (hasAllowOthers && hasNumElements)
       throw new Exception("Matcher contains both ___allowOthers and ___numElements")
 
-    if (hasNumElements && getWantedNumObjectElements(matcher)!=json.value.size)
+    if (hasNumElements && getWantedNumObjectElements(matcher) != json.value.size)
       matchJsonFailed(s"${pp(json)} contains wrong number of elements. Should contain ${getWantedNumObjectElements(matcher)}, contains ${json.value.size}.", throwException, path)
 
-    else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size>json.value.size)
-      matchJsonFailed(s"${pp(json)} contains less fields than ${pp(matcher)}.", throwException, path)
+    else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size>json.value.size) {
+      val keys1 = matcher.keys
+      val keys2 = json.keys
+      val diff = keys1 -- keys2
 
-    else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size<json.value.size)
-      matchJsonFailed(s"${pp(json)} contains more fields than ${pp(matcher)}. Maybe you forgot to add an ___allowOtherFields value to the matcher.", throwException, path)
+      matchJsonFailed(s"In ${pp(json)}, the following fields are missing: ${diff.mkString(", ")}", throwException, path)
 
-    else
+    } else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size<json.value.size) {
+      val keys1 = matcher.keys
+      val keys2 = json.keys
+      val diff = keys2 -- keys1
+
+      matchJsonFailed(s"In ${pp(json)}, the following fields are added: ${diff.mkString(", ")}\nMaybe you forgot to add an ___allowOtherFields value to the matcher.", throwException, path)
+
+    } else
       matcher.fields.forall(_ match{
         case (key: String, value: JsValue) =>
           if (key == ___numElements)

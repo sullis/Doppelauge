@@ -465,6 +465,46 @@ class JsonMatcherSpec extends Specification {
 
     }
 
+    "Error message for missing fields must contain the names of the extra fields" in {
+      try{
+        matchJson(
+          Json.obj(
+            "a" -> 1,
+            "b_extrafield1" -> 3,
+            "c_extrafield2" -> 4
+          ),
+          Json.obj(
+            "a" -> 1
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          e.getMessage().contains("missing: b_extrafield1, c_extrafield2") must beTrue
+        }
+      }
+    }
+
+    "Error message for extra fields must contain the names of missing fields" in {
+      try{
+        matchJson(
+          Json.obj(
+            "a" -> 1
+          ),
+          Json.obj(
+            "a" -> 1,
+            "b_extrafield1" -> 3,
+            "c_extrafield2" -> 4
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          e.getMessage().contains("added: b_extrafield1, c_extrafield2") must beTrue
+        }
+      }
+    }
+
     "Error message must contain the path" in {
       try{
         matchJson(
