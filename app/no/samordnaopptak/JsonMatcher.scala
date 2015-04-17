@@ -131,21 +131,21 @@ object JsonMatcher{
       throw new Exception("Matcher contains both ___allowOthers and ___numElements")
 
     if (hasNumElements && getWantedNumObjectElements(matcher) != json.value.size)
-      matchJsonFailed(s"${pp(json)} contains wrong number of elements. Should contain ${getWantedNumObjectElements(matcher)}, contains ${json.value.size}.", throwException, path)
+      matchJsonFailed(s"${pp(matcher)} contains wrong number of elements. Should contain ${getWantedNumObjectElements(matcher)}, contains ${json.value.size}.", throwException, path)
 
     else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size>json.value.size) {
-      val keys1 = matcher.keys
-      val keys2 = json.keys
-      val diff = keys1 -- keys2
-
-      matchJsonFailed(s"In ${pp(json)}, the following fields are missing: ${diff.mkString(", ")}", throwException, path)
-
-    } else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size<json.value.size) {
-      val keys1 = matcher.keys
-      val keys2 = json.keys
+      val keys1 = json.keys
+      val keys2 = matcher.keys
       val diff = keys2 -- keys1
 
-      matchJsonFailed(s"In ${pp(json)}, the following fields are added: ${diff.mkString(", ")}\nMaybe you forgot to add an ___allowOtherFields value to the matcher.", throwException, path)
+      matchJsonFailed(s"In ${pp(matcher)}, the following fields are added: ${diff.mkString(", ")}\nMaybe you forgot to add an ___allowOtherFields value to the matcher.", throwException, path)
+
+    } else if (hasAllowOthers==false && hasNumElements==false && matcher.value.size<json.value.size) {
+      val keys1 = json.keys
+      val keys2 = matcher.keys
+      val diff = keys1 -- keys2
+
+      matchJsonFailed(s"In ${pp(matcher)}, the following fields are missing: ${diff.mkString(", ")}", throwException, path)
 
     } else
       matcher.fields.forall(_ match{
@@ -155,7 +155,7 @@ object JsonMatcher{
           else if (key == ___allowOtherJsonsKey)
             true
           else if (json.keys.contains(key)==false)
-            matchJsonFailed(s"""${pp(json)} doesn't contain the key "$key"""", throwException, path)
+            matchJsonFailed(s"""${pp(matcher)} doesn't contain the key "$key"""", throwException, path)
           else
             matchJson(value, json.\(key), throwException, ignoreArrayOrder, if (path=="") key else path+"."+key)
       })

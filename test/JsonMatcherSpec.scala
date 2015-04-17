@@ -469,12 +469,12 @@ class JsonMatcherSpec extends Specification {
       try{
         matchJson(
           Json.obj(
+            "a" -> 1
+          ),
+          Json.obj(
             "a" -> 1,
             "b_extrafield1" -> 3,
             "c_extrafield2" -> 4
-          ),
-          Json.obj(
-            "a" -> 1
           )
         )
         throw new Exception("somethingswrong")
@@ -489,12 +489,12 @@ class JsonMatcherSpec extends Specification {
       try{
         matchJson(
           Json.obj(
-            "a" -> 1
-          ),
-          Json.obj(
             "a" -> 1,
             "b_extrafield1" -> 3,
             "c_extrafield2" -> 4
+          ),
+          Json.obj(
+            "a" -> 1
           )
         )
         throw new Exception("somethingswrong")
