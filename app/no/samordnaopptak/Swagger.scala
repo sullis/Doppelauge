@@ -3,93 +3,50 @@ package no.samordnaopptak.apidoc
 import play.api.libs.json._
 
 import TestByAnnotation.Test
+import JsonUtil.Json
 
-
-/*
-{
-  "apiVersion":"1",
-  "swaggerVersion":"1.2",
-  "basePath":"http://localhost:3000/tilgangskontroll",
-  "resourcePath":"/acl",
-  "produces":["application/json"],
-  "apis":[
-    {
-      "path":"/api/v1",
-      "operations":[
-        {
-          "method":"GET",
-          "summary":"get version",
-          "notes":"",
-          "type":"Acl",
-          "nickname":"",
-          "parameters":[],
-          "responseMessages":[
-            {
-              "code":400,
-              "message":"Invalid username and password combination"
-            }
-          ]
-        }
-      ]
-    },
-
-    {
-      "path":"/api/v1/acl/{service}","operations":[
-        {
-          "method":"GET",
-          "summary":"get actions for all uses in a specific service",
-          "notes":"",
-          "items":{"$ref":"ActionList"},
-          "nickname":"",
-          "parameters":[
-            {
-              "name":"service",
-              "required":true,
-              "type":"string",
-              "paramType":"path"
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  "models":{
-    "Acl":{
-      "id":"Acl",
-      "properties":{
-        "version":{
-          "type":"List[string]"
-        }
-      }
-    },
-    "ActionList":{
-      "id":"ActionList",
-      "type":"array",
-      "properties":{
-        "version2":{
-          "type":"string"
-        }
-      }
-    }
-  }
-}
-
-
- Swagger JSON DOC: https://github.com/wordnik/swagger-core/wiki/Resource-Listing
- Litt mer info her: https://support.3scale.net/howtos/api-configuration/active_docs_spec
- Og i kildekoden til swagger-ui: github swagger-ui
- */
 
 
 object SwaggerUtil{
 
+  // https://github.com/swagger-api/swagger-core/wiki/Datatypes
+  def atomTypeToSwaggerType(atomType: String) = {
+    val (type_,format) = atomType match {
+      case "etc." => ("etc.","")
+      case "String" => ("string","")
+      case "Long" => ("integer","int64")
+      case "Boolean" => ("boolean","")
+      case "Integer" => ("integer","int32")
+      case "Int" => ("integer","int32")
+      case "Any" => ("any","")
+      case "Double" => ("number","double")
+      case "Float" => ("number","float")
+    }
+    if (format=="")
+      Json.obj(
+        "type" -> type_
+      )
+    else
+      Json.obj(
+        "type" -> type_,
+        "format" -> format
+      )
+  }
+
   val header = Json.obj(
-    "apiVersion" -> "1",
-    "swaggerVersion" -> "1.2",
-    //"basePath" -> "http://localhost:3000/tilgangskontroll",
-    "basePath" -> "",
-    "produces" -> Json.arr("application/json")
+    "swagger" -> "2.0",
+    //"host": "api.uber.com",
+    /*
+    "schemes" -> Json.arr(
+        "https"
+    ),
+     */
+    //"basePath" -> "",
+    "produces" -> Json.arr(
+      "application/json"
+    )
   )
+
 
   private def jsonWithoutUndefined(json: JsObject) = JsObject(
     json.value.toSeq.filter(_ match{
@@ -118,15 +75,15 @@ object SwaggerUtil{
   }
 
   @Test(code="""
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/happ") === "users"
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/")     === "users"
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla/{id}") === "users"
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users/habla")      === "users"
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users/{id}")       === "users"
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users/")           === "users"
-     self.getResourcePathGroup("/api/v1/", "/api/v1/users")            === "users"
+     self.getTag("/api/v1/", "/api/v1/users/habla/happ") === "users"
+     self.getTag("/api/v1/", "/api/v1/users/habla/")     === "users"
+     self.getTag("/api/v1/", "/api/v1/users/habla/{id}") === "users"
+     self.getTag("/api/v1/", "/api/v1/users/habla")      === "users"
+     self.getTag("/api/v1/", "/api/v1/users/{id}")       === "users"
+     self.getTag("/api/v1/", "/api/v1/users/")           === "users"
+     self.getTag("/api/v1/", "/api/v1/users")            === "users"
   """)
-  def getResourcePathGroup(basePath: String, uri: String): String = {
+  def getTag(basePath: String, uri: String): String = {
     val fullPathTail = uri.drop(basePath.length)
     val firstSlash = fullPathTail.indexOf('/')
     if (firstSlash == -1)
@@ -135,121 +92,178 @@ object SwaggerUtil{
       fullPathTail.take(firstSlash)
   }
 
-  def getApi(apidoc: JsObject): JsObject =
-    Json.obj(
-      "path" -> ("/../../.." + (apidoc \ "uri").as[String]),
-      "operations" -> Json.arr(
+  private def createTagName(tag: String) =
+    tag(0).toUpper + tag.tail
+
+  private def getType(json: Json, addDescription: Boolean = true) = {
+    val type_      = json("type").asString
+    val isAtomType = ApiDocUtil.atomTypes.contains(type_)
+    val isArray    = json("isArray").asBoolean
+
+    val type2 =
+      if (isAtomType)
+        atomTypeToSwaggerType(type_)
+      else
         Json.obj(
-          "method" -> apidoc \ "method",
-          "summary" -> apidoc \ "shortDescription",
-          "notes" -> apidoc \ "longDescription",
-          "type"  -> (if (apidoc.keys.contains("result")) (apidoc \ "result" \ "type") else "void"),
-          "nickname" -> "habla",
-          //"nickname" -> "", // ???
-          //"allowMultiple" -> true, // ???
-          "parameters" -> JsArray(
-            if (apidoc.keys.contains("parameters"))
-              (apidoc \ "parameters").asInstanceOf[JsObject].value.toSeq.map(_ match{
-                  case (name,attributes) => jsonWithoutUndefined(Json.obj(
-                    "name" -> name,
-                    "type" -> attributes \ "type",
-                    "description" -> attributes \ "comment",
-                    "paramType" -> attributes \ "paramType",
-                    "required" -> (attributes \ "required")
-                  ))
-              })
-            else
-              List()
-          ),
-          "responseMessages" -> apidoc \ "errors"
+          "$ref" -> ("#/definitions/" + type_)
+        )
+
+    val description =
+      if (json.hasKey("noComment") || !json.hasKey("comment") || addDescription==false)
+        Json.obj()
+      else
+        Json.obj(
+          "description" -> json("comment").asString
+        )
+
+    if (isArray)
+      Json.obj(
+        "type" -> "array",
+        "items" -> type2
+      ) ++ description
+    else
+      type2 ++ description
+  }
+
+  private def getResponseErrors(errors: Json) = {
+    //println("errors: "+errors)
+    val code = errors("code").asNumber.toString
+    val message = errors("message").asString
+    Json.obj(
+      code -> Json.obj(
+        "description" -> message
+      )
+    )
+  }
+
+  private def getResult(result: Json) =
+    Json.obj(
+      "200" -> (
+        Json.obj(
+          "description" -> result("comment").asString,
+          "schema" -> getType(result, addDescription=false)
         )
       )
     )
 
-  def getModels(datatypes: JsObject): JsObject =
-    Json.obj(
-      "models" -> JsObject(
-        datatypes.value.toSeq.map(_ match{
-          case (name, attributes) => name -> Json.obj(
-            "id" -> name,
-            "properties" -> JsObject(
-              attributes.asInstanceOf[JsObject].value.toSeq.map(_ match{
-                case (name, attributes) => name -> jsonWithoutUndefined(
-                  if ((attributes \ "isArray").asInstanceOf[JsBoolean].value)
-                    Json.obj(
-                      "type" -> "array",
-                      "items" -> Json.obj(
-                        "$ref" -> attributes \ "type"
-                      ),
-                      "description" -> attributes \ "comment",
-                      "required" -> true
-                    )
-                  else
-                    Json.obj(
-                      "type" -> attributes \ "type",
-                      "description" -> attributes \ "comment",
-                      "required" -> true
-                    )
-                )
-              })
-            )
+  private def getResponses(apidoc: Json): JsObject = {
+    val errorAsJson =
+      if (apidoc.hasKey("errors"))
+        JsonUtil.flattenJsObjects(
+          apidoc("errors").asList.map( error =>
+            getResponseErrors(error)
           )
-        })
+        )
+      else
+        Json.obj()
+
+    val resultAsJson =
+      if (apidoc.hasKey("result"))
+        getResult(apidoc("result"))
+      else
+        Json.obj()
+
+    errorAsJson ++ resultAsJson
+  }
+
+  def getApi(basePath: String, apidoc: Json): JsObject = {
+    val method = apidoc("method").asString.toLowerCase
+    Json.obj(
+      method -> Json.obj(
+        "summary" -> apidoc("shortDescription").asString,
+        "description" -> apidoc("longDescription").asString,
+        "parameters" -> JsArray(
+          if (apidoc.hasKey("parameters"))
+            (apidoc("parameters").asMap.map {
+              case (name: String, attributes: Json) => jsonWithoutUndefined(
+                Json.obj(
+                  "name" -> name,
+                  "in" -> attributes("paramType").asString,
+                  "required" -> attributes("required").asBoolean,
+                  "description" -> (if (attributes.hasKey("noComment")) "" else attributes("comment").asString),
+                  "schema" -> getType(attributes, addDescription=false)
+                )
+              )
+            }).toList
+          else
+            List()
+        ),
+        "tags" -> Json.arr(createTagName(getTag(basePath, apidoc("uri").asString))),
+        "responses" -> getResponses(apidoc)
       )
     )
+  }
 
+  private def getDefinition(dataType: Json): JsObject =
+    JsObject(
+      dataType.asMap.map(_ match {
+        case (name: String, attributes: Json) => name -> Json.obj(
+          "properties" -> JsObject(
+            attributes.asMap.map(_ match {
+              case (name, attributes) => name -> jsonWithoutUndefined(
+                getType(attributes)
+              )
+            }).toList
+          )
+        )
+      }).toList
+    )
+
+  private def getDefinitions(dataTypes: List[Json]): JsObject =
+    JsonUtil.flattenJsObjects(dataTypes.map(getDefinition(_)))
 
   @Test(code="""
-      self.allResourcePathGroups("/api/v1/", test.lib.ApiDocSamples.allUsers) === Set("users")
-      self.allResourcePathGroups("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
-      self.allResourcePathGroups("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "users")
+      self.allTags("/api/v1/", test.lib.ApiDocSamples.allUsers) === Set("users")
+      self.allTags("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
+      self.allTags("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "users")
   """)
-  def allResourcePathGroups(basePath: String, apidocs: List[String]): Set[String] = {
+  def allTags(basePath: String, apidocs: List[String]): Set[String] = {
     val ret =apidocs.map(
       ApiDocUtil.getJson(_)
     ).map(jsonApiDoc =>
       (jsonApiDoc \ "uri").as[String]
     ).map(
-      getResourcePathGroup(basePath, _)
+      getTag(basePath, _)
     ).toSet
     ret
   }
 
-  private def flattenJsObjects(objs: List[JsObject]): JsObject =
-    if (objs.isEmpty)
-      Json.obj()
-    else
-      objs.head ++ flattenJsObjects(objs.tail)
-
-  private def validateUniqueDataTypes(dataTypes: List[JsObject]) = {
-    val names = dataTypes.flatMap(_.keys)
+  private def validateUniqueDataTypes(dataTypes: List[Json]) = {
+    val names = dataTypes.flatMap(_.asMap.keys)
     if (names.size != names.distinct.size)
       throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
   }
 
+
   // {User -> {id -> {type -> String}}} -> Set(String)
-  private def getUsedDatatypesInDatatypes(dataTypes: List[JsObject]): Set[String] = {
+  private def getUsedDataTypesInDataType(dataType: Json): Set[String] = {
+    val dataTypeValues = dataType.asMap.values
+    val attributeValues = dataTypeValues.flatMap(_.asMap.values)
+
+    attributeValues.map(_("type").asString).toSet
+  }
+
+  private def getUsedDatatypesInDatatypes(dataTypes: List[Json]): Set[String] = {
     if (dataTypes.isEmpty)
       Set()
     else {
       val dataType = dataTypes.head
-      val dataTypeValues = dataType.values.map(_.as[JsObject]).flatMap(_.values)
-      val subTypes = dataTypeValues.map(o => (o \ "type")).map(_.as[String]).toSet
+      val subTypes = getUsedDataTypesInDataType(dataType)
       subTypes ++ getUsedDatatypesInDatatypes(dataTypes.tail)
     }
   }
 
-  private def getUsedDatatypesInJson(jsonApiDocs: List[JsObject]): Set[String] = {
+  private def getUsedDatatypesInJson(jsonApiDocs: List[Json]): Set[String] = {
     if (jsonApiDocs.isEmpty)
       Set()
     else {
       val json = jsonApiDocs.head
-      val parameterTypes = if (json.keys.contains("parameters"))
-                              (json\"parameters").as[JsObject].values.map(o => (o\"type").as[String]).toSet
+      val parameterTypes = if (json.hasKey("parameters"))
+                              json("parameters").asMap.values.map(_("type").asString).toSet
                            else
                               Set()
-      val returnType = if (json.keys.contains("result"))
-                          Set((json\"result"\"type").as[String])
+      val returnType = if (json.hasKey("result"))
+                         Set(json("result")("type").asString)
                        else
                          Set()
 
@@ -257,60 +271,52 @@ object SwaggerUtil{
     }
   }
 
-  private def validateThatAllDatatypesAreDefined(resourcePathGroup: String, jsonApiDocs: List[JsObject], dataTypes: List[JsObject]): Unit = {
-    val definedTypes: Set[String] = dataTypes.flatMap(_.keys).toSet ++ ApiDocUtil.atomTypes
+  private def validateThatAllDatatypesAreDefined(tag: String, jsonApiDocs: List[Json], dataTypes: List[Json]): Unit = {
+    val definedTypes: Set[String] = dataTypes.flatMap(_.asMap.keys).toSet ++ ApiDocUtil.atomTypes
     val usedTypes: Set[String]    = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
     val undefinedTypes            = usedTypes -- definedTypes
 
     if (undefinedTypes.size>0)
-      throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$resourcePathGroup": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
+      throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$tag": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
   }
 
-  def getJson(basePath: String, apidocs: List[String], resourcePathGroup: String): JsObject = {
-    val jsonApiDocs = apidocs.map(
-      ApiDocUtil.getJson(_)
-    ).filter(jsonApiDoc =>
-      getResourcePathGroup(basePath, (jsonApiDoc \ "uri").as[String]) == resourcePathGroup
-    )
+  def getEndpoint(basePath: String, path: String, apidocs: List[Json]): JsObject = {
+    val relevantApiDocs = apidocs.filter(_("uri").asString==path)
 
-    val dataTypes = apidocs.map(ApiDocUtil.getDataTypes(_))
-    validateUniqueDataTypes(dataTypes)
-
-    validateThatAllDatatypesAreDefined(resourcePathGroup, jsonApiDocs, dataTypes)
-
-    header ++
-    Json.obj(
-      "resourcePath" -> s"/$resourcePathGroup",
-      "apis"         -> JsArray(jsonApiDocs.map(getApi(_)))
-    ) ++
-    getModels(flattenJsObjects(dataTypes))
+    JsonUtil.flattenJsObjects(relevantApiDocs.map(getApi(basePath, _)))
   }
 
-  def getJson(basePath: String, apidoc: String): JsObject = {
-    val jsonApiDoc = ApiDocUtil.getJson(apidoc)
-    val resourcePathGroup = getResourcePathGroup(basePath, (jsonApiDoc \ "uri").as[String])
-    getJson(basePath, List(apidoc), resourcePathGroup)
-  }
+  private def getAllPaths(apidocs: List[Json]): Set[String] =
+    apidocs.map(_("uri").asString).toSet
 
   def getMain(basePath: String, apidocs: List[String]): JsObject = {
 
+    val dataTypes = apidocs.map(apidoc => JsonUtil.jsValue(ApiDocUtil.getDataTypes(apidoc)))
+    validateUniqueDataTypes(dataTypes)
+
+    val tags = allTags(basePath, apidocs).toList.sorted
+
+    val jsonApiDocs = apidocs.map(a => JsonUtil.jsValue(ApiDocUtil.getJson(a)))
+
+    validateThatAllDatatypesAreDefined(basePath, jsonApiDocs, dataTypes)
+
+    val allPaths = getAllPaths(jsonApiDocs)
+
+    val groupedJsonApiDocs = jsonApiDocs.groupBy(_("uri").asString)
+
+    val groupedJsonApiDocsAsJsValue = (groupedJsonApiDocs map {
+      case (key, jsonApiDoc) => Json.obj(
+        key -> getEndpoint(basePath, key, jsonApiDoc)
+      )
+    }).toList
+
+    //println("jsonapidocs: "+groupedJsonApiDocs)
+
     header ++
     Json.obj(
-      "info" -> Json.obj(
-        //"termsOfServiceUrl" : "http://helloreverb.com/terms/",
-        //"licenseUrl" : "http://www.apache.org/licenses/LICENSE-2.0.html",
-        //"contact" : "apiteam@wordnik.com",
-        "title" -> "Studieadmin",
-        //"license" : "",
-        "description" -> "This is the studieadmin API"
-      ),
-      "apis" -> JsArray(
-        allResourcePathGroups(basePath, apidocs).toList.sorted.map(resourcePathGroup => {
-          Json.obj(
-            "path" -> s"/$resourcePathGroup",
-            "description" -> s"Operations on $resourcePathGroup")
-        })
-      )
+      "resourcePath" -> basePath,
+      "paths" -> JsonUtil.flattenJsObjects(groupedJsonApiDocsAsJsValue),
+      "definitions" -> getDefinitions(dataTypes)
     )
   }
 }

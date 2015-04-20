@@ -130,6 +130,16 @@ object ApiDocSamples{
       String
   """
 
+  val docWithArrayResult = """
+    GET /api/v1/usernames
+
+    DESCRIPTION
+      Get Usernames
+
+    RESULT
+      Array String
+  """
+
   val docWithExtraDataType = """
     GET /api/v1/acl
 
@@ -262,7 +272,7 @@ object ApiDocSamples{
       unrelated: String
   """
 
-  val allUsers = List(doc1,doc2,doc3,doc3b,doc6,doc6b)
+  val allUsers = List(doc1,doc2,doc3,doc3b,doc6,doc6b,docWithArrayResult)
   val allAcls = List(doc4,doc5)
   val all = allUsers ++ allAcls
 
@@ -447,6 +457,7 @@ class ApiDocSpec extends Specification {
           ),
           "result" -> Json.obj(
             "type" -> "User",
+            "isArray" -> false,
             "comment" -> "Result comment"
           )
         ),

@@ -8,224 +8,300 @@ import no.samordnaopptak.apidoc.TestByAnnotation
 import no.samordnaopptak.apidoc.{SwaggerUtil}
 import no.samordnaopptak.apidoc.JsonMatcher._
 
+object SwaggerTestData{
+
+  val apidocstrings = List(
+    """
+    GET /api/v1/users
+
+    DESCRIPTION
+      Get Users summary
+      Get Users description
+
+    ERRORS
+      400 Something went wrong
+
+    RESULT
+      Array User <- An array of users
+
+    User: !
+      id: Long
+      id2: Int
+      names: Array String
+      extra: Extra
+
+    Extra: !
+      extrastring: String <- Extra type
+    """,
+
+
+
+    """
+    POST /api/v1/users
+
+    DESCRIPTION
+      Create User summary
+      Create User description
+
+    ERRORS
+      400 Something went wrong
+
+    RESULT
+      User <- A User from post
+
+    PARAMETERS
+      body: User
+    """,
+
+
+
+    """
+    GET /api/v1/users2/{id}
+
+    DESCRIPTION
+      Get User summary
+      Get User description
+
+    ERRORS
+      400 Something went wrong
+
+    RESULT
+      String <- A User from get
+
+    PARAMETERS
+      id: String
+    """,
+
+
+
+    """
+    GET /api/v1/cats
+
+    DESCRIPTION
+      Get Cats
+      Get Cats description
+
+    RESULT
+      Array String <- Cats
+    """
+
+  )
+
+
+
+  val jsonstring = """
+{
+  "swagger" : "2.0",
+  "resourcePath":"/api/v1/",
+  "produces":["application/json"],
+
+  "paths": {
+    "/api/v1/users": {
+        "get": {
+              "summary":"Get Users summary",
+              "description": "Get Users description",
+              "parameters": [],
+              "tags": [
+                  "Users"
+              ],
+              "responses": {
+                 "400" : {
+                    "description" : "Something went wrong"
+                 },
+                 "200": {
+                    "description": "An array of users",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                 }
+              }
+         },
+        "post": {
+              "summary":"Create User summary",
+              "description": "Create User description",
+              "parameters": [
+                {
+                  "in" : "body",
+                  "name" : "body",
+                  "required" : true,
+                  "description" : "",
+                  "schema": {
+                      "$ref": "#/definitions/User"
+                  }
+                }
+              ],
+              "tags": [
+                  "Users"
+              ],
+              "responses": {
+                 "400" : {
+                    "description" : "Something went wrong"
+                 },
+                 "200": {
+                    "description": "A User from post",
+                    "schema": {
+                       "$ref": "#/definitions/User"
+                    }
+                 }
+              }
+         }
+     },
+
+    "/api/v1/users2/{id}": {
+        "get" : {
+              "summary":"Get User summary",
+              "description": "Get User description",
+              "parameters": [
+                {
+                  "name" : "id",
+                  "required" : true,
+                  "description" : "",
+                  "schema" : {
+                    "type" : "string"
+                  },
+                  "in" : "path"
+                }
+              ],
+              "tags": [
+                  "Users2"
+              ],
+              "responses": {
+                 "400" : {
+                    "description" : "Something went wrong"
+                 },
+                 "200": {
+                     "description": "A User from get",
+                     "schema": {
+                       "type": "string"
+                     }
+                 }
+              }
+         }
+    },
+
+    "/api/v1/cats": {
+        "get" : {
+              "summary": "Get Cats",
+              "description": "Get Cats description",
+              "parameters": [ ],
+              "tags": [
+                  "Cats"
+              ],
+              "responses": {
+                 "200": {
+                    "description": "Cats",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                 }
+              }
+         }
+    }
+  },
+
+  "definitions": {
+        "User": {
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "format": "int64"
+                }, 
+                "id2": {
+                    "type": "integer",
+                    "format": "int32"
+                },
+               "names": {
+                    "type": "array",
+                    "items": {
+                       "type": "string"
+                    }
+                },
+                "extra": {
+                    "$ref": "#/definitions/Extra"
+                }
+            }
+        },
+        "Extra": {
+            "properties": {
+               "extrastring": {
+                  "type": "string",
+                  "description": "Extra type"
+               }
+            }
+        }
+  }
+}
+"""
+
+}
+
 
 class SwaggerSpec extends Specification {
 
   "Swagger" should {
 
+    /*
     "pass the annotation tests" in { // First run the smallest unit tests.
       play.api.test.Helpers.running(FakeApplication()) {
         TestByAnnotation.TestObject(SwaggerUtil)
       }
       true
     }
+     */
 
+    "something" in {
+      //val a = no.samordnaopptak.apidoc.ApiDocUtil.getRaw(ApiDocSamples.docWithMissingDataTypes)
+      val a = no.samordnaopptak.apidoc.ApiDocUtil.getJson(ApiDocSamples.docWithArrayResult)
+      println("a: "+Json.prettyPrint(a))
 
-    "Get all /users Apis" in {
       matchJson(
+        a,
         Json.obj(
-          "models" -> Json.obj(
-            "Attributes" -> Json.obj(___numElements -> 2),
-            "User" -> Json.obj(___numElements -> 2)),
-          "resourcePath" -> "/users",
-          "apis" -> Json.arr(
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "GET",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users/{id}"),
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "GET",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users"),
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "PUT",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users/{id}"),
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "PUT",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users/{id}/hepp/{id2}"),
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "PATCH",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users/{id}"),
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "PATCH",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/users/{id}/hepp/{id2}")
-          ),
-          ___allowOtherFields
-        ),
-        play.api.test.Helpers.running(FakeApplication()) {
-          SwaggerUtil.getJson("/api/v1/", ApiDocSamples.all, "users")
-        }
+          "method" -> "GET",
+          "uri"    -> "/api/v1/usernames",
+          "uriParms" -> Json.arr(),
+          "shortDescription" -> "Get Usernames",
+          "longDescription" -> "",
+          "result" -> Json.obj(
+            "type" -> "String",
+            "comment" -> "",
+            "isArray" -> true
+          )
+        )
       )
+
+      true
     }
 
-    "Get all /acl Apis" in {
-      matchJson(
-        Json.obj(
-          "models" -> Json.obj(
-            "Attributes" -> Json.obj(___numElements -> 2),
-            "User" -> Json.obj(___numElements -> 2)),
-          "resourcePath" -> "/acl",
-          "apis" -> Json.arr(
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "GET",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/acl"),
-            Json.obj(
-              "operations" -> Json.arr(Json.obj(
-                "method" -> "GET",
-                ___numElements -> 7)),
-              "path" -> "/../../../api/v1/acl/dasacls")
-          ),
-          ___allowOtherFields
-        ),
-        play.api.test.Helpers.running(FakeApplication()) {
-          SwaggerUtil.getJson("/api/v1/", ApiDocSamples.all, "acl")
-        }
-      )
-    }
+    "Produce the main thing" in {
+      val produced = SwaggerUtil.getMain("/api/v1/", SwaggerTestData.apidocstrings)
+      val correct = Json.parse(SwaggerTestData.jsonstring)
 
+      /*
+      println("groups: "+SwaggerUtil.allTags("/api/v1/", SwaggerTestData.apidocstrings))
+      //println("getjson: "+SwaggerUtil.getJson("/api/v1/", "/api/v1/users", no.samordnaopptak.apidoc.controllers.thething.apidocstrings))
+      println()
+       */
 
-    "Get main json object (The Swagger menu)" in {
-      matchJson(
-        Json.obj(
-          "info" -> Json.obj(___allowOtherFields),
-          "apis" -> Json.arr(
-            Json.obj(
-              "path" -> "/acl",
-              "description" -> "Operations on acl"),
-            Json.obj(
-              "path" -> "/users",
-              "description" -> "Operations on users")
-          ),
-          ___allowOtherFields
-        ),
-        play.api.test.Helpers.running(FakeApplication()) {
-          SwaggerUtil.getMain("/api/v1/", ApiDocSamples.all)
-        }
-      )
+      matchJson(produced, correct)
     }
 
     "validate that a datatype is only defined one place" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        SwaggerUtil.getJson("/api/v1/", ApiDocSamples.allAndExtraDataType, "users") should throwA(new Exception("One or more ApiDoc datatypes defined more than once: List(Attributes)"))
+        SwaggerUtil.getMain("/api/v1/", ApiDocSamples.allAndExtraDataType) should throwA(new Exception("One or more ApiDoc datatypes defined more than once: List(Attributes)"))
       }
     }
 
     "validate that all used datatype are defined" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        SwaggerUtil.getJson("/api/v1/", ApiDocSamples.allAndMissingDataTypes, "acl") should throwA(new Exception("""2 ApiDoc datatype(s) was/were undefined while evaluating "acl": ("StringSalabim", "StringSalami")"""))
+        SwaggerUtil.getMain("/api/v1/", ApiDocSamples.allAndMissingDataTypes) should throwA(new Exception("""2 ApiDoc datatype(s) was/were undefined while evaluating "/api/v1/": ("StringSalabim", "StringSalami")"""))
       }
-    }
-
-    "Create Swagger apidoc from Apidoc apidoc (check all fields)" in {
-      matchJson(
-        Json.parse(
-"""
-{
-  "apiVersion":"1",
-  "swaggerVersion":"1.2",
-  "basePath":"",
-  "resourcePath" : "/users",
-
-  "produces":["application/json"],
-
-   "apis" : [ {
-     "path" : "/../../../api/v1/users/{id}",
-     "operations" : [ {
-       "method" : "GET",
-       "summary" : "Get all users",
-       "notes" : "More detailed description of \"Get all users\"",
-       "type" : "User",
-       "nickname" : "habla",
-       "parameters" : [ {
-         "name" : "id",
-         "required" : true,
-         "type" : "String",
-         "description" : "ID of the user",
-         "paramType" : "path"
-       }, {
-         "name" : "id2",
-         "paramType" : "header",
-         "type" : "String",
-         "required" : true
-       }, {
-         "name" : "q",
-         "paramType" : "query",
-         "type" : "String",
-         "required" : false
-       }, {
-         "name" : "body",
-         "required" : true,
-         "type" : "User",
-         "paramType" : "body"
-       } ],
-       "responseMessages" : [ {
-         "code" : 400,
-         "message" : "What?"
-       }, {
-         "code" : 401,
-         "message" : "Syntax Error"
-       } ]
-     } ]
-   } ],
-
-  "models":{
-   "User" : {
-     "id" : "User",
-     "properties" : {
-       "id" : {
-         "type" : "String",
-         "description" : "The ID of the user",
-         "required" : true
-       },
-       "attributes" : {
-         "type" : "array",
-         "items" : {
-           "$ref" : "Attributes"
-         },
-         "required" : true
-       },
-       "something" : {
-         "type" : "String",
-         "required" : true
-       }
-     }
-   },
-   "Attributes" : {
-     "id" : "Attributes",
-     "properties" : {
-       "firstAndLast" : {
-         "type" : "array",
-         "items" : {
-           "$ref" : "String"
-         },
-         "required" : true
-       },
-       "..." : {
-         "type" : "etc.",
-         "required" : true
-       }
-     }
-   }
- }
-}
-"""
-        ),
-        play.api.test.Helpers.running(FakeApplication()) {
-          SwaggerUtil.getJson("/api/v1/", ApiDocSamples.doc1)
-        }
-      )
     }
 
   }

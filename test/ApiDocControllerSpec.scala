@@ -72,7 +72,9 @@ class ApiDocControllerSpec extends Specification {
     mustNotContain: List[String] = List()
   ){
     val futureResult = getFutureResult(result)
-    contentType(futureResult) must beSome.which(_ == "application/json")
+
+    if (contentType(futureResult) != Some("application/json"))
+      throw new Exception("contentType(futureResult) is not Some(\"application/json\"), but "+contentType(futureResult))
 
     val json: JsValue = contentAsJson(futureResult)
     matchJson(matcher, json)
@@ -177,12 +179,8 @@ class ApiDocControllerSpec extends Specification {
         checkResult(
           controller.get(),
           Json.obj(
-            "info" -> Json.obj(___allowOtherFields),
-            "apis" -> Json.arr(
-              Json.obj(
-                "path" -> "/api",
-                "description" -> "Operations on api"),
-              ___allowOtherValues
+            "paths" -> Json.obj(
+              ___allowOtherFields
             ),
             ___allowOtherFields
           )
@@ -190,32 +188,6 @@ class ApiDocControllerSpec extends Specification {
       }
     }
 
-    "return users api doc" in {
-      inCleanEnvironment() {
-
-        val controller = new ApiDocController
-
-        checkResult(
-          controller.getPath("api"),
-          Json.obj(
-            "models" -> Json.obj(___allowOtherFields),
-            "resourcePath" -> "/api",
-            "apis" -> Json.arr(
-              Json.obj(
-                "operations" -> Json.arr(Json.obj(
-                  "method" -> "GET",
-                  ___numElements -> 7)),
-                "path" -> "/../../../api/v1/api-docs"),
-              Json.obj(
-                "operations" -> Json.arr(Json.obj(
-                  "method" -> "GET",
-                  ___numElements -> 7)),
-                "path" -> "/../../../api/v1/api-docs/{path}")
-            ),
-            ___allowOtherFields
-          ))
-      }
-    }
   }
 }
 

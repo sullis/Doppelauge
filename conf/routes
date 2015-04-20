@@ -6,7 +6,6 @@
 # apidoc
 
 GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.controllers.ApiDocController.get()
-GET     /api/v1/api-docs/:path                  no.samordnaopptak.apidoc.controllers.ApiDocController.getPath(path: String)
 
 
 

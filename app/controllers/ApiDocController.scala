@@ -126,40 +126,21 @@ class ApiDocController extends Controller {
   def get() = {
     Ok(SwaggerUtil.getMain("/", apiDocsFromAnnotations))
   }
-
-  @ApiDoc(doc="""
-    GET /api/v1/api-docs/{path}
-
-    DESCRIPTION
-      Get swagger documentation json for a resource path
-      You can add more detailed information here.
-
-    ERRORS
-      404 Path not found
-
-    PARAMETERS
-      path: String
-  """)
-  def getPath(path: String) = {
-    Ok(SwaggerUtil.getJson("/", apiDocsFromAnnotations, path))
-  }
 }
+
 
 object ApiDocController extends Controller {
   val controller = new ApiDocController
 
   def get()  = Action { request =>
     controller.get()
-  }
 
-  def getPath(path: String)  = Action { request =>
-    controller.getPath(path)
+    // used for testing:
+    //Ok(Json.parse(test.lib.SwaggerTestData.jsonstring))
   }
 
   def validate(basePath: String) = {
     val annotations = controller.apiDocsFromAnnotations
-    SwaggerUtil.allResourcePathGroups(basePath, annotations).foreach(
-      SwaggerUtil.getJson(basePath, annotations, _)
-    )
+    SwaggerUtil.getMain("/", annotations)
   }
 }

@@ -337,13 +337,15 @@ object ApiDocUtil{
           throw new Exception(s"Malformed RESULT elements (more or less than 1): $elements.")
 
         val splitted = elements(0).trim.split("<-").map(_.trim)
-        val type_ = splitted(0)
+
+        val typeInfo = TypeInfo("", splitted(0))
         val comment = if (splitted.length==1) "" else splitted(1)
 
         Json.obj(
           "result" -> Json.obj(
-            "type" -> type_,
-            "comment" -> comment
+            "type" -> typeInfo.type_,
+            "comment" -> comment,
+            "isArray" -> typeInfo.isArray
           )
         )
       }
