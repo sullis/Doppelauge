@@ -155,7 +155,7 @@ object JsonMatcher{
           else if (key == ___allowOtherJsonsKey)
             true
           else if (json.keys.contains(key)==false)
-            matchJsonFailed(s"""${pp(matcher)} doesn't contain the key "$key"""", throwException, path)
+            matchJsonFailed(s"""${pp(json)} doesn't contain the key "$key", which is defined in the matcher: ${pp(matcher)}""", throwException, path)
           else
             matchJson(value, json.\(key), throwException, ignoreArrayOrder, if (path=="") key else path+"."+key)
       })
