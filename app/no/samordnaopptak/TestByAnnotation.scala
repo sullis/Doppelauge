@@ -42,8 +42,24 @@ object TestObject{
     } else
       throw new Exception(createExceptionString(linenum, methodName, s""""$line" does not contain "===" or "=/=")"""))
 
-  def createAssertionCodeLine(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) =    
-    s"""if (!($a $comparitor $b)) throw new Exception("\"\"""" +createExceptionString(linenum, methodName, s"""Assertion failed for "$line\"\"")""")
+  def createAssertionCodeLine(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) =
+  s"""
+  {
+    val TestByAnnotation___comp_value_a = $a
+    val TestByAnnotation___comp_value_b = $b
+    if (!(TestByAnnotation___comp_value_a $comparitor TestByAnnotation___comp_value_b))
+       throw new Exception(s"\"\"\n
+  """ +
+  createExceptionString(
+    linenum,
+    methodName,
+    s"""Assertion failed for the assertion "$line\".\n\n""" +
+      "This is not correct: $TestByAnnotation___comp_value_a " +
+      comparitor +
+      " $TestByAnnotation___comp_value_b \n\n "
+  ) +
+  "\"\"\")}"
+
 
   def printTest(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) =
     println(Console.GREEN+s"TestByAnnotitation '$methodName'/#${linenum}: "+Console.RESET + a + Console.GREEN + " " + (if (comparitor=="==") "===" else "=/=") + Console.RESET + " " + b)
