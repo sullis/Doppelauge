@@ -4,6 +4,7 @@ import org.specs2.mutable._
 import play.api.test._
 import play.api.libs.json._
 
+import no.samordnaopptak.apidoc.TestByAnnotation
 import no.samordnaopptak.apidoc.{ApiDocUtil, JsonMatcher}
 
 import com.fasterxml.jackson.annotation._
@@ -289,18 +290,18 @@ class ApiDocSpec extends Specification {
 
   "ApiDoc" should {
 
+    "pass the annotation tests" in { // First run the smallest unit tests.
+      play.api.test.Helpers.running(FakeApplication()) {
+        TestByAnnotation.TestObject(ApiDocUtil)
+      }
+      true
+    }
+
     "Get Class objects from inner classes" in {
       play.api.test.Helpers.running(FakeApplication()) {
         ApiDocUtil.loadInnerClass("test.lib.ApiDocSpec.Inner1.Inner2")
         true
       }
-    }
-
-    "Check that the findUriParm function works" in {
-      ApiDocUtil.findUriParm("/api/v1/acl/{service}") must equalTo(List("service"))
-      ApiDocUtil.findUriParm("/api/v1/acl/{service}/{hest}") must equalTo(List("service", "hest"))
-      ApiDocUtil.findUriParm("/api/v1/acl/")          must equalTo(List())
-      ApiDocUtil.findUriParm("/api/v1/acl")           must equalTo(List())
     }
 
     "Validate data type fields, with no added or removed fields" in {

@@ -246,14 +246,12 @@ class SwaggerSpec extends Specification {
 
   "Swagger" should {
 
-    /*
     "pass the annotation tests" in { // First run the smallest unit tests.
       play.api.test.Helpers.running(FakeApplication()) {
         TestByAnnotation.TestObject(SwaggerUtil)
       }
       true
     }
-     */
 
     "something" in {
       //val a = no.samordnaopptak.apidoc.ApiDocUtil.getRaw(ApiDocSamples.docWithMissingDataTypes)

@@ -7,6 +7,9 @@ import play.api.Play.current
 import play.api.libs.json._
 import com.fasterxml.jackson.annotation.JsonIgnore
 
+import TestByAnnotation.Test
+
+
 object ApiDocUtil{
 
   val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float")
@@ -70,10 +73,12 @@ object ApiDocUtil{
     loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className.split('.').toList)
 
 
-  // "/api/v1/acl/{service}"        -> List("service")
-  // "/api/v1/acl/{service}/{hest}" -> List("service", "hest")
-  // "/api/v1/acl/",                -> List()
-  // "/api/v1/acl",                 -> List()
+  @Test(code="""
+    self.findUriParm("/api/v1/acl/{service}")        === List("service")
+    self.findUriParm("/api/v1/acl/{service}/{hest}") === List("service", "hest")
+    self.findUriParm("/api/v1/acl/")                 === List()
+    self.findUriParm("/api/v1/acl")                  === List()
+  """)
   def findUriParm(autoUri: String): List[String] =
     if (autoUri=="")
       List()
@@ -82,7 +87,6 @@ object ApiDocUtil{
       autoUri.substring(1, next) :: findUriParm(autoUri.drop(next+1))
     } else
       findUriParm(autoUri.drop(1))
-
 
 
   def validateDataTypeFields(className: String, dataTypeName: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {

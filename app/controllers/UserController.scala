@@ -20,8 +20,8 @@ case class UserData(firstName: String, lastName: String){
 
 case class User(id: String, data: UserData){
   def toJson = Json.obj(
-      "id" -> id,
-      "data" -> data.toJson
+    "id" -> id,
+    "data" -> data.toJson
   )
 }
 

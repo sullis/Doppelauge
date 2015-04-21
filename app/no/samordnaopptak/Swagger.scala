@@ -213,18 +213,20 @@ object SwaggerUtil{
     JsonUtil.flattenJsObjects(dataTypes.map(getDefinition(_)))
 
   @Test(code="""
-      self.allTags("/api/v1/", test.lib.ApiDocSamples.allUsers) === Set("users")
+      self.allTags("/api/v1/", List()) === Set()
+      self.allTags("/api/v1/", test.lib.ApiDocSamples.allUsers) === Set("users", "usernames")
       self.allTags("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
-      self.allTags("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "users")
+      self.allTags("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "usernames", "users")
   """)
   def allTags(basePath: String, apidocs: List[String]): Set[String] = {
-    val ret =apidocs.map(
+    val ret = apidocs.map(
       ApiDocUtil.getJson(_)
     ).map(jsonApiDoc =>
       (jsonApiDoc \ "uri").as[String]
     ).map(
       getTag(basePath, _)
     ).toSet
+
     ret
   }
 
