@@ -48,15 +48,16 @@ object TestObject{
     val TestByAnnotation___comp_value_a = $a
     val TestByAnnotation___comp_value_b = $b
     if (!(TestByAnnotation___comp_value_a $comparitor TestByAnnotation___comp_value_b))
-       throw new Exception(s"\"\"\n
+       throw new Exception("\"\"\n
   """ +
   createExceptionString(
     linenum,
     methodName,
     s"""Assertion failed for the assertion "$line\".\n\n""" +
-      "This is not correct: $TestByAnnotation___comp_value_a " +
+      "This is not correct: " +
+      "\"\"\" + TestByAnnotation___comp_value_a + \"\"\" " +
       comparitor +
-      " $TestByAnnotation___comp_value_b \n\n "
+      " \"\"\" + TestByAnnotation___comp_value_b + \"\"\" \n\n "
   ) +
   "\"\"\")}"
 
@@ -76,6 +77,13 @@ object TestObject{
       } catch {
         case e: Throwable => throw new Exception(createExceptionString(linenum, methodName, s""""$line" failed while parsing "$assertionCodeLine": ${e.getMessage()}""""))
       }
+      /*
+      println()
+      println("a: "+a)
+      println("assertionCodeLine: "+assertionCodeLine)
+      println("tree: "+tree)
+      println()
+       */
       tb.eval(
         Block(
           List(ValDef(Modifiers(), newTermName("self"), TypeTree(), reify{o.asInstanceOf[T]}.tree)),

@@ -8,7 +8,7 @@ import org.specs2.mutable._
 object ObjectToTestWith {
   
   @Test(code="""
-     self.test("a") =/= "a22"
+     self.test("a")  =/= "a2_"
      self.test("a")  === "a_"
      self.test("a2") === "a2_"
   """)
@@ -24,6 +24,14 @@ object ObjectToTestWith {
   def test2(input: String, b: List[Int]): List[String] =
     List("b")
 
+  // Check that dollars can be used
+  @Test(code="""
+     self.test3("$a") =/= "$ab"
+  """)
+  def test3(input: String): String = {
+    assert(input=="$a")
+    input
+  }
 
   def notest() = None
 }
