@@ -10,9 +10,20 @@ import play.api.Play.current
 
 import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
 
-case class User(id: String, data: UserData)
-case class UserData(firstName: String, lastName: String)
 
+case class UserData(firstName: String, lastName: String){
+  def toJson = Json.obj(
+    "firstName" -> firstName,
+    "lastName" -> lastName
+  )
+}
+
+case class User(id: String, data: UserData){
+  def toJson = Json.obj(
+      "id" -> id,
+      "data" -> data.toJson
+  )
+}
 
 object UserController extends Controller {
   val controller = new ApiDocController
@@ -50,13 +61,7 @@ object UserController extends Controller {
       lastName: String
   """)
   def get()  = Action { request =>
-    Ok(Json.obj(
-      "id" -> user.id,
-      "data" -> Json.obj(
-        "firstName" -> user.data.firstName,
-        "lastName" -> user.data.lastName
-      )
-    ))
+    Ok(user.toJson)
   }
 
   @ApiDoc(doc="""
@@ -74,12 +79,6 @@ object UserController extends Controller {
       User
   """)
   def get2()  = Action { request =>
-    Ok(Json.obj(
-      "id" -> user.id,
-      "data" -> Json.obj(
-        "firstName" -> user.data.firstName,
-        "lastName" -> user.data.lastName
-      )
-    ))
+    Ok(user.toJson)
   }
 }

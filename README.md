@@ -245,7 +245,7 @@ Notes
 * Scala classes must be specified with full path. (I.e. you have to write "controllers.User", not "User".)
   The only exception is if the classes is in the "models" package. (I.e. it is possible to write "User" instead of "models.User").
 
-* In order to run validation checks on the api docs, it is necessary to call `ApiDocController.validate("/api/v1/")`.
+* In order to run validation checks on the api docs, it is necessary to call `ApiDocController.validate("/")`.
   If using specs2, it might be a good idea to put the following code (or something similar) into tests/ApiDocControllerSpec.scala:
 
 `
@@ -259,7 +259,7 @@ Notes
 
     class ApiDocControllerSpec extends Specification {
       "Validate swagger api docs" in {
-          controllers.ApiDocController.validate("/api/v1/")
+          controllers.ApiDocController.validate("/")
       }
     }
 `
