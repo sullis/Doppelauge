@@ -144,34 +144,78 @@ object ApiDocUtil{
   private def getIndentLength(line: String) =
     line.prefixLength(_==' ')
 
+  @Test(code="""
+    self.getEnumArgs("String") === (List(),0)
+    self.getEnumArgs("String(query)") === (List(),0)
+    self.getEnumArgs("Array String(query)") === (List(),0)
+    self.getEnumArgs("Enum() String(query)") === (List(),6)
+    self.getEnumArgs("Enum(1,2,3) String") === (List("1","2","3"),11)
+    self.getEnumArgs("Enum(2,65,9) Int(query)") === (List("2","65","9"), 12)
+
+    // Type parsing:
+    self.TypeInfo("", "Array String (header)").type_ === "String"
+    self.TypeInfo("", "Array String (header)").isArray === true
+    self.TypeInfo("", "Array String (header)").paramType === "header"
+
+    self.TypeInfo("", "Enum(a,b) String (header)").type_ === "String"
+    self.TypeInfo("", "Enum(a,b) String (header)").isEnum === true
+    self.TypeInfo("", "Enum(a,b) String (header)").paramType === "header"
+
+    self.TypeInfo("", "Enum(2,65,9) Int(query)").type_ === "Int"
+    self.TypeInfo("", "Enum(2,65,9) Int(query)").optional === false
+    self.TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional === true
+  """)
+  def getEnumArgs(typetypetype: String): (List[String],Int) = {
+    if (!typetypetype.startsWith("Enum ") && !typetypetype.startsWith("Enum("))
+      return (List(),0)
+
+    val startpos = typetypetype.indexOf('(')
+    val endpos = typetypetype.indexOf(')')
+
+    /*
+    println("typetypetype: "+typetypetype)
+    println("startpos: "+startpos)
+    println("endpos: "+endpos)
+     */
+
+    val argsstring = typetypetype.substring(startpos+1,endpos)
+    val args = argsstring.split(",").map(_.trim).filter(_ != "").toList
+    //println("args: "+args)
+
+    (args,endpos+1)
+  }
+
+  case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
+    val (enumArgs,enumSize)  = getEnumArgs(typetypetype)
+    val isArray      = typetypetype.startsWith("Array")
+    val isEnum       = enumArgs.size > 0
+    val typetype     = if (isArray) typetypetype.drop(6).trim else if (isEnum) typetypetype.drop(enumSize).trim else typetypetype                     // typetype = "String (header)"
+    val hasParmType  = typetype.endsWith(")")
+    val firstLeftPar = typetype.indexOf('(')
+    val type_        = if (hasParmType) typetype.take(firstLeftPar).trim else typetype.trim           // type_ = "String"
+    var paramType    = if (hasParmType)                                                            // paramType = "header"
+                          typetype.drop(firstLeftPar).dropWhile(_!='(').drop(1).dropRight(1).trim
+                      else if (parmName=="body")
+                         "body"
+                      else
+                         "path"
+    val optional    = if (hasParmType==false)
+                        false
+                      else if (!paramType.contains(','))
+                        false
+                      else
+                        (paramType.split(',')(1).trim=="optional")
+
+    paramType = paramType.split(',')(0) // "query, optional" -> "query"
+
+    if ( ! Set("body", "path", "query", "header", "formData").contains(paramType))
+      throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
+  }
+
   case class Raw(key: String, elements: List[String]) {
     def plus(element: String) =
       Raw(key, elements ++ List(element))
 
-    case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
-      val isArray     = typetypetype.startsWith("Array")
-      val typetype    = if (isArray) typetypetype.drop(6).trim else typetypetype                     // typetype = "String (header)"
-      val hasParmType = typetype.endsWith(")")
-      val firstSpace  = typetype.indexOf(' ')
-      val type_       = if (hasParmType) typetype.take(firstSpace).trim else typetype.trim           // type_ = "String"                           
-      var paramType    = if (hasParmType)                                                            // paramType = "header"
-                           typetype.drop(firstSpace).dropWhile(_!='(').drop(1).dropRight(1).trim 
-                        else if (parmName=="body")
-                           "body"
-                        else
-                           "path"
-      val optional   = if (hasParmType==false)
-                         false
-                       else if (!paramType.contains(','))
-                         false
-                       else 
-                         (paramType.split(',')(1)==" optional")
-
-      paramType = paramType.split(',')(0) // "query, optional" -> "query"
-
-      if ( ! Set("body", "path", "query", "header", "form").contains(paramType))
-        throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "form". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
-    }
 
     private def getParameters(): JsObject =
       JsObject(
@@ -179,7 +223,9 @@ object ApiDocUtil{
           if (element=="...")
             "..." -> Json.obj(
               "type" -> "etc.",
-              "isArray" -> false
+              "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr()
             )
           else {
             val nameLength = element.indexOf(':', 0)
@@ -197,6 +243,8 @@ object ApiDocUtil{
               else
                 "comment" -> comment,
               "isArray" -> typeInfo.isArray,
+              "isEnum" -> typeInfo.isEnum,
+              "enumArgs" -> typeInfo.enumArgs,
               "paramType" -> typeInfo.paramType,
               "required"  -> !typeInfo.optional
             )
@@ -349,7 +397,9 @@ object ApiDocUtil{
           "result" -> Json.obj(
             "type" -> typeInfo.type_,
             "comment" -> comment,
-            "isArray" -> typeInfo.isArray
+            "isArray" -> typeInfo.isArray,
+            "isEnum" -> typeInfo.isEnum,
+            "enumArgs" -> typeInfo.enumArgs
           )
         )
       }

@@ -18,10 +18,11 @@ case class UserData(firstName: String, lastName: String){
   )
 }
 
-case class User(id: String, data: UserData){
+case class User(id: String, data: UserData, type_ : String){
   def toJson = Json.obj(
     "id" -> id,
-    "data" -> data.toJson
+    "data" -> data.toJson,
+    "type" -> type_
   )
 }
 
@@ -32,7 +33,7 @@ object UserController extends Controller {
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
    */
 
-  val user = User("1235f",UserData("CommonFirstName", "CommonLastName"))
+  val user = User("1235f",UserData("CommonFirstName", "CommonLastName"), "cat")
 
   @ApiDoc(doc="""
     GET /useradmin/api/v1/user
@@ -44,6 +45,7 @@ object UserController extends Controller {
     PARAMETERS
       offset: Int (query, optional) <- default = 0
       limit: Int (query) <- default = 0
+      enumParameterExample: Enum(4,5,6,7) Int(query) <- enum value
 
     RESULT
       User
@@ -52,9 +54,10 @@ object UserController extends Controller {
       404 User not found
       400 Syntax Error
 
-    User: no.samordnaopptak.apidoc.controllers.User
+    User: no.samordnaopptak.apidoc.controllers.User(-type_,+type)
       id: String
       data: UserData
+      type: Enum(man, woman, cat) String
 
     UserData: no.samordnaopptak.apidoc.controllers.UserData
       firstName: String
@@ -68,7 +71,7 @@ object UserController extends Controller {
     GET /user2admin/api/v1/user
 
     DESCRIPTION
-      Get user
+      Get an array of users
       You can add more detailed information here.
 
     ERRORS
@@ -76,7 +79,7 @@ object UserController extends Controller {
       400 Syntax Error
 
     RESULT
-      User
+      Array User
   """)
   def get2()  = Action { request =>
     Ok(user.toJson)

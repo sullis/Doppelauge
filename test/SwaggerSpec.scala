@@ -12,7 +12,7 @@ object SwaggerTestData{
 
   val apidocstrings = List(
     """
-    GET /api/v1/users
+    GET /api/v1/users/{type}
 
     DESCRIPTION
       Get Users summary
@@ -24,11 +24,17 @@ object SwaggerTestData{
     RESULT
       Array User <- An array of users
 
+    PARAMETERS
+      type: Enum(man, dog, woman) String
+      age: Enum(2,65,9) Int(query,optional)
+
     User: !
       id: Long
       id2: Int
       names: Array String
       extra: Extra
+      type: Enum(man, woman, dog) String
+      age: Enum(2,65,9) String
 
     Extra: !
       extrastring: String <- Extra type
@@ -37,7 +43,7 @@ object SwaggerTestData{
 
 
     """
-    POST /api/v1/users
+    POST /api/v1/users/{type}
 
     DESCRIPTION
       Create User summary
@@ -51,6 +57,8 @@ object SwaggerTestData{
 
     PARAMETERS
       body: User
+      type: Enum(man, dog, woman) String
+
     """,
 
 
@@ -83,24 +91,55 @@ object SwaggerTestData{
 
     RESULT
       Array String <- Cats
+    """,
+
+    """
+    GET /api/v1/dogs
+
+    DESCRIPTION
+      Get Dogs
+      Get Dogs description
+
+    RESULT
+      Enum(dog, cat, woman) String <- Type
     """
 
   )
 
 
-
-  val jsonstring = """
+    val jsonstring = """
 {
   "swagger" : "2.0",
-  "resourcePath":"/api/v1/",
   "produces":["application/json"],
 
   "paths": {
-    "/api/v1/users": {
+    "/api/v1/users/{type}": {
         "get": {
               "summary":"Get Users summary",
               "description": "Get Users description",
-              "parameters": [],
+              "parameters": [
+                {
+                  "in": "path",
+                  "name": "type",
+                  "description" : "",
+                  "type": "string",
+                  "enum": [
+                     "man","dog","woman"
+                  ],
+                  "required" : true
+                },
+                {
+                  "in": "query",
+                  "name": "age",
+                  "description" : "",
+                  "type": "integer",
+                  "format": "int32",
+                  "enum": [
+                     "2","65","9"
+                  ],
+                  "required" : false
+                }
+              ],
               "tags": [
                   "Users"
               ],
@@ -131,6 +170,16 @@ object SwaggerTestData{
                   "schema": {
                       "$ref": "#/definitions/User"
                   }
+                },
+                {
+                  "in": "path",
+                  "name": "type",
+                  "required" : true,
+                  "description" : "",
+                  "type": "string",
+                  "enum": [
+                     "man","dog","woman"
+                  ]
                 }
               ],
               "tags": [
@@ -162,7 +211,8 @@ object SwaggerTestData{
                   "schema" : {
                     "type" : "string"
                   },
-                  "in" : "path"
+                  "in" : "path",
+                  "required" : true
                 }
               ],
               "tags": [
@@ -202,6 +252,28 @@ object SwaggerTestData{
                  }
               }
          }
+    },
+
+    "/api/v1/dogs": {
+        "get" : {
+              "summary": "Get Dogs",
+              "description": "Get Dogs description",
+              "parameters": [ ],
+              "tags": [
+                  "Dogs"
+              ],
+              "responses": {
+                 "200": {
+                    "description": "Type",
+                    "schema": {
+                        "type": "string",
+                        "enum": [
+                           "dog", "cat", "woman"
+                        ]
+                    }
+                 }
+              }
+         }
     }
   },
 
@@ -224,6 +296,18 @@ object SwaggerTestData{
                 },
                 "extra": {
                     "$ref": "#/definitions/Extra"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                       "man", "woman", "dog"
+                    ]
+                },
+                "age": {
+                    "type": "string",
+                    "enum": [
+                       "2","65","9"
+                    ]
                 }
             }
         },
@@ -250,30 +334,6 @@ class SwaggerSpec extends Specification {
       play.api.test.Helpers.running(FakeApplication()) {
         TestByAnnotation.TestObject(SwaggerUtil)
       }
-      true
-    }
-
-    "something" in {
-      //val a = no.samordnaopptak.apidoc.ApiDocUtil.getRaw(ApiDocSamples.docWithMissingDataTypes)
-      val a = no.samordnaopptak.apidoc.ApiDocUtil.getJson(ApiDocSamples.docWithArrayResult)
-      println("a: "+Json.prettyPrint(a))
-
-      matchJson(
-        a,
-        Json.obj(
-          "method" -> "GET",
-          "uri"    -> "/api/v1/usernames",
-          "uriParms" -> Json.arr(),
-          "shortDescription" -> "Get Usernames",
-          "longDescription" -> "",
-          "result" -> Json.obj(
-            "type" -> "String",
-            "comment" -> "",
-            "isArray" -> true
-          )
-        )
-      )
-
       true
     }
 

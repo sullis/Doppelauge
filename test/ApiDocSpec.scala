@@ -141,6 +141,23 @@ object ApiDocSamples{
       Array String
   """
 
+  val docWithEnums = """
+    GET /api/v1/username/{id}
+
+    DESCRIPTION
+      Get Username
+
+    PARAMETERS
+      id: Enum(1,2,3) String
+      body: EnumModel
+
+    RESULT
+      Enum(a,b,c,4) String
+
+    EnumModel: !
+      enumVal: Enum(a1,b2,c3) String
+  """
+
   val docWithExtraDataType = """
     GET /api/v1/acl
 
@@ -339,7 +356,7 @@ class ApiDocSpec extends Specification {
 
     "Throw exception for illegal parameter type" in {
       ApiDocUtil.getJson(ApiDocSamples.docWithIllegalParamType) must throwA(
-        new Exception(""""gakk" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "form". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
+        new Exception(""""gakk" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
       )
     }
 
@@ -424,6 +441,8 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "comment" -> "ID of the user",
               "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
@@ -431,6 +450,8 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "header",
               "required" -> true
             ),
@@ -438,6 +459,8 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "query",
               "required" -> false
             ),
@@ -445,6 +468,8 @@ class ApiDocSpec extends Specification {
               "type" -> "User",
               "noComment" -> true,
               "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "body",
               "required" -> true
             )),
@@ -459,12 +484,103 @@ class ApiDocSpec extends Specification {
           "result" -> Json.obj(
             "type" -> "User",
             "isArray" -> false,
+            "isEnum" -> false,
+            "enumArgs" -> Json.arr(),
             "comment" -> "Result comment"
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
           ApiDocUtil.getJson(ApiDocSamples.doc1)
         }
+      )
+    }
+
+    "Check Array result" in {
+      val a = no.samordnaopptak.apidoc.ApiDocUtil.getJson(ApiDocSamples.docWithArrayResult)
+      //println("a: "+Json.prettyPrint(a))
+
+      JsonMatcher.matchJson(
+        a,
+        Json.obj(
+          "method" -> "GET",
+          "uri"    -> "/api/v1/usernames",
+          "uriParms" -> Json.arr(),
+          "shortDescription" -> "Get Usernames",
+          "longDescription" -> "",
+          "result" -> Json.obj(
+            "type" -> "String",
+            "comment" -> "",
+            "isArray" -> true,
+            "isEnum" -> false,
+            "enumArgs" -> Json.arr()
+          )
+        )
+      )
+    }
+
+    "Check doc with Enum parameters and result" in {
+      val a = no.samordnaopptak.apidoc.ApiDocUtil.getJson(ApiDocSamples.docWithEnums)
+      //println("a: "+Json.prettyPrint(a))
+
+      JsonMatcher.matchJson(
+        a,
+        Json.obj(
+          "method" -> "GET",
+          "uri"    -> "/api/v1/username/{id}",
+          "uriParms" -> Json.arr("id"),
+          "shortDescription" -> "Get Username",
+          "longDescription" -> "",
+          "parameters" -> Json.obj(
+            "id" -> Json.obj(
+              "type" -> "String",
+              "noComment" -> true,
+              "isArray" -> false,
+              "isEnum" -> true,
+              "enumArgs" -> Json.arr("1","2","3"),
+              "paramType" -> "path",
+              "required" -> true
+            ),
+            "body" -> Json.obj(
+              "type" -> "EnumModel",
+              "noComment" -> true,
+              "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
+     //         "enumArgs" -> Json.arr("a1","b2","c3"),
+              "paramType" -> "body",
+              "required" -> true
+            )
+          ),
+          "result" -> Json.obj(
+            "type" -> "String",
+            "comment" -> "",
+            "isArray" -> false,
+            "isEnum" -> true,
+            "enumArgs" -> Json.arr("a","b","c","4")
+          )
+        )
+      )
+    }
+
+    "Check datatype with Enum" in {
+      val a = no.samordnaopptak.apidoc.ApiDocUtil.getDataTypes(ApiDocSamples.docWithEnums)
+      //println("a: "+Json.prettyPrint(a))
+
+      JsonMatcher.matchJson(
+        a,
+        Json.obj(
+          "EnumModel" -> Json.obj(
+            "enumVal" -> Json.obj(
+              "type" -> "String",
+              "noComment" -> true,
+              "isArray" -> false,
+              "isEnum" -> true,
+              "enumArgs" -> Json.arr("a1","b2","c3"),
+              "paramType" -> "path",
+              "required" -> true
+            )
+          )
+        )
       )
     }
 
@@ -476,6 +592,8 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "comment" -> "The ID of the user",
               "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
@@ -483,6 +601,8 @@ class ApiDocSpec extends Specification {
               "type" -> "Attributes",
               "noComment" -> true,
               "isArray" -> true,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
@@ -490,6 +610,8 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "path",
               "required" -> true
             )
@@ -499,12 +621,16 @@ class ApiDocSpec extends Specification {
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> true,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
             "..." -> Json.obj(
               "type" -> "etc.",
-              "isArray" -> false
+              "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr()
             )
           )
         ),

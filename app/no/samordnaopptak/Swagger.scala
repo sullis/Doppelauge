@@ -54,25 +54,6 @@ object SwaggerUtil{
     })
   )
 
-  @Test(code="""
-     self.getResourcePath("/api/v1/users/")     === "/users"
-     self.getResourcePath("/api/v1/users/{id}") === "/users"
-     self.getResourcePath("/api/v1/users")      === "/users"
-     self.getResourcePath("/users")             === "/users"
-  """)
-  def getResourcePath(uri: String): String = {
-    val last = uri.lastIndexOf('/')
-    val secondLast = uri.substring(0,last).lastIndexOf('/')
-
-    if (uri.endsWith("/"))
-      uri.substring(secondLast,last)
-
-    else if (uri.endsWith("}"))
-      uri.substring(secondLast,last)
-
-    else
-      uri.drop(last)
-  }
 
   @Test(code="""
      self.getTag("/api/v1/", "/api/v1/users/habla/happ") === "users"
@@ -99,7 +80,7 @@ object SwaggerUtil{
     val type_      = json("type").asString
     val isAtomType = ApiDocUtil.atomTypes.contains(type_)
     val isArray    = json("isArray").asBoolean
-
+    val isEnum     = json("isEnum").asBoolean
     val type2 =
       if (isAtomType)
         atomTypeToSwaggerType(type_)
@@ -121,6 +102,12 @@ object SwaggerUtil{
         "type" -> "array",
         "items" -> type2
       ) ++ description
+    else if (isEnum)
+      type2 ++
+      Json.obj(
+        "enum" -> JsArray(json("enumArgs").asList.map(j => JsString(j.asString)))
+      ) ++
+      description
     else
       type2 ++ description
   }
@@ -180,8 +167,14 @@ object SwaggerUtil{
                   "name" -> name,
                   "in" -> attributes("paramType").asString,
                   "required" -> attributes("required").asBoolean,
-                  "description" -> (if (attributes.hasKey("noComment")) "" else attributes("comment").asString),
-                  "schema" -> getType(attributes, addDescription=false)
+                  "description" -> (if (attributes.hasKey("noComment")) "" else attributes("comment").asString)
+                ) ++ (
+                  if (attributes("isEnum").asBoolean==true)
+                    getType(attributes, addDescription=false)
+                  else
+                    Json.obj(
+                      "schema" -> getType(attributes, addDescription=false)
+                    )
                 )
               )
             }).toList
@@ -241,7 +234,7 @@ object SwaggerUtil{
   private def getUsedDataTypesInDataType(dataType: Json): Set[String] = {
     val dataTypeValues = dataType.asMap.values
     val attributeValues = dataTypeValues.flatMap(_.asMap.values)
-
+    //println("attributeValues: "+attributeValues.map(_("type").asString).toSet)
     attributeValues.map(_("type").asString).toSet
   }
 
@@ -268,7 +261,11 @@ object SwaggerUtil{
                          Set(json("result")("type").asString)
                        else
                          Set()
-
+      /*
+      println("json: "+json)
+      println("parameterTypes: "+parameterTypes+", "+parameterTypes.size)
+      println("returnType: "+returnType+", "+returnType.size)
+       */
       parameterTypes ++ returnType ++ getUsedDatatypesInJson(jsonApiDocs.tail)
     }
   }
@@ -277,7 +274,10 @@ object SwaggerUtil{
     val definedTypes: Set[String] = dataTypes.flatMap(_.asMap.keys).toSet ++ ApiDocUtil.atomTypes
     val usedTypes: Set[String]    = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
     val undefinedTypes            = usedTypes -- definedTypes
-
+    /*
+    println("definedTypes: "+definedTypes)
+    println("usedTypes: "+usedTypes)
+     */
     if (undefinedTypes.size>0)
       throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$tag": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
   }
@@ -316,7 +316,6 @@ object SwaggerUtil{
 
     header ++
     Json.obj(
-      "resourcePath" -> basePath,
       "paths" -> JsonUtil.flattenJsObjects(groupedJsonApiDocsAsJsValue),
       "definitions" -> getDefinitions(dataTypes)
     )

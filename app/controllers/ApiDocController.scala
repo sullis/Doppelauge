@@ -154,8 +154,8 @@ object ApiDocController extends Controller {
   def get()  = Action { request =>
     controller.get()
 
-    // used for testing:
-    //Ok(Json.parse(test.lib.SwaggerTestData.jsonstring))
+    // When extending: copy jsonstring from SwaggerSpec.scala in here, uncomment line below, extend jsonstring, copy jsonstring back, fix code amd SwaggerTestData.apidocstrings so that the tests pass, comment the line again, done.
+    //Ok(Json.parse(jsonstring))
   }
 
   def validate(basePath: String) = {

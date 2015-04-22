@@ -1,4 +1,6 @@
 
+
+
 API-doc
 =========
 
@@ -41,6 +43,7 @@ Basic usage:
       PARAMETERS 
         id: String <- The user id
         names: Array String <- All names in an array of strings
+        type: Enum(Woman, Man, Dog) String <- The user can either be a woman, a man, or a dog.
 
       ERRORS
         400 User not found
@@ -64,6 +67,7 @@ Define parameter types:
         phone: String(query)             <- 'query' parameter type
         mobile: String(query, optional)  <- Optional 'query' parameter type
         email: String(form)              <- 'form' parameter type
+        age: Enum(10,20,30,40) Int       <- Enum Int parameter.
     """)
     def getUser(id: String) = ...
 
@@ -92,6 +96,7 @@ Defining types:
       User:
         id: String
         firstName: String  <- The first name of the user.
+        age: Enum(10,20,30,40) Int <- Age can be either 10, 20, 30 or 40
     """)
     def getUser(id: String) = ...
 
