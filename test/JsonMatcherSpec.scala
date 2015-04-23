@@ -151,6 +151,47 @@ class JsonMatcherSpec extends Specification {
       )
     }
 
+    "match Or" in {
+      matchJson(
+        Or(JsString("a"), JsNumber(50), JsNumber(30)),
+        JsString("a")
+      )
+      matchJson(
+        Or(JsString("a"), JsNumber(50)),
+        JsNumber(50)
+      )
+      matchJson(
+        Or(JsString("a"), JsNumber(2), JsNumber(50)),
+        JsNumber(2)
+      )
+      matchJson(
+        Or(JsString("a"), JsNumber(50)),
+        JsBoolean(false)
+      ) should throwA[JsonMatcherException] 
+      matchJson(
+        Or(),
+        JsBoolean(false)
+      ) should throwA[JsonMatcherException] 
+    }
+
+    "match And" in {
+      matchJson(
+        And(),
+        JsString("a")
+      )
+      matchJson(
+        And(___anyNumber, JsNumber(50)),
+        JsNumber(50)
+      )
+      matchJson(
+        And(JsString("a"), JsNumber(50)),
+        JsNumber(50)
+      ) should throwA[JsonMatcherException]
+      matchJson(
+        And(JsNumber(50), JsString("a")),
+        JsNumber(50)
+      ) should throwA[JsonMatcherException]
+    }
 
     // simple array tests
 

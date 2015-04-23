@@ -21,13 +21,16 @@ object JsonMatcher{
   val ___anyArray   = JsString("________anyArray_________")
   val ___anyBoolean = JsString("________anyBoolean_______")
 
-  case class RegExp(pattern: String) extends JsUndefined("") {
+  case class RegExp(pattern: String) extends JsUndefined("regexp") {
     val regexp = new scala.util.matching.Regex(pattern)
 
     def apply(jsString: JsString): Boolean = {
       regexp.findFirstIn(jsString.value) != None
     }
   }
+
+  case class Or(matchers: JsValue*) extends JsUndefined("or")
+  case class And(matchers: JsValue*) extends JsUndefined("and")
 
   val ___allowOtherValues: JsString = JsString(___allowOtherJsonsKey)
   val ___ignoreOrder: JsString = JsString(___ignoreOrderJsonKey)
@@ -161,6 +164,34 @@ object JsonMatcher{
       })
   }
 
+  private def matchOr(or: Or, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+    def inner(matchers: Seq[JsValue]): Boolean =
+      if (matchers.isEmpty && throwException)
+        matchJsonFailed(s"""Doesn't match:\n${or.matchers.toList.map(Json.prettyPrint(_)).mkString("Or(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
+      else if (matchers.isEmpty)
+        false
+      else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
+        true
+      else
+        inner(matchers.tail)
+
+    inner(or.matchers.toSeq)
+  }
+
+  private def matchAnd(and: And, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+    def inner(matchers: Seq[JsValue]): Boolean =
+      if (matchers.isEmpty)
+        true
+      else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
+        inner(matchers.tail)
+      else if (throwException)
+        matchJsonFailed(s"""Doesn't match:\n${and.matchers.toList.map(Json.prettyPrint(_)).mkString("And(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
+      else
+        false
+
+    inner(and.matchers.toSeq)
+  }
+
   private def matchJson(matcher: JsValue, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
     if (verbose && matcher.isInstanceOf[JsString] && json.isInstanceOf[JsString])
       println("matching "+matcher+", vs. "+json)
@@ -173,6 +204,8 @@ object JsonMatcher{
       case (`___anyObject`,  j: JsObject) => true
       case (`___anyArray`,   j: JsArray) => true
       case (`___anyBoolean`, j: JsBoolean) => true
+      case (m: Or,           j: JsValue)   => matchOr(m, j, throwException, ignoreArrayOrder, path)
+      case (m: And,          j: JsValue)   => matchAnd(m, j, throwException, ignoreArrayOrder, path)
       case (r: RegExp,     j: JsString) => if (r(j)) true else matchJsonFailed(s""""${j.value}" doesn't match the regexp "${r.pattern}".""", throwException, path)
       case (r: RegExp,     j: JsValue) => matchJsonFailed(s"""RegExp matcher expected a string. Not-string value: "$j"""", throwException, path)
       case (m: JsObject, j: JsObject) => matchJsonObjects(m,j,throwException,ignoreArrayOrder,path)
