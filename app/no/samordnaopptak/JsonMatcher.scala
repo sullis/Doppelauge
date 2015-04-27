@@ -21,6 +21,10 @@ object JsonMatcher{
   val ___anyArray   = JsString("________anyArray_________")
   val ___anyBoolean = JsString("________anyBoolean_______")
 
+  case class Custom(func: JsValue => Boolean, name: String = "") extends JsUndefined("custom") {
+    override def toString = if (name=="") func.toString else name
+  }
+
   case class RegExp(pattern: String) extends JsUndefined("regexp") {
     val regexp = new scala.util.matching.Regex(pattern)
 
@@ -164,6 +168,27 @@ object JsonMatcher{
       })
   }
 
+  private def getStackTraceString(t: Throwable) = {
+    val sw = new java.io.StringWriter()
+    t.printStackTrace(new java.io.PrintWriter(sw))
+    sw.toString()
+  }
+
+  private def matchCustom(custom: Custom, json: JsValue, throwException: Boolean, path: String): Boolean = {
+    val result = try{
+      custom.func(json)
+    } catch {
+      case e: Throwable => {
+        matchJsonFailed(s""""The custom matcher $custom threw an exception: "${getStackTraceString(e)}" when called with "${pp(json)}".""", throwException, path)
+      }
+    }
+
+    if (result==true)
+      true
+    else
+      matchJsonFailed(s""""The custom matcher function $custom returned false when called with "${pp(json)}".""", throwException, path)
+  }
+
   private def matchOr(or: Or, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
     def inner(matchers: Seq[JsValue]): Boolean =
       if (matchers.isEmpty && throwException)
@@ -206,6 +231,7 @@ object JsonMatcher{
       case (`___anyBoolean`, j: JsBoolean) => true
       case (m: Or,           j: JsValue)   => matchOr(m, j, throwException, ignoreArrayOrder, path)
       case (m: And,          j: JsValue)   => matchAnd(m, j, throwException, ignoreArrayOrder, path)
+      case (c: Custom,       j: JsValue) => matchCustom(c, j, throwException, path)
       case (r: RegExp,     j: JsString) => if (r(j)) true else matchJsonFailed(s""""${j.value}" doesn't match the regexp "${r.pattern}".""", throwException, path)
       case (r: RegExp,     j: JsValue) => matchJsonFailed(s"""RegExp matcher expected a string. Not-string value: "$j"""", throwException, path)
       case (m: JsObject, j: JsObject) => matchJsonObjects(m,j,throwException,ignoreArrayOrder,path)

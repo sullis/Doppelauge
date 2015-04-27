@@ -193,6 +193,76 @@ class JsonMatcherSpec extends Specification {
       ) should throwA[JsonMatcherException]
     }
 
+    "Creating custom matchers" in {
+
+      // successfull
+      matchJson(
+        Custom(_ => true),
+        JsNull
+      )
+      matchJson(
+        Custom(_.as[JsNumber].value > 0),
+        JsNumber(50)
+      )
+
+
+      // unsuccessfull
+      matchJson(
+        Custom(_ => false),
+        JsNull
+      ) should throwA[JsonMatcherException]
+
+      matchJson(
+        Custom(_.as[JsNumber].value > 0),
+        JsNumber(0)
+      ) should throwA[JsonMatcherException]
+
+
+      // override toString
+      try {
+        matchJson(
+          new Custom(_ => false){
+            override def toString = "gakkgakk"
+          },
+          JsNull
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException =>
+          e.getMessage().contains("gakkgakk") must beTrue
+      }
+
+
+      // custom function name (for use in error message)
+      try {
+        matchJson(
+          new Custom(_ => false, name="gakkgakk"),
+          JsNull
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException =>
+          e.getMessage().contains("gakkgakk") must beTrue
+      }
+
+      // check that exceptions thrown inside the custom matcher function are handled properly
+      // We do this to get more informative error messages and avoid having to check for types.
+      try {
+        matchJson(
+          Custom(_.as[JsNumber].value > 0),
+          JsString("gakkgakkgakk")
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          e.getMessage().contains("gakkgakkgakk") must beTrue
+          e.getMessage().contains("threw an exception") must beTrue
+        }
+      }
+
+    }
+
+
     // simple array tests
 
     "match obj with array" in {
