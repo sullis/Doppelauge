@@ -90,11 +90,14 @@ class ApiDocControllerSpec extends Specification {
       true
     }
 
+    def routeEntries =
+      RoutesHelper.getRouteEntries()
+        .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
+
     "validate that the validate method that validates if method and uri in conf/routes and autodoc matches works" in {
       inCleanEnvironment() {
         val controller = new ApiDocController
 
-        val routeEntries = RoutesHelper.getRouteEntries()
         controller.validate(routeEntries)
 
         {
@@ -126,7 +129,7 @@ class ApiDocControllerSpec extends Specification {
 
     "Call Swagger.getJson on all annotated resource path groups, in order to run validation checks on them" in {
       inCleanEnvironment() {
-        ApiDocController.validate("/")
+        ApiDocController.validate(routeEntries)
       }
     }
 
@@ -136,7 +139,7 @@ class ApiDocControllerSpec extends Specification {
         val controller = new ApiDocController
 
         checkResult(
-          controller.get(),
+          controller.get(routeEntries),
           Json.obj(
             "paths" -> Json.obj(
               ___allowOtherFields

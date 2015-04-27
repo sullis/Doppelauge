@@ -253,7 +253,6 @@ Notes
 * In order to run validation checks on the api docs, it is necessary to call `ApiDocController.validate("/")`.
   If using specs2, it might be a good idea to put the following code (or something similar) into tests/ApiDocControllerSpec.scala:
 
-`
 
     package test
 
@@ -264,10 +263,23 @@ Notes
 
     class ApiDocControllerSpec extends Specification {
       "Validate swagger api docs" in {
-          controllers.ApiDocController.validate("/")
+          controllers.ApiDocController.validate()
       }
     }
-`
+
+
+  If there are end points defined in the "routes" file which have no api doc, you need to remove these before calling validate():
+
+
+    class ApiDocControllerSpec extends Specification {
+      "Validate swagger api docs" in {
+          val routeEntries =
+             no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
+               .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
+          controllers.ApiDocController.validate(routeEntries)
+      }
+    }
+
 
 
 License

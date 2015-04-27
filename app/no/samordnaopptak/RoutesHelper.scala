@@ -38,11 +38,13 @@ object RoutesHelper{
     ).map(routeEntry =>
       //println("routeEntry: "+routeEntry)
       routeEntry
+/*
     ).filter(routeEntry =>
       routeEntry.scalaClass != "controllers.Assets" &&
       routeEntry.scalaClass != "controllers.StaticFile" &&
       routeEntry.scalaClass != "controllers.Application" &&
       !routeEntry.uri.contains("<.+>")
+ */
     ).toList
 
   // "/api/v1/acl/$service<[^/]+>" -> "/api/v1/acl/{service}"

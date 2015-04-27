@@ -118,9 +118,7 @@ class ApiDocController extends Controller {
     })
   }
 
-  lazy val apiDocsFromAnnotations: List[String] = {
-
-    val routeEntries = RoutesHelper.getRouteEntries()
+  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): List[String] = {
 
     validate(routeEntries)
 
@@ -142,8 +140,8 @@ class ApiDocController extends Controller {
       Get main swagger json documentation
       You can add more detailed information here.
   """)
-  def get() = {
-    Ok(SwaggerUtil.getMain("/", apiDocsFromAnnotations))
+  def get(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) = {
+    Ok(SwaggerUtil.getMain("/", getApiDocsFromAnnotations(routeEntries)))
   }
 }
 
@@ -152,14 +150,23 @@ object ApiDocController extends Controller {
   val controller = new ApiDocController
 
   def get()  = Action { request =>
-    controller.get()
+    val routeEntries =
+      RoutesHelper.getRouteEntries()
+        .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
 
-    // When extending: copy jsonstring from SwaggerSpec.scala in here, uncomment line below, extend jsonstring, copy jsonstring back, fix code amd SwaggerTestData.apidocstrings so that the tests pass, comment the line again, done.
+    controller.get(routeEntries)
+
+    // When extending:
+    // 1. copy jsonstring from SwaggerSpec.scala in here
+    // 2. uncomment line below (i.e. "Ok(Json.parse(jsonstring))")
+    // 3. extend jsonstring with new functionality
+    // 4. copy jsonstring back
+    // 5. fix code add SwaggerTestData.apidocstrings so that the tests pass
+    // 6. comment the line below again
+    // 7. done.
     //Ok(Json.parse(jsonstring))
   }
 
-  def validate(basePath: String) = {
-    val annotations = controller.apiDocsFromAnnotations
-    SwaggerUtil.getMain("/", annotations)
-  }
+  def validate(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) =
+    controller.get(routeEntries)
 }
