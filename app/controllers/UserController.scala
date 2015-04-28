@@ -56,8 +56,8 @@ object UserController extends Controller {
 
     User: no.samordnaopptak.apidoc.controllers.User(-type_,+type)
       id: String
-      data: UserData
-      type: Enum(man, woman, cat) String
+      data: UserData(optional)
+      type: Enum(man, woman, cat) String(optional)
 
     UserData: no.samordnaopptak.apidoc.controllers.UserData
       firstName: String

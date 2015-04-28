@@ -231,7 +231,7 @@ object ApiDocUtil{
     println("parmName: "+parmName)
     println("typtyptyp: "+typetypetype)
      */
-    
+
     if ( ! Set("body", "path", "query", "header", "formData").contains(paramType))
       throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
   }
@@ -249,7 +249,8 @@ object ApiDocUtil{
               "type" -> "etc.",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr()
+              "enumArgs" -> Json.arr(),
+              "required" -> false
             )
           else {
             val nameLength = element.indexOf(':', 0)
