@@ -49,9 +49,9 @@ object SwaggerUtil{
 
 
   private def jsonWithoutUndefined(json: JsObject) = JsObject(
-    json.value.toSeq.filter(_ match{
+    json.value.toSeq.filter {
       case (name, attributes) => ! attributes.isInstanceOf[JsUndefined]
-    })
+    }
   )
 
 
@@ -189,17 +189,27 @@ object SwaggerUtil{
 
   private def getDefinition(dataType: Json): JsObject =
     JsObject(
-      dataType.asMap.map(_ match {
-        case (name: String, attributes: Json) => name -> Json.obj(
-          "properties" -> JsObject(
-            attributes.asMap.map(_ match {
-              case (name, attributes) => name -> jsonWithoutUndefined(
-                getType(attributes)
-              )
-            }).toList
+      dataType.asMap.map {
+        case (name: String, attributes: Json) => {
+          val required = attributes.asMap.filter {
+            case (_, attributes) => attributes("required").asBoolean
+          }.map{
+            case (name, _) => name
+          }
+          name -> Json.obj(
+            "id" -> name,
+            "required" -> required,
+            "properties" -> JsObject(
+              attributes.asMap.map {
+                case (name, attributes) =>
+                  name -> jsonWithoutUndefined(
+                    getType(attributes)
+                  )
+              }.toList
+            )
           )
-        )
-      }).toList
+        }
+      }.toList
     )
 
   private def getDefinitions(dataTypes: List[Json]): JsObject =

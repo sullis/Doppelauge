@@ -26,14 +26,14 @@ object SwaggerTestData{
 
     PARAMETERS
       type: Enum(man, dog, woman) String
-      age: Enum(2,65,9) Int(query,optional)
+      age: Enum(2,65,9) Int(query, optional)
 
     User: !
       id: Long
-      id2: Int
+      id2: Int(optional)
       names: Array String
-      extra: Extra
-      type: Enum(man, woman, dog) String
+      extra: Extra(optional)
+      type: Enum(man, woman, dog) String(optional)
       age: Enum(2,65,9) String
 
     Extra: !
@@ -107,7 +107,7 @@ object SwaggerTestData{
   )
 
 
-    val jsonstring = """
+    val jsonstring = s"""
 {
   "swagger" : "2.0",
   "produces":["application/json"],
@@ -152,7 +152,7 @@ object SwaggerTestData{
                     "schema": {
                         "type": "array",
                         "items": {
-                            "$ref": "#/definitions/User"
+                            "$$ref": "#/definitions/User"
                         }
                     }
                  }
@@ -168,7 +168,7 @@ object SwaggerTestData{
                   "required" : true,
                   "description" : "",
                   "schema": {
-                      "$ref": "#/definitions/User"
+                      "$$ref": "#/definitions/User"
                   }
                 },
                 {
@@ -192,7 +192,7 @@ object SwaggerTestData{
                  "200": {
                     "description": "A User from post",
                     "schema": {
-                       "$ref": "#/definitions/User"
+                       "$$ref": "#/definitions/User"
                     }
                  }
               }
@@ -279,6 +279,8 @@ object SwaggerTestData{
 
   "definitions": {
         "User": {
+            "id" : "User",
+            "required" : ["id", "names", "age", "${___ignoreOrder.value}"],
             "properties": {
                 "id": {
                     "type": "integer",
@@ -295,7 +297,7 @@ object SwaggerTestData{
                     }
                 },
                 "extra": {
-                    "$ref": "#/definitions/Extra"
+                    "$$ref": "#/definitions/Extra"
                 },
                 "type": {
                     "type": "string",
@@ -312,6 +314,8 @@ object SwaggerTestData{
             }
         },
         "Extra": {
+            "id" : "Extra",
+            "required": ["extrastring"],
             "properties": {
                "extrastring": {
                   "type": "string",
@@ -337,6 +341,7 @@ class SwaggerSpec extends Specification {
       true
     }
 
+
     "Produce the main thing" in {
       val produced = SwaggerUtil.getMain("/api/v1/", SwaggerTestData.apidocstrings)
       val correct = Json.parse(SwaggerTestData.jsonstring)
@@ -347,7 +352,7 @@ class SwaggerSpec extends Specification {
       println()
        */
 
-      matchJson(produced, correct)
+      matchJson(correct, produced)
     }
 
     "validate that a datatype is only defined one place" in {

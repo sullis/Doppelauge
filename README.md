@@ -20,7 +20,7 @@ This API-doc does the following validation checks:
 QUICK START
 ===========
 
-1. execute "play run" in the terminal.
+1. execute "activator run" in the terminal.
 
 2. Go to this address in your browser:
 

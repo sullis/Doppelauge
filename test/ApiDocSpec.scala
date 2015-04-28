@@ -639,6 +639,7 @@ class ApiDocSpec extends Specification {
         }
       )
     }
+
   }
 }
 

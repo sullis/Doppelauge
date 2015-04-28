@@ -74,6 +74,9 @@ object UserController extends Controller {
       Get an array of users
       You can add more detailed information here.
 
+    PARAMETERS
+      body: User
+
     ERRORS
       404 User not found
       400 Syntax Error
@@ -82,6 +85,6 @@ object UserController extends Controller {
       Array User
   """)
   def get2()  = Action { request =>
-    Ok(user.toJson)
+    Ok(Json.arr(user.toJson))
   }
 }

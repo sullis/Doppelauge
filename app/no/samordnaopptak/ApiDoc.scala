@@ -164,6 +164,12 @@ object ApiDocUtil{
     self.TypeInfo("", "Enum(2,65,9) Int(query)").type_ === "Int"
     self.TypeInfo("", "Enum(2,65,9) Int(query)").optional === false
     self.TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional === true
+
+    self.TypeInfo("", "String(header)").optional === false
+    self.TypeInfo("", "String (header, optional)").optional === true
+    self.TypeInfo("", "String(optional)").optional === true
+    self.TypeInfo("", "String( optional)").optional === true
+    self.TypeInfo("", "String").optional === false
   """)
   def getEnumArgs(typetypetype: String): (List[String],Int) = {
     if (!typetypetype.startsWith("Enum ") && !typetypetype.startsWith("Enum("))
@@ -190,24 +196,42 @@ object ApiDocUtil{
     val isArray      = typetypetype.startsWith("Array")
     val isEnum       = enumArgs.size > 0
     val typetype     = if (isArray) typetypetype.drop(6).trim else if (isEnum) typetypetype.drop(enumSize).trim else typetypetype                     // typetype = "String (header)"
-    val hasParmType  = typetype.endsWith(")")
-    val firstLeftPar = typetype.indexOf('(')
-    val type_        = if (hasParmType) typetype.take(firstLeftPar).trim else typetype.trim           // type_ = "String"
-    var paramType    = if (hasParmType)                                                            // paramType = "header"
-                          typetype.drop(firstLeftPar).dropWhile(_!='(').drop(1).dropRight(1).trim
-                      else if (parmName=="body")
+
+    val leftParPos   = typetype.indexOf('(')
+    val rightParPos  = typetype.indexOf(')')
+
+    if (leftParPos>=0 && rightParPos == -1)
+      throw new Exception(s"""Syntax error: Missing right paranthesis in "$parmName $typetypetype"""")
+
+    if (leftParPos == -1 && rightParPos>=0)
+      throw new Exception(s"""Syntax error: Missing left paranthesis in "$parmName $typetypetype"""")
+
+    val hasTypeOptions = leftParPos != -1
+
+    val type_        = if (hasTypeOptions) typetype.take(leftParPos).trim else typetype.trim           // type_ = "String"
+    val typeOptions  = if (hasTypeOptions)
+                          typetype.substring(leftParPos+1, rightParPos).split(',').map(_.trim).toSet
+                       else
+                         Set[String]()
+
+    val optional     = typeOptions.contains("optional")
+
+    val paramTypes   = typeOptions - "optional"
+
+    if (paramTypes.size >= 2)
+      throw new Exception(s"""Syntax error: Too many parameter options in "$parmName $typetypetype" ($paramTypes)""")
+
+    val paramType    = if (paramTypes.size == 1)                                                           // paramType = "header"
+                          paramTypes.head
+                       else if (parmName=="body")
                          "body"
-                      else
+                       else
                          "path"
-    val optional    = if (hasParmType==false)
-                        false
-                      else if (!paramType.contains(','))
-                        false
-                      else
-                        (paramType.split(',')(1).trim=="optional")
-
-    paramType = paramType.split(',')(0) // "query, optional" -> "query"
-
+    /*
+    println("parmName: "+parmName)
+    println("typtyptyp: "+typetypetype)
+     */
+    
     if ( ! Set("body", "path", "query", "header", "formData").contains(paramType))
       throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
   }
