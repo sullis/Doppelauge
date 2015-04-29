@@ -630,7 +630,8 @@ class ApiDocSpec extends Specification {
               "type" -> "etc.",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr()
+              "enumArgs" -> Json.arr(),
+              "required" -> false
             )
           )
         ),

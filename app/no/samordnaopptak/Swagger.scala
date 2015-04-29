@@ -63,15 +63,29 @@ object SwaggerUtil{
      self.getTag("/api/v1/", "/api/v1/users/{id}")       === "users"
      self.getTag("/api/v1/", "/api/v1/users/")           === "users"
      self.getTag("/api/v1/", "/api/v1/users")            === "users"
+     self.getTag("/api/v1/", "/users")                   === "users"
+     self.getTag("/api/v1/", "/users_and_houses")        === "users_and_houses"
+     self.getTag("/api/v1/", "/gakk/users_and_houses")   === "gakk/users_and_houses"
+     self.getTag("/api/v1/", "/a/b")                     === "a/b"
   """)
-  def getTag(basePath: String, uri: String): String = {
-    val fullPathTail = uri.drop(basePath.length)
-    val firstSlash = fullPathTail.indexOf('/')
-    if (firstSlash == -1)
-      fullPathTail
-    else
-      fullPathTail.take(firstSlash)
-  }
+  def getTag(basePath: String, uri: String): String =
+    if (!uri.startsWith(basePath)) {
+
+       if (uri.startsWith("/"))
+         uri.drop(1)
+       else
+         uri
+
+    } else {
+
+      val fullPathTail = uri.drop(basePath.length)
+      val firstSlash = fullPathTail.indexOf('/')
+      if (firstSlash == -1)
+        fullPathTail
+      else
+        fullPathTail.take(firstSlash)
+
+    }
 
   private def createTagName(tag: String) =
     tag(0).toUpper + tag.tail
