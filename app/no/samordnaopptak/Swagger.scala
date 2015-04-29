@@ -65,18 +65,28 @@ object SwaggerUtil{
      self.getTag("/api/v1/", "/api/v1/users")            === "users"
      self.getTag("/api/v1/", "/users")                   === "users"
      self.getTag("/api/v1/", "/users_and_houses")        === "users_and_houses"
-     self.getTag("/api/v1/", "/gakk/users_and_houses")   === "gakk/users_and_houses"
-     self.getTag("/api/v1/", "/a/b")                     === "a/b"
+     self.getTag("/api/v1/", "/gakk/users_and_houses")   === "gakk"
+     self.getTag("/api/v1/", "/a/b")                     === "a"
+     self.getTag("/api/v1/", "/api/v1")                  === "root"
+     self.getTag("/api/v1/", "/api/v1/")                 === "root"
   """)
-  def getTag(basePath: String, uri: String): String =
-    if (!uri.startsWith(basePath)) {
+  def getTag(basePath: String, uri_raw: String): String = {
 
-       if (uri.startsWith("/"))
-         uri.drop(1)
-       else
-         uri
+    assert(uri_raw.startsWith("/"))
 
-    } else {
+    val uri =
+      if (uri_raw.endsWith("/"))
+        uri_raw.dropRight(1)
+      else
+        uri_raw
+
+    if (basePath == uri+"/")
+      "root"
+
+    else if (!uri.startsWith(basePath))
+      getTag("/", uri)
+
+    else {
 
       val fullPathTail = uri.drop(basePath.length)
       val firstSlash = fullPathTail.indexOf('/')
@@ -86,6 +96,8 @@ object SwaggerUtil{
         fullPathTail.take(firstSlash)
 
     }
+
+  }
 
   private def createTagName(tag: String) =
     tag(0).toUpper + tag.tail
@@ -316,6 +328,9 @@ object SwaggerUtil{
     apidocs.map(_("uri").asString).toSet
 
   def getMain(basePath: String, apidocs: List[String]): JsObject = {
+
+    if (!basePath.endsWith("/"))
+      throw new Exception("Basepath must end with slash: "+basePath)
 
     val dataTypes = apidocs.map(apidoc => JsonUtil.jsValue(ApiDocUtil.getDataTypes(apidoc)))
     validateUniqueDataTypes(dataTypes)
