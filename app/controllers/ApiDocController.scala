@@ -76,21 +76,26 @@ class ApiDocController extends Controller {
   class MethodMismatchException(val message: String) extends Exception(message)
   class UriMismatchException(val message: String) extends Exception(message)
 
+
+  private def hasAnnotation(method: java.lang.reflect.Method) = {
+    val annotations = method.getAnnotations()
+    annotations.find(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]) != None
+  }
+
+
   def hasMethodAnnotation(className: String, methodName: String) = {
     val class_ = play.api.Play.classloader.loadClass(className)
-    class_.getDeclaredMethods().find(_.getName()==methodName) match {
-      case None => false
-      case Some(method) => {
-        val annotations = method.getAnnotations()
-        annotations.find(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]) != None
-      }
-    }
+
+    class_.getDeclaredMethods().find(
+      method => (method.getName()==methodName && hasAnnotation(method))
+    ) != None
   }
 
   def getMethodAnnotation(className: String, methodName: String) = {
     val class_ = play.api.Play.classloader.loadClass(className)
+
     class_.getDeclaredMethods().find(
-      _.getName()==methodName
+      method => (method.getName()==methodName && hasAnnotation(method))
     ).get.getAnnotations().find(
       _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
     ).get.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
@@ -133,7 +138,6 @@ class ApiDocController extends Controller {
 
   def validate(routeEntries: List[RouteEntry]): Unit = {
     routeEntries.foreach(routeEntry => {
-      //println("Validating "+routeEntry)
 
       if (!hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
         throw new Exception(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the corresponding Object)")
@@ -157,13 +161,9 @@ class ApiDocController extends Controller {
 
     validate(routeEntries)
 
-    val apiDocAnnotations = routeEntries.map(routeEntry =>
-      getMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod)
+    val apiDocs = routeEntries.map(routeEntry =>
+      getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod)
     )
-
-    val apiDocs = apiDocAnnotations.map(_.doc)
-
-    //println("apiDocs: "+apiDocs)
 
     apiDocs
   }
@@ -176,7 +176,8 @@ class ApiDocController extends Controller {
       You can add more detailed information here.
   """)
   def get(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) = {
-    Ok(SwaggerUtil.getMain("/", getApiDocsFromAnnotations(routeEntries)))
+    val apidocs = getApiDocsFromAnnotations(routeEntries)
+    Ok(SwaggerUtil.getMain("/", apidocs))
   }
 }
 
