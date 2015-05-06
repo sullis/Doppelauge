@@ -96,6 +96,41 @@ class ApiDocController extends Controller {
     ).get.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
   }
 
+  def expandIncludes(doc: String): String = {
+    val lines = doc.split("\n")
+    lines.map { line =>
+      val trimmed = line.trim
+
+      if (trimmed.startsWith("INCLUDE ")) {
+
+        val varname = trimmed.drop("INCLUDE ".size).trim
+        val lastDot = varname.lastIndexOf('.')
+        val className = varname.take(lastDot)
+        val methodName = varname.drop(lastDot+1)
+
+        /*
+        println(line)
+        println(varname)
+        println(className)
+        println(methodName)
+         */
+
+        getMethodAnnotationDoc(className, methodName)
+
+      } else {
+
+        line + "\n"
+
+      }
+
+    }.mkString
+  }
+
+  def getMethodAnnotationDoc(className: String, methodName: String) = {
+    val annotation = getMethodAnnotation(className, methodName)
+    expandIncludes(annotation.doc)
+  }
+
   def validate(routeEntries: List[RouteEntry]): Unit = {
     routeEntries.foreach(routeEntry => {
       //println("Validating "+routeEntry)
@@ -103,8 +138,8 @@ class ApiDocController extends Controller {
       if (!hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
         throw new Exception(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the corresponding Object)")
 
-      val annotation = getMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod)
-      val json = ApiDocUtil.getJson(annotation.doc)
+      val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod)
+      val json = ApiDocUtil.getJson(doc)
       val jsonMethod = (json\"method").as[String]
       val jsonUri = (json\"uri").as[String]
 

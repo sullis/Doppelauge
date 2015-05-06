@@ -17,6 +17,15 @@ import no.samordnaopptak.apidoc.{ApiDoc, SwaggerUtil}
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
 
 
+class Include {
+  @ApiDoc(doc="""
+    PARAMETERS 
+      id: String (header) <- ID of the user
+  """)
+  def includedDocFunc() =
+    throw new Exception("No point calling this function")
+}
+
 class ApiDocControllerSpec extends Specification {
 
   @ApiDoc(doc="""
@@ -43,8 +52,7 @@ class ApiDocControllerSpec extends Specification {
     DESCRIPTION
       Get user
 
-    PARAMETERS 
-      id: String (header) <- ID of the user
+    INCLUDE test.Include.includedDocFunc
 
     ERRORS
       400 User not found
