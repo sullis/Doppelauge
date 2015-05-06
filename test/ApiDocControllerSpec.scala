@@ -21,6 +21,9 @@ class Include {
   @ApiDoc(doc="""
     PARAMETERS 
       id: String (header) <- ID of the user
+
+    INCLUDE test.Include.includedDocFunc
+    INCLUDE test.Include.includedDocFunc
   """)
   def includedDocFunc() =
     throw new Exception("No point calling this function")
@@ -52,6 +55,7 @@ class ApiDocControllerSpec extends Specification {
     DESCRIPTION
       Get user
 
+    INCLUDE test.Include.includedDocFunc
     INCLUDE test.Include.includedDocFunc
 
     ERRORS

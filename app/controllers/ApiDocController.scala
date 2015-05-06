@@ -101,7 +101,7 @@ class ApiDocController extends Controller {
     ).get.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
   }
 
-  def expandIncludes(doc: String): String = {
+  def expandIncludes(doc: String, alreadyIncluded: scala.collection.mutable.Set[String]): String = {
     val lines = doc.split("\n")
     lines.map { line =>
       val trimmed = line.trim
@@ -109,18 +109,28 @@ class ApiDocController extends Controller {
       if (trimmed.startsWith("INCLUDE ")) {
 
         val varname = trimmed.drop("INCLUDE ".size).trim
-        val lastDot = varname.lastIndexOf('.')
-        val className = varname.take(lastDot)
-        val methodName = varname.drop(lastDot+1)
 
-        /*
-        println(line)
-        println(varname)
-        println(className)
-        println(methodName)
-         */
+        if (alreadyIncluded.contains(varname)) {
 
-        getMethodAnnotationDoc(className, methodName)
+          "\n"
+
+        } else {
+
+          val lastDot = varname.lastIndexOf('.')
+          val className = varname.take(lastDot)
+          val methodName = varname.drop(lastDot+1)
+
+          /*
+           println(line)
+           println(varname)
+           println(className)
+           println(methodName)
+           */
+
+          alreadyIncluded.add(varname)
+
+          getMethodAnnotationDoc(className, methodName, alreadyIncluded)
+        }
 
       } else {
 
@@ -131,18 +141,20 @@ class ApiDocController extends Controller {
     }.mkString
   }
 
-  def getMethodAnnotationDoc(className: String, methodName: String) = {
+  def getMethodAnnotationDoc(className: String, methodName: String, alreadyIncluded: scala.collection.mutable.Set[String]) = {
     val annotation = getMethodAnnotation(className, methodName)
-    expandIncludes(annotation.doc)
+    expandIncludes(annotation.doc, alreadyIncluded)
   }
 
   def validate(routeEntries: List[RouteEntry]): Unit = {
+    val alreadyIncluded = scala.collection.mutable.Set[String]()
+
     routeEntries.foreach(routeEntry => {
 
       if (!hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
         throw new Exception(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the corresponding Object)")
 
-      val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod)
+      val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
       val json = ApiDocUtil.getJson(doc)
       val jsonMethod = (json\"method").as[String]
       val jsonUri = (json\"uri").as[String]
@@ -161,8 +173,10 @@ class ApiDocController extends Controller {
 
     validate(routeEntries)
 
+    val alreadyIncluded = scala.collection.mutable.Set[String]()
+
     val apiDocs = routeEntries.map(routeEntry =>
-      getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod)
+      getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
     )
 
     apiDocs
