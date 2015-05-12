@@ -70,7 +70,7 @@ object SwaggerUtil{
      self.getTag("/api/v1/", "/api/v1")                  === "root"
      self.getTag("/api/v1/", "/api/v1/")                 === "root"
   """)
-  def getTag(basePath: String, uri_raw: String): String = {
+  private def getTag(basePath: String, uri_raw: String): String = {
 
     assert(uri_raw.startsWith("/"))
 
@@ -247,7 +247,7 @@ object SwaggerUtil{
       self.allTags("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
       self.allTags("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "usernames", "users")
   """)
-  def allTags(basePath: String, apidocs: List[String]): Set[String] = {
+  private def allTags(basePath: String, apidocs: List[String]): Set[String] = {
     val ret = apidocs.map(
       ApiDocUtil.getJson(_)
     ).map(jsonApiDoc =>

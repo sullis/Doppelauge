@@ -74,19 +74,19 @@ object ApiDocUtil{
 
 
   @Test(code="""
-    self.findUriParm("/api/v1/acl/{service}")        === List("service")
-    self.findUriParm("/api/v1/acl/{service}/{hest}") === List("service", "hest")
-    self.findUriParm("/api/v1/acl/")                 === List()
-    self.findUriParm("/api/v1/acl")                  === List()
+    self.findUriParms("/api/v1/acl/{service}")        === List("service")
+    self.findUriParms("/api/v1/acl/{service}/{hest}") === List("service", "hest")
+    self.findUriParms("/api/v1/acl/")                 === List()
+    self.findUriParms("/api/v1/acl")                  === List()
   """)
-  def findUriParm(autoUri: String): List[String] =
+  private def findUriParms(autoUri: String): List[String] =
     if (autoUri=="")
       List()
     else if (autoUri.startsWith("{")) {
       val next = autoUri.indexOf('}')
-      autoUri.substring(1, next) :: findUriParm(autoUri.drop(next+1))
+      autoUri.substring(1, next) :: findUriParms(autoUri.drop(next+1))
     } else
-      findUriParm(autoUri.drop(1))
+      findUriParms(autoUri.drop(1))
 
 
   def validateDataTypeFields(className: String, dataTypeName: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
@@ -153,25 +153,25 @@ object ApiDocUtil{
     self.getEnumArgs("Enum(2,65,9) Int(query)") === (List("2","65","9"), 12)
 
     // Type parsing:
-    self.TypeInfo("", "Array String (header)").type_ === "String"
-    self.TypeInfo("", "Array String (header)").isArray === true
-    self.TypeInfo("", "Array String (header)").paramType === "header"
+    instance.TypeInfo("", "Array String (header)").type_ === "String"
+    instance.TypeInfo("", "Array String (header)").isArray === true
+    instance.TypeInfo("", "Array String (header)").paramType === "header"
 
-    self.TypeInfo("", "Enum(a,b) String (header)").type_ === "String"
-    self.TypeInfo("", "Enum(a,b) String (header)").isEnum === true
-    self.TypeInfo("", "Enum(a,b) String (header)").paramType === "header"
+    instance.TypeInfo("", "Enum(a,b) String (header)").type_ === "String"
+    instance.TypeInfo("", "Enum(a,b) String (header)").isEnum === true
+    instance.TypeInfo("", "Enum(a,b) String (header)").paramType === "header"
 
-    self.TypeInfo("", "Enum(2,65,9) Int(query)").type_ === "Int"
-    self.TypeInfo("", "Enum(2,65,9) Int(query)").optional === false
-    self.TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional === true
+    instance.TypeInfo("", "Enum(2,65,9) Int(query)").type_ === "Int"
+    instance.TypeInfo("", "Enum(2,65,9) Int(query)").optional === false
+    instance.TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional === true
 
-    self.TypeInfo("", "String(header)").optional === false
-    self.TypeInfo("", "String (header, optional)").optional === true
-    self.TypeInfo("", "String(optional)").optional === true
-    self.TypeInfo("", "String( optional)").optional === true
-    self.TypeInfo("", "String").optional === false
+    instance.TypeInfo("", "String(header)").optional === false
+    instance.TypeInfo("", "String (header, optional)").optional === true
+    instance.TypeInfo("", "String(optional)").optional === true
+    instance.TypeInfo("", "String( optional)").optional === true
+    instance.TypeInfo("", "String").optional === false
   """)
-  def getEnumArgs(typetypetype: String): (List[String],Int) = {
+  private def getEnumArgs(typetypetype: String): (List[String],Int) = {
     if (!typetypetype.startsWith("Enum ") && !typetypetype.startsWith("Enum("))
       return (List(),0)
 
@@ -236,7 +236,7 @@ object ApiDocUtil{
       throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
   }
 
-  case class Raw(key: String, elements: List[String]) {
+  private case class Raw(key: String, elements: List[String]) {
     def plus(element: String) =
       Raw(key, elements ++ List(element))
 
@@ -377,7 +377,7 @@ object ApiDocUtil{
         val pos = key.indexOf(' ')
         val method = key.substring(0,pos).trim
         val uri = key.drop(pos).trim
-        val uriParms = findUriParm(uri)
+        val uriParms = findUriParms(uri)
 
         Json.obj(
           "method" -> method,
