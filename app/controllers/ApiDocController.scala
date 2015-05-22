@@ -79,26 +79,32 @@ class ApiDocController extends Controller {
 
   private def hasAnnotation(method: java.lang.reflect.Method) = {
     val annotations = method.getAnnotations()
-    annotations.find(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]) != None
+    annotations.exists(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc])
   }
 
 
   def hasMethodAnnotation(className: String, methodName: String) = {
     val class_ = play.api.Play.classloader.loadClass(className)
 
-    class_.getDeclaredMethods().find(
-      method => (method.getName()==methodName && hasAnnotation(method))
-    ) != None
+    class_.getDeclaredMethods().exists(
+      method => method.getName()==methodName && hasAnnotation(method)
+    )
   }
 
   def getMethodAnnotation(className: String, methodName: String) = {
     val class_ = play.api.Play.classloader.loadClass(className)
 
-    class_.getDeclaredMethods().find(
-      method => (method.getName()==methodName && hasAnnotation(method))
-    ).get.getAnnotations().find(
-      _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
-    ).get.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
+    val method =
+      class_.getDeclaredMethods().find(
+        method => (method.getName()==methodName && hasAnnotation(method))
+      ).get
+
+    val rightAnnotation =
+      method.getAnnotations().find(
+        _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
+      ).get
+
+    rightAnnotation.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
   }
 
   def expandIncludes(doc: String, alreadyIncluded: scala.collection.mutable.Set[String]): String = {
@@ -108,26 +114,26 @@ class ApiDocController extends Controller {
 
       if (trimmed.startsWith("INCLUDE ")) {
 
-        val varname = trimmed.drop("INCLUDE ".size).trim
+        val pathAndMethod = trimmed.drop("INCLUDE ".size).trim
 
-        if (alreadyIncluded.contains(varname)) {
+        if (alreadyIncluded.contains(pathAndMethod)) {
 
           "\n"
 
         } else {
 
-          val lastDot = varname.lastIndexOf('.')
-          val className = varname.take(lastDot)
-          val methodName = varname.drop(lastDot+1)
+          val lastDot = pathAndMethod.lastIndexOf('.')
+          val className = pathAndMethod.take(lastDot)
+          val methodName = pathAndMethod.drop(lastDot+1)
 
           /*
            println(line)
-           println(varname)
+           println(pathAndMethod)
            println(className)
            println(methodName)
            */
 
-          alreadyIncluded.add(varname)
+          alreadyIncluded.add(pathAndMethod)
 
           getMethodAnnotationDoc(className, methodName, alreadyIncluded)
         }
