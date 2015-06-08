@@ -263,6 +263,49 @@ class JsonMatcherSpec extends Specification {
     }
 
 
+    "match Maybe" in {
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(1)
+        ),
+        Json.obj(
+          "a" -> 1
+        )
+      )
+
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(1)
+        ),
+        Json.obj(
+          "a" -> JsNull
+        )
+      )
+
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(1)
+        ),
+        Json.obj()
+      )
+
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(2)
+        ),
+        Json.obj(
+          "a" -> 1
+        )
+      ) should throwA[JsonMatcherException]
+
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(___anyNumber)
+        ),
+        Json.obj()
+      )
+    }
+
     // simple array tests
 
     "match obj with array" in {

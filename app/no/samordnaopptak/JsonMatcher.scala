@@ -13,14 +13,27 @@ object JsonMatcher{
 
   private val ___allowOtherJsonsKey = "________allowothers________"
   private val ___ignoreOrderJsonKey = "________ignoreOrder________"
+  private val ___maybeFieldPrefix = "________maybe_______"
+
   val ___numElements = "________numFields________"
 
+  /** This value does something stringy.
+    * {{{
+    *   JsonMatcher.matchJson(
+    *     JsonMatcher.___anyString,
+    *     JsString("gakk")
+    *   )
+    * }}}
+    */
   val ___anyString  = JsString("________anyString________")
+
   val ___anyNumber  = JsString("________anyNumber________")
   val ___anyObject  = JsString("________anyObject________")
   val ___anyArray   = JsString("________anyArray_________")
   val ___anyBoolean = JsString("________anyBoolean_______")
 
+
+  /** This class does something Custom. */
   case class Custom(func: JsValue => Boolean, name: String = "") extends JsUndefined("custom") {
     override def toString = if (name=="") func.toString else name
   }
@@ -35,10 +48,17 @@ object JsonMatcher{
 
   case class Or(matchers: JsValue*) extends JsUndefined("or")
   case class And(matchers: JsValue*) extends JsUndefined("and")
+  case class Maybe(wrapperValue: Json.JsValueWrapper) extends JsUndefined("maybe") {
+    val matcher = Or(
+      JsNull,
+      Json.arr(wrapperValue).value(0)
+    )
+  }
 
   val ___allowOtherValues: JsString = JsString(___allowOtherJsonsKey)
   val ___ignoreOrder: JsString = JsString(___ignoreOrderJsonKey)
   val ___allowOtherFields: (String,Json.JsValueWrapper) = ___allowOtherJsonsKey -> Json.toJsFieldJsValueWrapper(___allowOtherJsonsKey)
+
 
   private def pp(json: JsValue): String =
     s"\n${Json.prettyPrint(json)}\n"
@@ -129,7 +149,22 @@ object JsonMatcher{
       matchOrderedJsonArrays(json, hasAllowOthers, cleanMatcher, 0, cleanJson, throwException, path)
   }
 
-  private def matchJsonObjects(matcher: JsObject, json: JsObject, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+  private def matchJsonObjects(matcher: JsObject, jsonWithoutMaybes: JsObject, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+    val maybeKeys = matcher.value.filter{
+      case (_, value: Maybe) => true
+      case _                 => false
+    }.keys
+
+    val unusedMaybeKeys = maybeKeys.filter( key => !jsonWithoutMaybes.keys.contains(key))
+
+    val maybes = JsObject(
+      unusedMaybeKeys.map(key =>
+        key -> JsNull
+      ).toSeq
+    )
+
+    val json = jsonWithoutMaybes ++ maybes
+
     val hasAllowOthers = matcher.keys.contains(___allowOtherJsonsKey)
     val hasNumElements = matcher.keys.contains(___numElements)
     val matcherSize = if (hasNumElements) matcher.value.size-1 else matcher.value.size
@@ -231,6 +266,7 @@ object JsonMatcher{
       case (`___anyBoolean`, j: JsBoolean) => true
       case (m: Or,           j: JsValue)   => matchOr(m, j, throwException, ignoreArrayOrder, path)
       case (m: And,          j: JsValue)   => matchAnd(m, j, throwException, ignoreArrayOrder, path)
+      case (m: Maybe,        j: JsValue)   => matchJson(m.matcher, j,  throwException, ignoreArrayOrder, path)
       case (c: Custom,       j: JsValue) => matchCustom(c, j, throwException, path)
       case (r: RegExp,     j: JsString) => if (r(j)) true else matchJsonFailed(s""""${j.value}" doesn't match the regexp "${r.pattern}".""", throwException, path)
       case (r: RegExp,     j: JsValue) => matchJsonFailed(s"""RegExp matcher expected a string. Not-string value: "$j"""", throwException, path)
