@@ -33,6 +33,9 @@ object JsonMatcher{
   val ___anyBoolean = JsString("________anyBoolean_______")
 
 
+  private def wrapperToJsValue(wrapper: Json.JsValueWrapper) =
+    Json.arr(wrapper).value(0)
+
   /** This class does something Custom. */
   case class Custom(func: JsValue => Boolean, name: String = "") extends JsUndefined("custom") {
     override def toString = if (name=="") func.toString else name
@@ -47,17 +50,17 @@ object JsonMatcher{
   }
 
   case class Or(wrapperMatchers: Json.JsValueWrapper*) extends JsUndefined("or") {
-    val matchers = Json.arr(wrapperMatchers:_*)
+    val matchers = wrapperMatchers.map(wrapperToJsValue)
   }
 
   case class And(wrapperMatchers: Json.JsValueWrapper*) extends JsUndefined("and") {
-    val matchers = Json.arr(wrapperMatchers:_*)
+    val matchers = wrapperMatchers.map(wrapperToJsValue)
   }
 
   case class Maybe(wrapperValue: Json.JsValueWrapper) extends JsUndefined("maybe") {
     val matcher = Or(
       JsNull,
-      Json.arr(wrapperValue).value(0)
+      wrapperToJsValue(wrapperValue)
     )
   }
 
@@ -233,7 +236,7 @@ object JsonMatcher{
   private def matchOr(or: Or, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
     def inner(matchers: Seq[JsValue]): Boolean =
       if (matchers.isEmpty && throwException)
-        matchJsonFailed(s"""Doesn't match:\n${or.matchers.value.toList.map(Json.prettyPrint(_)).mkString("Or(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
+        matchJsonFailed(s"""Doesn't match:\n${or.matchers.map(Json.prettyPrint(_)).mkString("Or(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
       else if (matchers.isEmpty)
         false
       else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
@@ -241,7 +244,7 @@ object JsonMatcher{
       else
         inner(matchers.tail)
 
-    inner(or.matchers.value.toSeq)
+    inner(or.matchers)
   }
 
   private def matchAnd(and: And, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
@@ -251,14 +254,17 @@ object JsonMatcher{
       else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
         inner(matchers.tail)
       else if (throwException)
-        matchJsonFailed(s"""Doesn't match:\n${and.matchers.value.toList.map(Json.prettyPrint(_)).mkString("And(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
+        matchJsonFailed(s"""Doesn't match:\n${and.matchers.map(Json.prettyPrint(_)).mkString("And(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
       else
         false
 
-    inner(and.matchers.value.toSeq)
+    inner(and.matchers)
   }
 
-  private def matchJson(matcher: JsValue, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+  private def matchJson(matcherWrapper: Json.JsValueWrapper, jsonWrapper: Json.JsValueWrapper, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+    val matcher = wrapperToJsValue(matcherWrapper)
+    val json = wrapperToJsValue(jsonWrapper)
+
     if (verbose && matcher.isInstanceOf[JsString] && json.isInstanceOf[JsString])
       println("matching "+matcher+", vs. "+json)
     else if (very_verbose)
@@ -289,6 +295,11 @@ object JsonMatcher{
     success
   }
 
-  def matchJson(matcher: JsValue, json: JsValue, throwException: Boolean = true, ignoreArrayOrder: Boolean = false): Boolean =
+  /** This is a brief description of what's being documented.
+  *
+  * This is further documentation of what we're documenting.  It should
+  * provide more details as to how this works and what it does. 
+  */
+  def matchJson(matcher: Json.JsValueWrapper, json: Json.JsValueWrapper, throwException: Boolean = true, ignoreArrayOrder: Boolean = false): Boolean =
     matchJson(matcher, json, throwException, ignoreArrayOrder, "")
 }

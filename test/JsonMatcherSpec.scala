@@ -60,7 +60,7 @@ class JsonMatcherSpec extends Specification {
       // string
       matchJson(
         Json.obj("a" -> ___anyString),
-        Json.obj("a" -> "b")
+        Map("a" -> "b")
       )
       matchJson(
         Json.obj("a" -> ___anyString),
@@ -154,30 +154,30 @@ class JsonMatcherSpec extends Specification {
     "match Or" in {
       matchJson(
         Or("a", 50, 30),
-        JsString("a")
+        "a"
       )
       matchJson(
         Or("a", 50),
-        JsNumber(50)
+        50
       )
       matchJson(
         Or("a", 2, 50),
-        JsNumber(2)
+        2
       )
       matchJson(
         Or("a", 50),
-        JsBoolean(false)
-      ) should throwA[JsonMatcherException] 
+        false
+      ) should throwA[JsonMatcherException]
       matchJson(
         Or(),
-        JsBoolean(false)
-      ) should throwA[JsonMatcherException] 
+        false
+      ) should throwA[JsonMatcherException]
     }
 
     "match And" in {
       matchJson(
         And(),
-        JsString("a")
+        "a"
       )
       matchJson(
         And(___anyNumber, 50),
@@ -185,11 +185,11 @@ class JsonMatcherSpec extends Specification {
       )
       matchJson(
         And("a", 50),
-        JsNumber(50)
+        50
       ) should throwA[JsonMatcherException]
       matchJson(
         And(50, "a"),
-        JsNumber(50)
+        50
       ) should throwA[JsonMatcherException]
     }
 
@@ -202,7 +202,7 @@ class JsonMatcherSpec extends Specification {
       )
       matchJson(
         Custom(_.as[JsNumber].value > 0),
-        JsNumber(50)
+        50
       )
 
 
