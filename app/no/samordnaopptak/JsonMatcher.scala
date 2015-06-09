@@ -46,8 +46,14 @@ object JsonMatcher{
     }
   }
 
-  case class Or(matchers: JsValue*) extends JsUndefined("or")
-  case class And(matchers: JsValue*) extends JsUndefined("and")
+  case class Or(wrapperMatchers: Json.JsValueWrapper*) extends JsUndefined("or") {
+    val matchers = Json.arr(wrapperMatchers:_*)
+  }
+
+  case class And(wrapperMatchers: Json.JsValueWrapper*) extends JsUndefined("and") {
+    val matchers = Json.arr(wrapperMatchers:_*)
+  }
+
   case class Maybe(wrapperValue: Json.JsValueWrapper) extends JsUndefined("maybe") {
     val matcher = Or(
       JsNull,
@@ -227,7 +233,7 @@ object JsonMatcher{
   private def matchOr(or: Or, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
     def inner(matchers: Seq[JsValue]): Boolean =
       if (matchers.isEmpty && throwException)
-        matchJsonFailed(s"""Doesn't match:\n${or.matchers.toList.map(Json.prettyPrint(_)).mkString("Or(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
+        matchJsonFailed(s"""Doesn't match:\n${or.matchers.value.toList.map(Json.prettyPrint(_)).mkString("Or(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
       else if (matchers.isEmpty)
         false
       else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
@@ -235,7 +241,7 @@ object JsonMatcher{
       else
         inner(matchers.tail)
 
-    inner(or.matchers.toSeq)
+    inner(or.matchers.value.toSeq)
   }
 
   private def matchAnd(and: And, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
@@ -245,11 +251,11 @@ object JsonMatcher{
       else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
         inner(matchers.tail)
       else if (throwException)
-        matchJsonFailed(s"""Doesn't match:\n${and.matchers.toList.map(Json.prettyPrint(_)).mkString("And(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
+        matchJsonFailed(s"""Doesn't match:\n${and.matchers.value.toList.map(Json.prettyPrint(_)).mkString("And(", ", ", ")")}\n VS. ${pp(json)}""", throwException, path)
       else
         false
 
-    inner(and.matchers.toSeq)
+    inner(and.matchers.value.toSeq)
   }
 
   private def matchJson(matcher: JsValue, json: JsValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {

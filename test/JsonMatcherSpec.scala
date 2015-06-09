@@ -153,19 +153,19 @@ class JsonMatcherSpec extends Specification {
 
     "match Or" in {
       matchJson(
-        Or(JsString("a"), JsNumber(50), JsNumber(30)),
+        Or("a", 50, 30),
         JsString("a")
       )
       matchJson(
-        Or(JsString("a"), JsNumber(50)),
+        Or("a", 50),
         JsNumber(50)
       )
       matchJson(
-        Or(JsString("a"), JsNumber(2), JsNumber(50)),
+        Or("a", 2, 50),
         JsNumber(2)
       )
       matchJson(
-        Or(JsString("a"), JsNumber(50)),
+        Or("a", 50),
         JsBoolean(false)
       ) should throwA[JsonMatcherException] 
       matchJson(
@@ -180,15 +180,15 @@ class JsonMatcherSpec extends Specification {
         JsString("a")
       )
       matchJson(
-        And(___anyNumber, JsNumber(50)),
+        And(___anyNumber, 50),
         JsNumber(50)
       )
       matchJson(
-        And(JsString("a"), JsNumber(50)),
+        And("a", 50),
         JsNumber(50)
       ) should throwA[JsonMatcherException]
       matchJson(
-        And(JsNumber(50), JsString("a")),
+        And(50, "a"),
         JsNumber(50)
       ) should throwA[JsonMatcherException]
     }
@@ -296,7 +296,7 @@ class JsonMatcherSpec extends Specification {
         Json.obj(
           "a" -> 1
         )
-      ) should throwA[JsonMatcherException]
+      ) must throwA[JsonMatcherException]
 
       matchJson(
         Json.obj(
@@ -304,6 +304,24 @@ class JsonMatcherSpec extends Specification {
         ),
         Json.obj()
       )
+
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(___anyNumber)
+        ),
+        Json.obj(
+          "a" -> 50
+        )
+      )
+
+      matchJson(
+        Json.obj(
+          "a" -> Maybe(___anyNumber)
+        ),
+        Json.obj(
+          "b" -> "c"
+        )
+      ) must throwA[JsonMatcherException]
     }
 
     // simple array tests

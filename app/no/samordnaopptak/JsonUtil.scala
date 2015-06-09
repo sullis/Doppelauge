@@ -152,7 +152,7 @@ object JsonUtil {
     }
   }
 
-  def string(s: String): Json = 
+  def string(s: String): Json =
     JsonWithValue(JsString(s))
 
   def number(n: BigDecimal): Json = 
