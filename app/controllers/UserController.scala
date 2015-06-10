@@ -8,7 +8,7 @@ import play.api.mvc._
 import play.api.libs.json._
 import play.api.Play.current
 
-import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
+import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil, JsonUtil}
 
 
 case class UserData(firstName: String, lastName: String){
@@ -87,4 +87,35 @@ object UserController extends Controller {
   def get2()  = Action { request =>
     Ok(Json.arr(user.toJson))
   }
+
+  @ApiDoc(doc="""
+    POST /user2admin/api/v1/guser
+
+    DESCRIPTION
+      Create a user
+      You can add more detailed information here.
+
+    PARAMETERS
+      body: User
+
+    ERRORS
+      404 User not found
+      400 Syntax Error
+
+    RESULT
+      User
+  """)
+  def post2()  = Action { request =>
+    val json = JsonUtil.jsValue(request.body.asJson.get)
+    val user = User(
+      json("id").asString,
+      UserData(
+        json("data")("firstName").asString,
+        json("data")("lastName").asString
+      ),
+      json("type").asString
+    )
+    Ok(user.toJson)
+  }
+
 }

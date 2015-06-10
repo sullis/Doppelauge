@@ -327,6 +327,11 @@ object SwaggerUtil{
   private def getAllPaths(apidocs: List[Json]): Set[String] =
     apidocs.map(_("uri").asString).toSet
 
+  private def sortMapByKey[T](group: Map[String, T]): List[(String, T)] =
+    group.toList.sortBy{
+      case (key, _) => key
+    }
+
   def getMain(basePath: String, apidocs: List[String]): JsObject = {
 
     if (!basePath.endsWith("/"))
@@ -343,7 +348,9 @@ object SwaggerUtil{
 
     val allPaths = getAllPaths(jsonApiDocs)
 
-    val groupedJsonApiDocs = jsonApiDocs.groupBy(_("uri").asString)
+    val groupedJsonApiDocs = sortMapByKey(
+      jsonApiDocs.groupBy(_("uri").asString)
+    )
 
     val groupedJsonApiDocsAsJsValue = (groupedJsonApiDocs map {
       case (key, jsonApiDoc) => Json.obj(

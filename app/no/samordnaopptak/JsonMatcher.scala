@@ -2,9 +2,8 @@ package no.samordnaopptak.apidoc
 
 import play.api.libs.json._
 
-// This file and test/lib/JsonMatcherSpec.scala are present in both sokerportal, tk and sdf. If changing any of those two files, all three repositories should be updated.
 
-
+/** This is the ScalaDoc for the package JsonMatcher. */
 object JsonMatcher{
   var very_verbose = false
   var verbose = very_verbose || false

@@ -13,6 +13,7 @@ GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.control
 
 GET     /useradmin/api/v1/user                            no.samordnaopptak.apidoc.controllers.UserController.get
 GET     /user2admin/api/v1/user                           no.samordnaopptak.apidoc.controllers.UserController.get2
+POST     /user2admin/api/v1/guser                           no.samordnaopptak.apidoc.controllers.UserController.post2
 
 
 

@@ -151,25 +151,6 @@ object ApiDocUtil{
     self.getEnumArgs("Enum() String(query)") === (List(),6)
     self.getEnumArgs("Enum(1,2,3) String") === (List("1","2","3"),11)
     self.getEnumArgs("Enum(2,65,9) Int(query)") === (List("2","65","9"), 12)
-
-    // Type parsing:
-    instance.TypeInfo("", "Array String (header)").type_ === "String"
-    instance.TypeInfo("", "Array String (header)").isArray === true
-    instance.TypeInfo("", "Array String (header)").paramType === "header"
-
-    instance.TypeInfo("", "Enum(a,b) String (header)").type_ === "String"
-    instance.TypeInfo("", "Enum(a,b) String (header)").isEnum === true
-    instance.TypeInfo("", "Enum(a,b) String (header)").paramType === "header"
-
-    instance.TypeInfo("", "Enum(2,65,9) Int(query)").type_ === "Int"
-    instance.TypeInfo("", "Enum(2,65,9) Int(query)").optional === false
-    instance.TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional === true
-
-    instance.TypeInfo("", "String(header)").optional === false
-    instance.TypeInfo("", "String (header, optional)").optional === true
-    instance.TypeInfo("", "String(optional)").optional === true
-    instance.TypeInfo("", "String( optional)").optional === true
-    instance.TypeInfo("", "String").optional === false
   """)
   private def getEnumArgs(typetypetype: String): (List[String],Int) = {
     if (!typetypetype.startsWith("Enum ") && !typetypetype.startsWith("Enum("))
@@ -190,6 +171,28 @@ object ApiDocUtil{
 
     (args,endpos+1)
   }
+
+  @Test(code="""
+    instance.testTypeInfo("Array String (header)").type_ === "String"
+    instance.testTypeInfo("Array String (header)").isArray === true
+    instance.testTypeInfo("Array String (header)").paramType === "header"
+
+    instance.testTypeInfo("Enum(a,b) String (header)").type_ === "String"
+    instance.testTypeInfo("Enum(a,b) String (header)").isEnum === true
+    instance.testTypeInfo("Enum(a,b) String (header)").paramType === "header"
+
+    instance.testTypeInfo("Enum(2,65,9) Int(query)").type_ === "Int"
+    instance.testTypeInfo("Enum(2,65,9) Int(query)").optional === false
+    instance.testTypeInfo("Enum(2,65,9) Int(query,optional)").optional === true
+
+    instance.testTypeInfo("String(header)").optional === false
+    instance.testTypeInfo("String (header, optional)").optional === true
+    instance.testTypeInfo("String(optional)").optional === true
+    instance.testTypeInfo("String( optional)").optional === true
+    instance.testTypeInfo("String").optional === false
+  """)
+  def testTypeInfo(typetypetype: String) =
+    TypeInfo("", typetypetype)
 
   case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
     val (enumArgs,enumSize)  = getEnumArgs(typetypetype)
