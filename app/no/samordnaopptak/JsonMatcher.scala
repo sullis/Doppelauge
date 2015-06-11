@@ -36,7 +36,7 @@ object JsonMatcher{
     Json.arr(wrapper).value(0)
 
   /** This class does something Custom. */
-  case class Custom(func: JsValue => Boolean, name: String = "") extends JsUndefined("custom") {
+  case class Custom(func: JsonUtil.Json => Boolean, name: String = "") extends JsUndefined("custom") {
     override def toString = if (name=="") func.toString else name
   }
 
@@ -219,7 +219,7 @@ object JsonMatcher{
 
   private def matchCustom(custom: Custom, json: JsValue, throwException: Boolean, path: String): Boolean = {
     val result = try{
-      custom.func(json)
+      custom.func(JsonUtil.jsValue(json))
     } catch {
       case e: Throwable => {
         matchJsonFailed(s""""The custom matcher $custom threw an exception: "${getStackTraceString(e)}" when called with "${pp(json)}".""", throwException, path)

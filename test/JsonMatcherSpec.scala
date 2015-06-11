@@ -200,21 +200,20 @@ class JsonMatcherSpec extends Specification {
         Custom(_ => true),
         JsNull
       )
-      matchJson(
-        Custom(_.as[JsNumber].value > 0),
-        50
-      )
 
-
-      // unsuccessfull
       matchJson(
         Custom(_ => false),
         JsNull
       ) should throwA[JsonMatcherException]
 
       matchJson(
-        Custom(_.as[JsNumber].value > 0),
-        JsNumber(0)
+        Custom(_.asNumber > 0),
+        50
+      )
+
+      matchJson(
+        Custom(_.asNumber > 0),
+        0
       ) should throwA[JsonMatcherException]
 
 
@@ -249,8 +248,8 @@ class JsonMatcherSpec extends Specification {
       // We do this to get more informative error messages and avoid having to check for types.
       try {
         matchJson(
-          Custom(_.as[JsNumber].value > 0),
-          JsString("gakkgakkgakk")
+          Custom(_.asNumber > 0),
+          "gakkgakkgakk"
         )
         throw new Exception("somethingswrong")
       } catch {
@@ -319,7 +318,7 @@ class JsonMatcherSpec extends Specification {
           "a" -> Maybe(___anyNumber)
         ),
         Json.obj(
-          "b" -> "c"
+          "a" -> "c"
         )
       ) must throwA[JsonMatcherException]
     }
