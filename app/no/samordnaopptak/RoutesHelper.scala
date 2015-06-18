@@ -53,7 +53,9 @@ object RoutesHelper{
       ""
     else if (confUri.startsWith("$")) {
       val pos = confUri.indexOf("<")
-      "{" + confUri.substring(1, pos) + "}" + getAutoUriFromConfUri(confUri.drop(pos+7))
+      val pos2 = confUri.indexOf(">")
+      val offset = pos2 - pos;
+      "{" + confUri.substring(1, pos) + "}" + getAutoUriFromConfUri(confUri.drop(pos+offset+1))
     } else
       confUri.take(1) + getAutoUriFromConfUri(confUri.drop(1))
 
