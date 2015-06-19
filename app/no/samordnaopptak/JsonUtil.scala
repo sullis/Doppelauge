@@ -7,6 +7,9 @@ object JsonUtil {
   import play.api.libs.json._
 
 
+  private def wrapperToJsValue(wrapper: Json.JsValueWrapper) =
+    Json.arr(wrapper).value(0)
+
   class JsonParseException(val message: String) extends Exception(message)
 
   trait Json{
@@ -17,8 +20,9 @@ object JsonUtil {
     override def toString =
       "JsonUtil.Json(\n"+pp()+"\n)"
 
+    def asJsValue: JsValue
     def asJsObject: JsObject
-    def asMap: scala.collection.Map[String, Json]
+    def asMap: Map[String, Json]
     def asList: List[Json]
     def asString: String
     def asBoolean: Boolean
@@ -28,6 +32,7 @@ object JsonUtil {
     def asInt = asNumber.toInt
     def asLong = asNumber.toLong
 
+    def isList: Boolean
     def isMap: Boolean
     def isNumber: Boolean
     def isBoolean: Boolean
@@ -35,6 +40,13 @@ object JsonUtil {
 
     def isDefined: Boolean
     def hasKey(key: String): Boolean // it might be undefined even if it has key. (i.e. when the value is null)
+
+    def keys: Set[String]
+
+    def size: Int
+
+    def ++(other: Json): Json =
+      JsonUtil.map(asMap ++ other.asMap)
 
     def asOption[R](command: Json => R): Option[R] = 
       Some(command(this))
@@ -83,6 +95,7 @@ object JsonUtil {
     private def error =
       throw new JsonParseException("""Trying to access key """"+key+"""", which is not found in """+parent)
 
+    def asJsValue = JsNull
     def asJsObject = error
     def asMap = error
     def asList = error
@@ -90,6 +103,7 @@ object JsonUtil {
     def asNumber = error
     def asBoolean = error
 
+    def isList = error    
     def isMap = error
     def isNumber: Boolean = error
     def isBoolean: Boolean = error
@@ -97,6 +111,10 @@ object JsonUtil {
 
     def isDefined: Boolean = false
     def hasKey(key: String): Boolean = false
+
+    def keys: Set[String] = error
+
+    def size: Int = error
 
     override def asOption[R](command: Json => R): Option[R] = None
     override def getOrElse[R](command: Json => R, orElseValue: R): R =
@@ -114,16 +132,18 @@ object JsonUtil {
       case e: JsResultException => throw new JsonParseException("'" + pp() + s"' can not be converted to $t. ("+e.getMessage()+")")
     }
 
-    lazy val asMap: scala.collection.Map[String, Json] = catchCommon("Map"){
+    lazy val asMap: Map[String, Json] = catchCommon("Map"){
       json.as[JsObject].value.map{
         case (key, `JsNull`) => key -> JsonWithoutValue(key, this)
         case (key, value) => key -> JsonWithValue(value)
-      }
+      }.toMap
     }
 
     lazy val asList = catchCommon("List"){
       json.as[JsArray].value.toList.map(JsonWithValue(_))
     }
+
+    def asJsValue = json
 
     def asJsObject = catchCommon("JsObject"){
       json.as[JsObject]
@@ -141,6 +161,7 @@ object JsonUtil {
       json.as[JsBoolean].value
     }
 
+    def isList: Boolean = json.isInstanceOf[JsArray]
     def isMap: Boolean = json.isInstanceOf[JsObject]
     def isNumber: Boolean = json.isInstanceOf[JsNumber]
     def isBoolean: Boolean = json.isInstanceOf[JsBoolean]
@@ -150,6 +171,16 @@ object JsonUtil {
     def hasKey(key: String): Boolean = catchCommon("hasKey"){
       json.as[JsObject].keys.contains(key)
     }
+
+    def keys: Set[String] = asMap.keys.toSet
+
+    def size: Int =
+      if (isList)
+        json.as[JsArray].value.size
+      else if (isMap)
+        json.as[JsObject].value.size
+      else
+        throw new JsonParseException("'" + pp() + s"' is not an array or a mapcan not be converted t")
   }
 
   def string(s: String): Json =
@@ -163,6 +194,17 @@ object JsonUtil {
 
   def jsValue(j: JsValue): Json =
     JsonWithValue(j)
+
+  def map(m: Map[String, Any]) =
+    jsValue(
+      Json.toJson(
+        m.map {
+          case (key, value: Json) => key -> value.asJsValue
+          case (key, value: JsValue) => key -> value
+          case (key, value) => key -> wrapperToJsValue(value.asInstanceOf[Json.JsValueWrapper])
+        }
+      )
+    )
 
   def parse(jsonString: String): Json =
     try{
