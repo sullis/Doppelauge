@@ -269,7 +269,7 @@ object JsonMatcher{
     else if (very_verbose)
       println("matching "+pp(matcher)+", vs. "+pp(json))
 
-    val success = (matcher, json) match{
+    val success = (matcher, json) match {
       case (`___anyString`,  j: JsString) => true
       case (`___anyNumber`,  j: JsNumber) => true
       case (`___anyObject`,  j: JsObject) => true

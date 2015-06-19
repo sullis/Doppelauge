@@ -180,7 +180,7 @@ object JsonUtil {
       else if (isMap)
         json.as[JsObject].value.size
       else
-        throw new JsonParseException("'" + pp() + s"' is not an array or a mapcan not be converted t")
+        throw new JsonParseException("'" + pp() + s"' is not an array or a map")
   }
 
   def string(s: String): Json =

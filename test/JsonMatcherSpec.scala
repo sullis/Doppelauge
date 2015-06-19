@@ -263,6 +263,7 @@ class JsonMatcherSpec extends Specification {
 
 
     "match Maybe" in {
+
       matchJson(
         Json.obj(
           "a" -> Maybe(1)
@@ -737,7 +738,6 @@ class JsonMatcherSpec extends Specification {
         }
       }
     }
-
 
   }
 }
