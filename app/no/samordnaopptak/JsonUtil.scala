@@ -11,6 +11,13 @@ class JsonUtil {
 
   class JsonParseException(val message: String) extends Exception(message)
 
+  /**
+    All json parsing failures will throw this exception. The method may be overridden.
+    */
+  def createParseException(message: String): Exception =
+    new JsonParseException(message)
+
+
   trait Json{
     private var visitedKeys: Set[String] = Set()
 
@@ -73,7 +80,7 @@ class JsonUtil {
       try{
         asList(index)
       }catch{
-        case e: java.lang.IndexOutOfBoundsException => throw new JsonParseException("index "+index+" not found in "+pp()+" ("+e.getMessage()+")")
+        case e: java.lang.IndexOutOfBoundsException => throw createParseException("index "+index+" not found in "+pp()+" ("+e.getMessage()+")")
       }
 
     def validateRemaining(ignoreKeys: Set[String]): Unit = {
@@ -81,7 +88,7 @@ class JsonUtil {
       val diff = asMap.keys.toSet.diff(visitedKeys)
 
       if (!diff.isEmpty)
-        throw new JsonParseException(s"""Unknown field(s): ${diff.mkString("\"", "\", \"", "\"")}""")
+        throw createParseException(s"""Unknown field(s): ${diff.mkString("\"", "\", \"", "\"")}""")
     }
 
     def validateRemaining(ignoreKeys: String*): Unit =
@@ -92,7 +99,7 @@ class JsonUtil {
     def pp() = "<not defined>"
 
     private def error =
-      throw new JsonParseException("""Trying to access key """"+key+"""", which is not found in """+parent)
+      throw createParseException("""Trying to access key """"+key+"""", which is not found in """+parent)
 
     def asJsValue = JsNull
     def asJsObject = error
@@ -127,8 +134,8 @@ class JsonUtil {
     private def catchCommon[R](t: String)(command: => R): R = try{
       command
     } catch {
-      case e: java.lang.ClassCastException => throw new JsonParseException("'" + pp() + s"' can not be converted to $t. ("+e.getMessage()+")")
-      case e: JsResultException => throw new JsonParseException("'" + pp() + s"' can not be converted to $t. ("+e.getMessage()+")")
+      case e: java.lang.ClassCastException => throw createParseException("'" + pp() + s"' can not be converted to $t. ("+e.getMessage()+")")
+      case e: JsResultException => throw createParseException("'" + pp() + s"' can not be converted to $t. ("+e.getMessage()+")")
     }
 
     lazy val asMap: Map[String, Json] = catchCommon("Map"){
@@ -179,7 +186,7 @@ class JsonUtil {
       else if (isMap)
         json.as[JsObject].value.size
       else
-        throw new JsonParseException("'" + pp() + s"' is not an array or a map")
+        throw createParseException("'" + pp() + s"' is not an array or a map")
   }
 
   def string(s: String): Json =
@@ -210,7 +217,7 @@ class JsonUtil {
     try{
       JsonWithValue(play.api.libs.json.Json.parse(jsonString))
     }catch{
-      case e: Throwable => throw new JsonParseException(s"""Could not parse "$jsonString": ${e.getMessage()}""")
+      case e: Throwable => throw createParseException(s"""Could not parse "$jsonString": ${e.getMessage()}""")
     }
 
   def parseAndValidate[R](jsonString: String, ignore: Set[String] = Set(), allowedKeys: Set[String] = Set())(command: Json => R): R = {
@@ -219,7 +226,7 @@ class JsonUtil {
     if (allowedKeys != Set() && json.isMap)
       json.asMap.keys.foreach(key =>
         if (!allowedKeys.contains(key))
-          throw new Exception(s"""Key "$key" is not supported when parsing json string""")
+          throw createParseException(s"""Key "$key" is not supported when parsing json string""")
       )
 
     val ret = command(json)
