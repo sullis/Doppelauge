@@ -1,8 +1,7 @@
 package no.samordnaopptak.apidoc
 
 
-object JsonUtil {
-
+class JsonUtil {
 
   import play.api.libs.json._
 
@@ -46,7 +45,7 @@ object JsonUtil {
     def size: Int
 
     def ++(other: Json): Json =
-      JsonUtil.map(asMap ++ other.asMap)
+      map(asMap ++ other.asMap)
 
     def asOption[R](command: Json => R): Option[R] = 
       Some(command(this))
@@ -195,12 +194,13 @@ object JsonUtil {
   def jsValue(j: JsValue): Json =
     JsonWithValue(j)
 
-  def map(m: Map[String, Any]) =
+  def map(m: Map[String, Any]): Json =
     jsValue(
       Json.toJson(
         m.map {
           case (key, value: Json) => key -> value.asJsValue
           case (key, value: JsValue) => key -> value
+          case (key, value: Int) => key -> JsNumber(value) // todo: Make a general any->json function, somehow.
           case (key, value) => key -> wrapperToJsValue(value.asInstanceOf[Json.JsValueWrapper])
         }
       )
@@ -241,4 +241,7 @@ object JsonUtil {
     flattenJsObjects(objs.toSeq)
  */
 }
+
+
+object JsonUtil extends JsonUtil
 

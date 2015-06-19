@@ -125,7 +125,7 @@ class JsonUtilSpec extends Specification {
       json("anobjectarray")(1)("b").asString must equalTo("b_")
     }
 
-    "map" in {
+    "JsonUtil.Json.asMap" in {
       json.asMap.get("asdf") must beNone
       json.asMap.keySet.contains("anobjectarray") must beTrue
       json.asMap("anobjectarray")(0)("a").asString must equalTo("a_")
@@ -141,6 +141,42 @@ class JsonUtilSpec extends Specification {
       json("atrueboolean").asOption(_.asBoolean) must equalTo(Some(true))
       json("afalseboolean").asOption(_.asBoolean) must equalTo(Some(false))
       json("astring").asOption(_.asString) must equalTo(Some("astring, definitely"))
+    }
+
+    "JsonUtil.map" in {
+      JsonUtil.map(
+        Map(
+          "a" -> 50,
+          "b" -> 60
+        )
+      ).asJsObject === play.api.libs.json.Json.obj(
+        "a" -> 50,
+        "b" -> 60
+      )
+    }
+
+    "Json.size, Json.keys and Json.++" in {
+      val o = JsonUtil.jsValue(
+        play.api.libs.json.Json.obj(
+          "a" -> 50,
+          "b" -> 60
+        )
+      )
+      val a = JsonUtil.jsValue(
+        play.api.libs.json.Json.arr("a","b","c")
+      )
+
+      o.size must equalTo(2)
+      a.size must equalTo(3)
+      o.keys must equalTo(Set("a","b"))
+      a.keys must throwA[JsonUtil.JsonParseException]
+
+      (json ++ json) must equalTo(json)
+      (o ++ o) must equalTo(o)
+
+      (json ++ o).size must equalTo(json.size + o.size)
+
+      (a ++ o) must throwA[JsonUtil.JsonParseException]
     }
 
     "parseIt" in {
