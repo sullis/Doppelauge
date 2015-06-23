@@ -1,5 +1,6 @@
 package no.samordnaopptak.apidoc
 
+import TestByAnnotation.Test
 
 
 case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scalaMethod: String)
@@ -17,8 +18,10 @@ object RoutesHelper{
     m1.substring(0, m1.lastIndexOf(".")).replace("@", "")
   }
 
-  //controllers.ApiDocController.get -> get
-  //controllers.ApiDocController.get(path:String) -> get
+  @Test(code="""
+    self.getRestMethodName("controllers.ApiDocController.get") === "get"
+    self.getRestMethodName("controllers.ApiDocController.get(path:String)") === "get"
+  """)
   private def getRestMethodName(annoDocField3: String) =
     if (annoDocField3.endsWith(")")) {
       val last = annoDocField3.lastIndexOf("(")
@@ -47,7 +50,12 @@ object RoutesHelper{
  */
     ).toList
 
-  // "/api/v1/acl/$service<[^/]+>" -> "/api/v1/acl/{service}"
+
+  @Test(code="""
+    self.getAutoUriFromConfUri("/api/v1/acl/$service<[^/]+>") === "/api/v1/acl/{service}"
+    self.getAutoUriFromConfUri("/api/v1/acl/$service<[asdf/e/aer/4343[]1534]>") === "/api/v1/acl/{service}"
+    self.getAutoUriFromConfUri("/api/v1/acl/$service<>") === "/api/v1/acl/{service}"
+  """)
   def getAutoUriFromConfUri(confUri: String): String =
     if (confUri=="")
       ""
@@ -59,9 +67,18 @@ object RoutesHelper{
     } else
       confUri.take(1) + getAutoUriFromConfUri(confUri.drop(1))
 
-  // /api/v1/50, /api/v1/50 -> true
-  // /api/v1/50, /api/v1/{haljapino} -> true
-  // /api/v1/50/fields, /api/v1/{haljapino}/fields -> true
+  @Test(code="""
+    self.urisMatches("/api/v1/50", "/api/v1/50") === true
+    self.urisMatches("/api/v1/50", "/api/v1/{haljapino}") === true
+    self.urisMatches("/api/v1/50/fields", "/api/v1/{haljapino}/fields") === true
+
+    self.urisMatches("/api/v1/50", "/api/v1/50/80") === false
+    self.urisMatches("/api/v1/50", "/api/v1") === false
+    self.urisMatches("/api/v1/50", "/api/v1/") === false
+    self.urisMatches("/api/v1/50", "/api/v1/{haljapino}/{ai}") === false
+    self.urisMatches("/api/v1/50", "/api/v1/{haljapino}/a") === false
+    self.urisMatches("/api/v1/", "/api/v1/{haljapino}") === false
+  """)
   def urisMatches(uri: String, routeUri: String): Boolean = {
     val s_uri      = uri.split("/")
     val s_routeUri = getAutoUriFromConfUri(routeUri).split("/")
