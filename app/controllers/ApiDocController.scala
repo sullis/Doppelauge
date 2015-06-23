@@ -154,31 +154,24 @@ class ApiDocController extends Controller {
 
   def validate(routeEntries: List[RouteEntry]): List[RouteEntry] = {
     val alreadyIncluded = scala.collection.mutable.Set[String]()
-    val list = new java.util.ArrayList[RouteEntry]()
+    val cleanedRouteEntries: List[RouteEntry] = routeEntries.filter(routeEntry => hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
+    cleanedRouteEntries.foreach(routeEntry => {
+      val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
+      val json = ApiDocUtil.getJson(doc)
+      val jsonMethod = (json \ "method").as[String]
+      val jsonUri = (json \ "uri").as[String]
 
-    routeEntries.foreach(routeEntry => {
+      if (jsonMethod != routeEntry.restMethod)
+        throw new MethodMismatchException(s"Conflicting REST method declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
+          s"autodoc: $jsonMethod. conf/routes: ${routeEntry.restMethod}")
 
-      if (hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod)) {
-        list.add(routeEntry)
-        //throw new Exception(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the corresponding Object)")
-
-        val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
-        val json = ApiDocUtil.getJson(doc)
-        val jsonMethod = (json \ "method").as[String]
-        val jsonUri = (json \ "uri").as[String]
-
-        if (jsonMethod != routeEntry.restMethod)
-          throw new MethodMismatchException(s"Conflicting REST method declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
-            s"autodoc: $jsonMethod. conf/routes: ${routeEntry.restMethod}")
-
-        if (!hasSameUri(jsonUri, routeEntry.uri))
-          throw new UriMismatchException(s"Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
-            s"autodoc: $jsonUri. conf/routes: ${routeEntry.uri}")
-
+      if (!hasSameUri(jsonUri, routeEntry.uri)) {
+        throw new UriMismatchException(s"Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
+          s"autodoc: $jsonUri. conf/routes: ${routeEntry.uri}")
       }
-    })
-
-    list.toArray.toList.asInstanceOf[List[RouteEntry]]
+    }
+    )
+    cleanedRouteEntries
   }
 
   def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): List[String] = {
