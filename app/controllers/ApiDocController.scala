@@ -214,11 +214,7 @@ object ApiDocController extends Controller {
   val controller = new ApiDocController
 
   def get()  = Action { request =>
-    val routeEntries =
-      RoutesHelper.getRouteEntries()
-        .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
-
-    controller.get(routeEntries)
+    controller.get()
 
     // When extending:
     // 1. copy jsonstring from SwaggerSpec.scala in here
