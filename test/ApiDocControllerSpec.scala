@@ -67,6 +67,8 @@ class ApiDocControllerSpec extends Specification {
   """)
   def errorDoc2() = true
 
+  def errorDoc3() = true // testing missing api-doc validattion
+
   def inCleanEnvironment()(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
       func
@@ -136,6 +138,19 @@ class ApiDocControllerSpec extends Specification {
           val errorRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.ApiDocControllerSpec", "errorDoc2")
           controller.validate(errorRouteEntry::routeEntries) should throwA[controller.UriMismatchException]
         }
+
+        // The function  misses error doc
+        {
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/somewhere", "test.ApiDocControllerSpec", "errorDoc3")
+          controller.validate(errorRouteEntry::routeEntries) should throwA[controller.MissingMethodException]
+        }
+
+        // The function itself is missing
+        {
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/somewhere", "test.ApiDocControllerSpec", "errorDoc3NotHere")
+          controller.validate(errorRouteEntry::routeEntries) should throwA[controller.MissingMethodException]
+        }
+
       }
     }
 
