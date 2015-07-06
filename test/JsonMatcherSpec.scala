@@ -5,6 +5,7 @@ import org.specs2.mutable._
 import play.api.libs.json._
 import play.api.test.Helpers._
 
+import no.samordnaopptak.apidoc.JsonUtil
 import no.samordnaopptak.apidoc.JsonMatcher._
 
 
@@ -111,37 +112,37 @@ class JsonMatcherSpec extends Specification {
 
     "match regexp strings" in {
       matchJson(
-        Json.obj("a" -> RegExp("b")),
+        JsonUtil.obj("a" -> RegExp("b")),
         Json.obj("a" -> "b")
       )
 
       matchJson(
-        Json.obj("a" -> RegExp("b")),
+        JsonUtil.obj("a" -> RegExp("b")),
         Json.obj("a" -> "cbh")
       )
 
       matchJson(
-        Json.obj("a" -> RegExp("^b")),
+        JsonUtil.obj("a" -> RegExp("^b")),
         Json.obj("a" -> "bh")
       )
 
       matchJson(
-        Json.obj("a" -> RegExp("b")),
+        JsonUtil.obj("a" -> RegExp("b")),
         Json.obj("a" -> "c")
       ) should throwA[JsonMatcherException] 
 
       matchJson(
-        Json.obj("a" -> RegExp("^b")),
+        JsonUtil.obj("a" -> RegExp("^b")),
         Json.obj("a" -> "cbh")
       ) should throwA[JsonMatcherException] 
 
       matchJson(
-        Json.obj("a" -> RegExp("^b$")),
+        JsonUtil.obj("a" -> RegExp("^b$")),
         Json.obj("a" -> "cbh")
       ) should throwA[JsonMatcherException] 
 
       matchJson(
-        Json.obj("a" -> RegExp("^b$")),
+        JsonUtil.obj("a" -> RegExp("^b$")),
         Json.obj("a" -> "b")
       )
 
@@ -150,6 +151,7 @@ class JsonMatcherSpec extends Specification {
         JsString("b")
       )
     }
+
 
     "match Or" in {
       matchJson(
@@ -265,7 +267,7 @@ class JsonMatcherSpec extends Specification {
     "match Maybe" in {
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(1)
         ),
         Json.obj(
@@ -274,7 +276,7 @@ class JsonMatcherSpec extends Specification {
       )
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(1)
         ),
         Json.obj(
@@ -283,14 +285,14 @@ class JsonMatcherSpec extends Specification {
       )
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(1)
         ),
         Json.obj()
       )
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(2)
         ),
         Json.obj(
@@ -299,14 +301,14 @@ class JsonMatcherSpec extends Specification {
       ) must throwA[JsonMatcherException]
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(___anyNumber)
         ),
         Json.obj()
       )
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(___anyNumber)
         ),
         Json.obj(
@@ -315,7 +317,7 @@ class JsonMatcherSpec extends Specification {
       )
 
       matchJson(
-        Json.obj(
+        JsonUtil.obj(
           "a" -> Maybe(___anyNumber)
         ),
         Json.obj(
@@ -739,5 +741,7 @@ class JsonMatcherSpec extends Specification {
       }
     }
 
+
   }
+
 }

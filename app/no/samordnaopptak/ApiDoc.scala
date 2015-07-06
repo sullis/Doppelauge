@@ -484,19 +484,17 @@ object ApiDocUtil{
   }
 
 
-  private def validateJson(json: JsObject) = {
-    val uriParms = (json \ "uriParms").as[List[String]]
-    val pathParms = if (!json.keys.contains("parameters"))
-                      Set()
-                    else
-                      (json \ "parameters").as[JsObject].value.filter(
-                         kv => ((kv._2)\"paramType")==JsString("path")
-                      ).keys
+  private def validateJson(jsonJson: JsObject) = {
+    val json = JsonUtil(jsonJson)
+    val uriParms = json("uriParms").asStringArray
+    val parameters = json("parameters").asOption(_.asMap).getOrElse(Set())
+    val pathParms = parameters.filter(_._2("paramType").asString == "path")
+    val pathParmKeys = pathParms.toMap.keys
 
-    if (uriParms.size != pathParms.size)
-      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParms\njson: $json).""")
+    if (uriParms.size != pathParmKeys.size)
+      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: $json).""")
 
-    pathParms.foreach(pathParm =>
+    pathParmKeys.foreach(pathParm =>
       if (!uriParms.contains(pathParm))
         throw new MismatchPathParametersException(s"""The path parameter "${pathParm}" is not defined in the path.""")
     )
@@ -514,13 +512,23 @@ object ApiDocUtil{
     ret
   }
 
-  def getDataTypes(apidoc: String): JsObject = {
+  def getDataTypes_old(apidoc: String): JsObject = {
     val raws = parseRaw(apidoc)
     var ret = Json.obj()
     raws.reverse.map(_.getApidoc).foreach(apidoc =>
-      if (apidoc.keys.contains("datatype"))
-        ret = ret ++ (apidoc \ "datatype").asInstanceOf[JsObject]
+      if (JsonUtil(apidoc)("datatype").isDefined)
+        ret = ret ++ (apidoc \ "datatype").get.asInstanceOf[JsObject]
     )
     ret
   }
+
+  def getDataTypes(apidoc: String): JsObject =
+    JsonUtil.flattenJsObjects(
+      parseRaw(apidoc)
+        .reverse
+        .map(raw => JsonUtil(raw.getApidoc()))
+        .filter(_("datatype").isDefined)
+        .map(_("datatype").asJsObject)
+    )
+
 }

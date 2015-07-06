@@ -4,16 +4,86 @@ import org.specs2.mutable._
 
 import no.samordnaopptak.apidoc.JsonUtil
 
+import play.api.libs.{json => pjson}
+import play.api.libs.json.{Json => PJson} // i.e. Play Json
+
 
 class JsonUtilSpec extends Specification {
 
   "JsonUtil" should {
 
+    "JsonUtil.obj" in {
+
+      JsonUtil.obj().asJsObject === PJson.obj()
+
+      JsonUtil.obj(
+        "a" -> "b"
+      ).asJsObject === PJson.obj(
+        "a" -> "b"
+      )
+
+      JsonUtil.obj(
+        "a" -> 1,
+        "b" -> 1.2,
+        "c" -> 5134134L
+      ).asJsObject === PJson.obj(
+        "a" -> 1,
+        "b" -> 1.2,
+        "c" -> 5134134L
+      )
+
+      JsonUtil.obj(
+        "a" -> true
+      ).asJsObject === PJson.obj(
+        "a" -> true
+      )
+
+      JsonUtil.obj(
+        "a" -> PJson.arr(0)
+      ).asJsObject === PJson.obj(
+        "a" -> PJson.arr(0)
+      )
+
+      JsonUtil.obj(
+        "a" -> JsonUtil.obj("c" -> "d")
+      ).asJsObject === PJson.obj(
+        "a" -> PJson.obj("c" -> "d")
+      )
+
+      true
+    }
+
+    "JsonUtil.arr" in {
+
+      JsonUtil.arr().asJsValue === PJson.arr()
+
+      JsonUtil.arr(
+        1, "2", false
+      ).asJsValue === PJson.arr(
+        1, "2", false
+      )
+
+      JsonUtil.arr(
+        1,
+        "2",
+        JsonUtil.obj(
+          "a" -> JsonUtil.arr(50)
+        )
+      ).asJsValue === PJson.arr(
+        1,
+        "2",
+        PJson.obj(
+          "a" -> PJson.arr(50)
+        )
+      )
+
+    }
 
     "Throw JsonParseException if trying to parse illegal json" in {
       JsonUtil.parse("{]") must throwA[JsonUtil.JsonParseException]
       JsonUtil.parse(""" { "gakk": 50 "o:" } """) must throwA[JsonUtil.JsonParseException]
     }
+
 
     val numbers = "[2, 0.0, -4.2]"
     val jsonString = s"""
@@ -50,37 +120,38 @@ class JsonUtilSpec extends Specification {
     val json = JsonUtil.parse(jsonString)
 
     "Ignore null values in objects." in {
-      json("anull").isInstanceOf[JsonUtil.JsonWithoutValue] must beTrue
+      json("anull") === JsonUtil.JNull
+      json("anull").isNull === true
       json("anull").asOption(_.asInt) must beNone
       json("anull").asOption(_.asLong) must beNone
       json("anull").asOption(_.asDouble) must beNone
       json("anull").asOption(_.asBoolean) must beNone
       json("anull").asOption(_.asMap) must beNone
       json("anull").asOption(_.asLong) must beNone
-      json("anull").asOption(_.asLongList) must beNone
+      json("anull").asOption(_.asLongArray) must beNone
     }
 
     "Array of numbers" in {
-      json("longs").asLongList must equalTo(List[Long](2L,0L,-4L))
-      json("longs").asIntList must equalTo(List[Int](2,0,-4))
-      json("longs").asStringList must throwA[JsonUtil.JsonParseException]
+      json("longs").asLongArray must equalTo(List[Long](2L,0L,-4L))
+      json("longs").asIntArray must equalTo(List[Int](2,0,-4))
+      json("longs").asStringArray must throwA[JsonUtil.JsonParseException]
 
-      json("mixed").asIntList must throwA[JsonUtil.JsonParseException]
-      json("mixed").asLongList must throwA[JsonUtil.JsonParseException]
-      json("mixed").asStringList must throwA[JsonUtil.JsonParseException]
+      json("mixed").asIntArray must throwA[JsonUtil.JsonParseException]
+      json("mixed").asLongArray must throwA[JsonUtil.JsonParseException]
+      json("mixed").asStringArray must throwA[JsonUtil.JsonParseException]
     }
 
 
     "inner access" in {
-      json("inner")("longs2").asLongList must equalTo(List[Long](2L,0L,-4L))
-      json("inner")("longs2").asIntList must equalTo(List[Int](2,0,-4))
-      json("inner")("longs2").asDoubleList must equalTo(List[Double](2,0,-4.2))
+      json("inner")("longs2").asLongArray must equalTo(List[Long](2L,0L,-4L))
+      json("inner")("longs2").asIntArray must equalTo(List[Int](2,0,-4))
+      json("inner")("longs2").asDoubleArray must equalTo(List[Double](2,0,-4.2))
     }
 
     "strings" in {
       json("astring").asString must equalTo("astring, definitely")
       json("nothinghereastring").asString must throwA[JsonUtil.JsonParseException]
-      json("astring").asDoubleList must throwA[JsonUtil.JsonParseException]
+      json("astring").asDoubleArray must throwA[JsonUtil.JsonParseException]
     }
 
 
@@ -100,13 +171,13 @@ class JsonUtilSpec extends Specification {
     }
 
     "unknowns" in {
-      json("nothere").isInstanceOf[JsonUtil.JsonWithoutValue] must beTrue
+      json("nothere").isInstanceOf[JsonUtil.JUndefined] must beTrue
       json("atrueboolean") // check that it's there.
       json("atrueboolean")("gakk") must throwA[JsonUtil.JsonParseException] // wrong type. gakk is a string, not an object.
     }
 
     "getOrElse" in {
-      json("nothere").isInstanceOf[JsonUtil.JsonWithoutValue] must beTrue
+      json("nothere").isInstanceOf[JsonUtil.JUndefined] must beTrue
       json("nothere").getOrElse(_.asLong, 50) === 50
       json("adouble").getOrElse(_.asDouble, 50) === 2.3
     }
@@ -133,7 +204,7 @@ class JsonUtilSpec extends Specification {
     }
 
     "Optional values" in {
-      json("longs").asOption(_.asLongList) must equalTo(Some(List[Long](2L,0L,-4L)))
+      json("longs").asOption(_.asLongArray) must equalTo(Some(List[Long](2L,0L,-4L)))
       json("longs").asOption(_.asString) must throwA[JsonUtil.JsonParseException]
       json("inner").asOption(_.asMap) must beSome
       json("adouble").asOption(_.asDouble) must equalTo(Some(2.3))
@@ -143,8 +214,8 @@ class JsonUtilSpec extends Specification {
       json("astring").asOption(_.asString) must equalTo(Some("astring, definitely"))
     }
 
-    "JsonUtil.map" in {
-      JsonUtil.map(
+    "JsonUtil from map" in {
+      JsonUtil(
         Map(
           "a" -> 50,
           "b" -> 60
@@ -156,13 +227,13 @@ class JsonUtilSpec extends Specification {
     }
 
     "Json.size, Json.keys and Json.++" in {
-      val o = JsonUtil.jsValue(
+      val o = JsonUtil(
         play.api.libs.json.Json.obj(
           "a" -> 50,
           "b" -> 60
         )
       )
-      val a = JsonUtil.jsValue(
+      val a = JsonUtil(
         play.api.libs.json.Json.arr("a","b","c")
       )
 
@@ -256,8 +327,8 @@ class JsonUtilSpec extends Specification {
       } must equalTo("a_")
 
       JsonUtil.parseAndValidate(jsonText){ json =>
-        List(json("a").asString, json("b").asString)
-      } must equalTo(List("a_","b_"))
+        Array(json("a").asString, json("b").asString)
+      } must equalTo(Array("a_","b_"))
     }
 
     "Validate remaining fields, where some fields are optional" in {
@@ -284,5 +355,6 @@ class JsonUtilSpec extends Specification {
       } must equalTo(List("a_",None,None))
 
     }
+
   }
 }

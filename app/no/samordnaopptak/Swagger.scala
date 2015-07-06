@@ -48,13 +48,6 @@ object SwaggerUtil{
   )
 
 
-  private def jsonWithoutUndefined(json: JsObject) = JsObject(
-    json.value.toSeq.filter {
-      case (name, attributes) => ! attributes.isInstanceOf[JsUndefined]
-    }
-  )
-
-
   @Test(code="""
      self.getTag("/api/v1/", "/api/v1/users/habla/happ") === "users"
      self.getTag("/api/v1/", "/api/v1/users/habla/")     === "users"
@@ -131,7 +124,7 @@ object SwaggerUtil{
     else if (isEnum)
       type2 ++
       Json.obj(
-        "enum" -> JsArray(json("enumArgs").asList.map(j => JsString(j.asString)))
+        "enum" -> JsArray(json("enumArgs").asArray.map(j => JsString(j.asString)))
       ) ++
       description
     else
@@ -163,7 +156,7 @@ object SwaggerUtil{
     val errorAsJson =
       if (apidoc.hasKey("errors"))
         JsonUtil.flattenJsObjects(
-          apidoc("errors").asList.map( error =>
+          apidoc("errors").asArray.map( error =>
             getResponseErrors(error)
           )
         )
@@ -188,7 +181,7 @@ object SwaggerUtil{
         "parameters" -> JsArray(
           if (apidoc.hasKey("parameters"))
             (apidoc("parameters").asMap.map {
-              case (name: String, attributes: Json) => jsonWithoutUndefined(
+              case (name: String, attributes: Json) =>
                 Json.obj(
                   "name" -> name,
                   "in" -> attributes("paramType").asString,
@@ -202,7 +195,6 @@ object SwaggerUtil{
                       "schema" -> getType(attributes, addDescription=false)
                     )
                 )
-              )
             }).toList
           else
             List()
@@ -227,10 +219,7 @@ object SwaggerUtil{
             "required" -> required,
             "properties" -> JsObject(
               attributes.asMap.map {
-                case (name, attributes) =>
-                  name -> jsonWithoutUndefined(
-                    getType(attributes)
-                  )
+                case (name, attributes) => name -> getType(attributes)
               }.toList
             )
           )
@@ -337,12 +326,12 @@ object SwaggerUtil{
     if (!basePath.endsWith("/"))
       throw new Exception("Basepath must end with slash: "+basePath)
 
-    val dataTypes = apidocs.map(apidoc => JsonUtil.jsValue(ApiDocUtil.getDataTypes(apidoc)))
+    val dataTypes = apidocs.map(apidoc => JsonUtil(ApiDocUtil.getDataTypes(apidoc)))
     validateUniqueDataTypes(dataTypes)
 
     val tags = allTags(basePath, apidocs).toList.sorted
 
-    val jsonApiDocs = apidocs.map(a => JsonUtil.jsValue(ApiDocUtil.getJson(a)))
+    val jsonApiDocs = apidocs.map(a => JsonUtil(ApiDocUtil.getJson(a)))
 
     validateThatAllDatatypesAreDefined(basePath, jsonApiDocs, dataTypes)
 
