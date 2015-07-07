@@ -249,11 +249,11 @@ object ApiDocUtil{
       JObject(
         elements.map(element => {
           if (element=="...")
-            "..." -> JsonUtil.obj(
+            "..." -> J.obj(
               "type" -> "etc.",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> JsonUtil.arr(),
+              "enumArgs" -> J.arr(),
               "required" -> false
             )
           else {
@@ -265,7 +265,7 @@ object ApiDocUtil{
             val typeInfo = TypeInfo(name, rest(0).trim)
             val comment = if (rest.length==1) "" else rest(1).trim
 
-            name -> JsonUtil.obj(
+            name -> J.obj(
               "type" -> typeInfo.type_,
               if (comment=="")
                 "noComment" -> true
@@ -367,7 +367,7 @@ object ApiDocUtil{
         validateDataTypeFields(className, name, fieldNames, addedFields, removedFields)
       }
 
-      JsonUtil.obj(
+      J.obj(
         name -> parameters
       )
     }
@@ -383,7 +383,7 @@ object ApiDocUtil{
         val uri = key.drop(pos).trim
         val uriParms = findUriParms(uri)
 
-        JsonUtil.obj(
+        J.obj(
           "method" -> method,
           "uri"    -> uri,
           "uriParms" -> uriParms
@@ -391,23 +391,23 @@ object ApiDocUtil{
       }
 
       else if (key=="DESCRIPTION")
-        JsonUtil.obj(
+        J.obj(
           "shortDescription" -> elements.head,
           "longDescription"  -> (if (elements.length==1) "" else elements.tail.mkString("<br>"))
         )
 
       else if (key=="PARAMETERS")
-        JsonUtil.obj(
+        J.obj(
           "parameters" -> getParameters()
         )
 
       else if (key=="ERRORS")
-        JsonUtil.obj(
+        J.obj(
           "errors" -> JArray(
             elements.map(element => {
               val code = element.substring(0,4).trim.toInt
               val description = element.drop(4).trim
-              JsonUtil.obj(
+              J.obj(
                 "code" -> code,
                 "message" -> description
               )})
@@ -422,8 +422,8 @@ object ApiDocUtil{
         val typeInfo = TypeInfo("", splitted(0))
         val comment = if (splitted.length==1) "" else splitted(1)
 
-        JsonUtil.obj(
-          "result" -> JsonUtil.obj(
+        J.obj(
+          "result" -> J.obj(
             "type" -> typeInfo.type_,
             "comment" -> comment,
             "isArray" -> typeInfo.isArray,
@@ -434,7 +434,7 @@ object ApiDocUtil{
       }
 
       else if (key.contains(":"))
-        JsonUtil.obj(
+        J.obj(
           "datatype" -> parseDataType(key)
         )
 
@@ -486,7 +486,7 @@ object ApiDocUtil{
 
 
   private def validateJson(jsonJson: JObject) = {
-    val json = JsonUtil(jsonJson)
+    val json = J(jsonJson)
     val uriParms = json("uriParms").asStringArray
     val parameters = json("parameters").asOption(_.asMap).getOrElse(Set())
     val pathParms = parameters.filter(_._2("paramType").asString == "path")
@@ -504,7 +504,7 @@ object ApiDocUtil{
 
   def getJson(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
-    var ret = JsonUtil.obj()
+    var ret = J.obj()
     raws.reverse.map(_.getApidoc).foreach(apidoc =>
       if ( ! apidoc.keys.contains("datatype"))
         ret = ret ++ apidoc
@@ -515,19 +515,19 @@ object ApiDocUtil{
 
   def getDataTypes_old(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
-    var ret = JsonUtil.obj()
+    var ret = J.obj()
     raws.reverse.map(_.getApidoc).foreach(apidoc =>
-      if (JsonUtil(apidoc)("datatype").isDefined)
+      if (J(apidoc)("datatype").isDefined)
         ret = ret ++ apidoc("datatype")
     )
     ret
   }
 
   def getDataTypes(apidoc: String): JObject =
-    JsonUtil.flattenJObjects(
+    J.flattenJObjects(
       parseRaw(apidoc)
         .reverse
-        .map(raw => JsonUtil(raw.getApidoc()))
+        .map(raw => J(raw.getApidoc()))
         .filter(_("datatype").isDefined)
         .map(_("datatype"))
     )

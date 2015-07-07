@@ -12,14 +12,14 @@ import no.samordnaopptak.json._
 
 
 case class UserData(firstName: String, lastName: String){
-  def toJson = JsonUtil.obj(
+  def toJson = J.obj(
     "firstName" -> firstName,
     "lastName" -> lastName
   )
 }
 
 case class User(id: String, data: UserData, type_ : String){
-  def toJson = JsonUtil.obj(
+  def toJson = J.obj(
     "id" -> id,
     "data" -> data.toJson,
     "type" -> type_
@@ -82,7 +82,7 @@ object UserController extends Controller {
       Array User
   """)
   def get2()  = Action { request =>
-    Ok(JsonUtil.arr(user.toJson).asJsValue)
+    Ok(J.arr(user.toJson).asJsValue)
   }
 
   @ApiDoc(doc="""
@@ -103,7 +103,7 @@ object UserController extends Controller {
       User
   """)
   def post2()  = Action { request =>
-    val json = JsonUtil(request.body.asJson.get)
+    val json = J(request.body.asJson.get)
     val user = User(
       json("id").asString,
       UserData(

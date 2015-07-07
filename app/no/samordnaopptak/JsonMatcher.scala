@@ -48,12 +48,12 @@ object JsonMatcher{
   }
 
   case class Or(anyMatchers: Any*) extends JValue {
-    val matchers = anyMatchers.map(JsonUtil(_))
+    val matchers = anyMatchers.map(J(_))
     override def asJsValue = JsNull
   }
 
   case class And(anyMatchers: Any*) extends JValue {
-    val matchers = anyMatchers.map(JsonUtil(_))
+    val matchers = anyMatchers.map(J(_))
     override def asJsValue = JsNull
   }
 
@@ -122,9 +122,9 @@ object JsonMatcher{
   }
 
   private def matchJsonArrays(matcher: JArray, json: JArray, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
-    val hasAllowOthers = matcher.value.contains(JsonUtil(___allowOtherValues))
-    val hasIgnoreOrder = matcher.value.contains(JsonUtil(___ignoreOrder)) || ignoreArrayOrder
-    val hasNumElements = matcher.value.contains(JsonUtil(___numElements))
+    val hasAllowOthers = matcher.value.contains(J(___allowOtherValues))
+    val hasIgnoreOrder = matcher.value.contains(J(___ignoreOrder)) || ignoreArrayOrder
+    val hasNumElements = matcher.value.contains(J(___numElements))
 
     if (hasAllowOthers && hasNumElements)
       throw new Exception("Matcher contains both ___allowOthers and ___numElements")
@@ -210,7 +210,7 @@ object JsonMatcher{
   }
 
   private def matchJsonObjects(matcher: JsObject, jsonWithoutMaybes: JsObject, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean =
-    matchJsonObjects(JsonUtil(matcher), JsonUtil(jsonWithoutMaybes), throwException, ignoreArrayOrder, path)
+    matchJsonObjects(J(matcher), J(jsonWithoutMaybes), throwException, ignoreArrayOrder, path)
 
   private def getStackTraceString(t: Throwable) = {
     val sw = new java.io.StringWriter()
@@ -296,8 +296,8 @@ object JsonMatcher{
   }
 
   private def matchJson(any_matcher: Any, any_json: Any, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
-    val matcher = JsonUtil(any_matcher)
-    val json = JsonUtil(any_json)
+    val matcher = J(any_matcher)
+    val json = J(any_json)
     matchJson(matcher, json, throwException, ignoreArrayOrder, path)
   }
 

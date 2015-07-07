@@ -10,19 +10,19 @@ import play.api.libs.json.{Json => PJson} // i.e. Play Json
 
 class JsonUtilSpec extends Specification {
 
-  "JsonUtil" should {
+  "J" should {
 
-    "JsonUtil.obj" in {
+    "J.obj" in {
 
-      JsonUtil.obj().asJsObject === PJson.obj()
+      J.obj().asJsObject === PJson.obj()
 
-      JsonUtil.obj(
+      J.obj(
         "a" -> "b"
       ).asJsObject === PJson.obj(
         "a" -> "b"
       )
 
-      JsonUtil.obj(
+      J.obj(
         "a" -> 1,
         "b" -> 1.2,
         "c" -> 5134134L
@@ -32,20 +32,20 @@ class JsonUtilSpec extends Specification {
         "c" -> 5134134L
       )
 
-      JsonUtil.obj(
+      J.obj(
         "a" -> true
       ).asJsObject === PJson.obj(
         "a" -> true
       )
 
-      JsonUtil.obj(
+      J.obj(
         "a" -> PJson.arr(0)
       ).asJsObject === PJson.obj(
         "a" -> PJson.arr(0)
       )
 
-      JsonUtil.obj(
-        "a" -> JsonUtil.obj("c" -> "d")
+      J.obj(
+        "a" -> J.obj("c" -> "d")
       ).asJsObject === PJson.obj(
         "a" -> PJson.obj("c" -> "d")
       )
@@ -53,21 +53,21 @@ class JsonUtilSpec extends Specification {
       true
     }
 
-    "JsonUtil.arr" in {
+    "J.arr" in {
 
-      JsonUtil.arr().asJsValue === PJson.arr()
+      J.arr().asJsValue === PJson.arr()
 
-      JsonUtil.arr(
+      J.arr(
         1, "2", false
       ).asJsValue === PJson.arr(
         1, "2", false
       )
 
-      JsonUtil.arr(
+      J.arr(
         1,
         "2",
-        JsonUtil.obj(
-          "a" -> JsonUtil.arr(50)
+        J.obj(
+          "a" -> J.arr(50)
         )
       ).asJsValue === PJson.arr(
         1,
@@ -80,8 +80,8 @@ class JsonUtilSpec extends Specification {
     }
 
     "Throw JsonParseException if trying to parse illegal json" in {
-      JsonUtil.parse("{]") must throwA[JsonParseException]
-      JsonUtil.parse(""" { "gakk": 50 "o:" } """) must throwA[JsonParseException]
+      J.parse("{]") must throwA[JsonParseException]
+      J.parse(""" { "gakk": 50 "o:" } """) must throwA[JsonParseException]
     }
 
 
@@ -117,7 +117,7 @@ class JsonUtilSpec extends Specification {
         }
       """
 
-    val json = JsonUtil.parse(jsonString)
+    val json = J.parse(jsonString)
 
     "Ignore null values in objects." in {
       json("anull") === JNull
@@ -214,8 +214,8 @@ class JsonUtilSpec extends Specification {
       json("astring").asOption(_.asString) must equalTo(Some("astring, definitely"))
     }
 
-    "JsonUtil from map" in {
-      JsonUtil(
+    "J from map" in {
+      J(
         Map(
           "a" -> 50,
           "b" -> 60
@@ -227,13 +227,13 @@ class JsonUtilSpec extends Specification {
     }
 
     "Json.size, Json.keys and Json.++" in {
-      val o = JsonUtil(
+      val o = J(
         play.api.libs.json.Json.obj(
           "a" -> 50,
           "b" -> 60
         )
       )
-      val a = JsonUtil(
+      val a = J(
         play.api.libs.json.Json.arr("a","b","c")
       )
 
@@ -259,11 +259,11 @@ class JsonUtilSpec extends Specification {
           }
         """
 
-      JsonUtil.parseIt(jsonText) { json =>
+      J.parseIt(jsonText) { json =>
         true
       } === true
 
-      JsonUtil.parseIt(jsonText) { json =>
+      J.parseIt(jsonText) { json =>
         json("a").asString
       } === "a_"
     }
@@ -276,7 +276,7 @@ class JsonUtilSpec extends Specification {
           }
         """
 
-      val json = JsonUtil.parse(jsonText)
+      val json = J.parse(jsonText)
 
       json("a").isDefined === true
       json("b").isDefined === false
@@ -295,7 +295,7 @@ class JsonUtilSpec extends Specification {
           }
         """
 
-      val json = JsonUtil.parse(jsonText)
+      val json = J.parse(jsonText)
 
       json.validateRemaining() must throwA[JsonParseException]
       json.validateRemaining("a") must throwA[JsonParseException]
@@ -314,19 +314,19 @@ class JsonUtilSpec extends Specification {
       json.validateRemaining("b")
       json.validateRemaining("a", "b")
 
-      JsonUtil.parseAndValidate(jsonText){json =>
+      J.parseAndValidate(jsonText){json =>
         json("a")
       } must throwA[JsonParseException]
 
-      JsonUtil.parseAndValidate(jsonText, ignore=Set("a")){ json =>
+      J.parseAndValidate(jsonText, ignore=Set("a")){ json =>
         json("a")
       } must throwA[JsonParseException]
 
-      JsonUtil.parseAndValidate(jsonText, ignore=Set("b")){ json =>
+      J.parseAndValidate(jsonText, ignore=Set("b")){ json =>
         json("a").asString
       } must equalTo("a_")
 
-      JsonUtil.parseAndValidate(jsonText){ json =>
+      J.parseAndValidate(jsonText){ json =>
         Array(json("a").asString, json("b").asString)
       } must equalTo(Array("a_","b_"))
     }
@@ -339,14 +339,14 @@ class JsonUtilSpec extends Specification {
           }
         """
 
-      JsonUtil.parseAndValidate(jsonText){json =>
+      J.parseAndValidate(jsonText){json =>
         List(
           json("a").asString,
           json("b").asOption(_.asString)
         )
       } must throwA[JsonParseException]
 
-      JsonUtil.parseAndValidate(jsonText){json =>
+      J.parseAndValidate(jsonText){json =>
         List(
           json("a").asString,
           json("b").asOption(_.asString),

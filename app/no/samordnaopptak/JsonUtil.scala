@@ -158,7 +158,7 @@ object JNull extends JValue {
 
 
 
-object JsonUtil {
+object J {
 
   private def jsValueToJValue(value: JsValue): JValue =
     value match {
