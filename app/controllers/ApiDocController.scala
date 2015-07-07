@@ -2,7 +2,6 @@ package no.samordnaopptak.apidoc.controllers
 
 
 import play.api.mvc._
-import play.api.libs.json._
 import play.api.Play.current
 
 import no.samordnaopptak.apidoc.TestByAnnotation.Test
@@ -163,8 +162,8 @@ class ApiDocController extends Controller {
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
       val json = ApiDocUtil.getJson(doc)
-      val jsonMethod = (json \ "method").as[String]
-      val jsonUri = (json \ "uri").as[String]
+      val jsonMethod = json("method").asString
+      val jsonUri = json("uri").asString
 
       if (jsonMethod != routeEntry.restMethod)
         throw new MethodMismatchException(
@@ -205,7 +204,7 @@ class ApiDocController extends Controller {
   """)
   def get(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) = {
     val apidocs = getApiDocsFromAnnotations(routeEntries)
-    Ok(SwaggerUtil.getMain("/", apidocs))
+    Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
   }
 }
 

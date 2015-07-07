@@ -5,21 +5,21 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 import play.api.mvc._
-import play.api.libs.json._
 import play.api.Play.current
 
-import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil, JsonUtil}
+import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
+import no.samordnaopptak.json._
 
 
 case class UserData(firstName: String, lastName: String){
-  def toJson = Json.obj(
+  def toJson = JsonUtil.obj(
     "firstName" -> firstName,
     "lastName" -> lastName
   )
 }
 
 case class User(id: String, data: UserData, type_ : String){
-  def toJson = Json.obj(
+  def toJson = JsonUtil.obj(
     "id" -> id,
     "data" -> data.toJson,
     "type" -> type_
@@ -64,7 +64,7 @@ object UserController extends Controller {
       lastName: String
   """)
   def get()  = Action { request =>
-    Ok(user.toJson)
+    Ok(user.toJson.asJsValue)
   }
 
   @ApiDoc(doc="""
@@ -82,7 +82,7 @@ object UserController extends Controller {
       Array User
   """)
   def get2()  = Action { request =>
-    Ok(Json.arr(user.toJson))
+    Ok(JsonUtil.arr(user.toJson).asJsValue)
   }
 
   @ApiDoc(doc="""
@@ -112,7 +112,7 @@ object UserController extends Controller {
       ),
       json("type").asString
     )
-    Ok(user.toJson)
+    Ok(user.toJson.asJsValue)
   }
 
 }

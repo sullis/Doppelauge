@@ -5,9 +5,13 @@ import play.api.test._
 import play.api.libs.json._
 
 import no.samordnaopptak.apidoc.TestByAnnotation
-import no.samordnaopptak.apidoc.{ApiDocUtil, JsonMatcher}
+import no.samordnaopptak.apidoc.ApiDocUtil
+
+import no.samordnaopptak.json.JsonMatcher
 
 import com.fasterxml.jackson.annotation._
+
+
 
 case class User(id: String, @JsonIgnore ignored_parameter: Int = 1){
   val attributes: Set[String] = Set()

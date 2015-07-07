@@ -5,8 +5,9 @@ import org.specs2.mutable._
 import play.api.libs.json._
 import play.api.test.Helpers._
 
-import no.samordnaopptak.apidoc.JsonUtil
-import no.samordnaopptak.apidoc.JsonMatcher._
+import no.samordnaopptak.json.JsonUtil
+import no.samordnaopptak.json.JsonMatcher._
+
 
 
 class JsonMatcherSpec extends Specification {

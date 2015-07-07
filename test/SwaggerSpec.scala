@@ -6,7 +6,7 @@ import play.api.libs.json._
 
 import no.samordnaopptak.apidoc.TestByAnnotation
 import no.samordnaopptak.apidoc.{SwaggerUtil}
-import no.samordnaopptak.apidoc.JsonMatcher._
+import no.samordnaopptak.json.JsonMatcher._
 
 object SwaggerTestData{
 

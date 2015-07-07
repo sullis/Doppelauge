@@ -1,10 +1,8 @@
 package no.samordnaopptak.apidoc
 
-import play.api.libs.json._
-
 import TestByAnnotation.Test
-import JsonUtil.Json
 
+import no.samordnaopptak.json._
 
 
 object SwaggerUtil{
@@ -23,26 +21,26 @@ object SwaggerUtil{
       case "Float" => ("number","float")
     }
     if (format=="")
-      Json.obj(
+      JsonUtil.obj(
         "type" -> type_
       )
     else
-      Json.obj(
+      JsonUtil.obj(
         "type" -> type_,
         "format" -> format
       )
   }
 
-  val header = Json.obj(
+  val header = JsonUtil.obj(
     "swagger" -> "2.0",
     //"host": "api.uber.com",
     /*
-    "schemes" -> Json.arr(
+    "schemes" -> JsonUtil.arr(
         "https"
     ),
      */
     //"basePath" -> "",
-    "produces" -> Json.arr(
+    "produces" -> JsonUtil.arr(
       "application/json"
     )
   )
@@ -95,7 +93,7 @@ object SwaggerUtil{
   private def createTagName(tag: String) =
     tag(0).toUpper + tag.tail
 
-  private def getType(json: Json, addDescription: Boolean = true) = {
+  private def getType(json: JValue, addDescription: Boolean = true) = {
     val type_      = json("type").asString
     val isAtomType = ApiDocUtil.atomTypes.contains(type_)
     val isArray    = json("isArray").asBoolean
@@ -104,85 +102,85 @@ object SwaggerUtil{
       if (isAtomType)
         atomTypeToSwaggerType(type_)
       else
-        Json.obj(
+        JsonUtil.obj(
           "$ref" -> ("#/definitions/" + type_)
         )
 
     val description =
       if (json.hasKey("noComment") || !json.hasKey("comment") || addDescription==false)
-        Json.obj()
+        JsonUtil.obj()
       else
-        Json.obj(
+        JsonUtil.obj(
           "description" -> json("comment").asString
         )
 
     if (isArray)
-      Json.obj(
+      JsonUtil.obj(
         "type" -> "array",
         "items" -> type2
       ) ++ description
     else if (isEnum)
       type2 ++
-      Json.obj(
-        "enum" -> JsArray(json("enumArgs").asArray.map(j => JsString(j.asString)))
+      JsonUtil.obj(
+        "enum" -> json("enumArgs")
       ) ++
       description
     else
       type2 ++ description
   }
 
-  private def getResponseErrors(errors: Json) = {
+  private def getResponseErrors(errors: JValue) = {
     //println("errors: "+errors)
     val code = errors("code").asNumber.toString
     val message = errors("message").asString
-    Json.obj(
-      code -> Json.obj(
+    JsonUtil.obj(
+      code -> JsonUtil.obj(
         "description" -> message
       )
     )
   }
 
-  private def getResult(result: Json) =
-    Json.obj(
+  private def getResult(result: JValue) =
+    JsonUtil.obj(
       "200" -> (
-        Json.obj(
+        JsonUtil.obj(
           "description" -> result("comment").asString,
           "schema" -> getType(result, addDescription=false)
         )
       )
     )
 
-  private def getResponses(apidoc: Json): JsObject = {
+  private def getResponses(apidoc: JValue): JObject = {
     val errorAsJson =
       if (apidoc.hasKey("errors"))
-        JsonUtil.flattenJsObjects(
+        JsonUtil.flattenJObjects(
           apidoc("errors").asArray.map( error =>
             getResponseErrors(error)
           )
         )
       else
-        Json.obj()
+        JsonUtil.obj()
 
     val resultAsJson =
       if (apidoc.hasKey("result"))
         getResult(apidoc("result"))
       else
-        Json.obj()
+        JsonUtil.obj()
 
     errorAsJson ++ resultAsJson
   }
 
-  def getApi(basePath: String, apidoc: Json): JsObject = {
+  def getApi(basePath: String, apidoc: JValue): JObject = {
     val method = apidoc("method").asString.toLowerCase
-    Json.obj(
-      method -> Json.obj(
+    JsonUtil.obj(
+      method -> JsonUtil.obj(
         "summary" -> apidoc("shortDescription").asString,
         "description" -> apidoc("longDescription").asString,
-        "parameters" -> JsArray(
+        "parameters" -> JArray(
           if (apidoc.hasKey("parameters"))
             (apidoc("parameters").asMap.map {
-              case (name: String, attributes: Json) =>
-                Json.obj(
+              case (name: String, attributes: JValue) =>
+                JsonUtil.obj(
                   "name" -> name,
                   "in" -> attributes("paramType").asString,
                   "required" -> attributes("required").asBoolean,
@@ -191,7 +189,7 @@ object SwaggerUtil{
                   if (attributes("isEnum").asBoolean==true)
                     getType(attributes, addDescription=false)
                   else
-                    Json.obj(
+                    JsonUtil.obj(
                       "schema" -> getType(attributes, addDescription=false)
                     )
                 )
@@ -199,25 +197,25 @@ object SwaggerUtil{
           else
             List()
         ),
-        "tags" -> Json.arr(createTagName(getTag(basePath, apidoc("uri").asString))),
+        "tags" -> JsonUtil.arr(createTagName(getTag(basePath, apidoc("uri").asString))),
         "responses" -> getResponses(apidoc)
       )
     )
   }
 
-  private def getDefinition(dataType: Json): JsObject =
-    JsObject(
+  private def getDefinition(dataType: JValue): JObject =
+    JObject(
       dataType.asMap.map {
-        case (name: String, attributes: Json) => {
+        case (name: String, attributes: JValue) => {
           val required = attributes.asMap.filter {
             case (_, attributes) => attributes("required").asBoolean
           }.map{
             case (name, _) => name
           }
-          name -> Json.obj(
+          name -> JsonUtil.obj(
             "id" -> name,
             "required" -> required,
-            "properties" -> JsObject(
+            "properties" -> JObject(
               attributes.asMap.map {
                 case (name, attributes) => name -> getType(attributes)
               }.toList
@@ -227,8 +225,8 @@ object SwaggerUtil{
       }.toList
     )
 
-  private def getDefinitions(dataTypes: List[Json]): JsObject =
-    JsonUtil.flattenJsObjects(dataTypes.map(getDefinition(_)))
+  private def getDefinitions(dataTypes: List[JValue]): JObject =
+    JsonUtil.flattenJObjects(dataTypes.map(getDefinition(_)))
 
   @Test(code="""
       self.allTags("/api/v1/", List()) === Set()
@@ -240,7 +238,7 @@ object SwaggerUtil{
     val ret = apidocs.map(
       ApiDocUtil.getJson(_)
     ).map(jsonApiDoc =>
-      (jsonApiDoc \ "uri").as[String]
+      jsonApiDoc("uri").asString
     ).map(
       getTag(basePath, _)
     ).toSet
@@ -248,7 +246,7 @@ object SwaggerUtil{
     ret
   }
 
-  private def validateUniqueDataTypes(dataTypes: List[Json]) = {
+  private def validateUniqueDataTypes(dataTypes: List[JValue]) = {
     val names = dataTypes.flatMap(_.asMap.keys)
     if (names.size != names.distinct.size)
       throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
@@ -256,14 +254,14 @@ object SwaggerUtil{
 
 
   // {User -> {id -> {type -> String}}} -> Set(String)
-  private def getUsedDataTypesInDataType(dataType: Json): Set[String] = {
+  private def getUsedDataTypesInDataType(dataType: JValue): Set[String] = {
     val dataTypeValues = dataType.asMap.values
     val attributeValues = dataTypeValues.flatMap(_.asMap.values)
     //println("attributeValues: "+attributeValues.map(_("type").asString).toSet)
     attributeValues.map(_("type").asString).toSet
   }
 
-  private def getUsedDatatypesInDatatypes(dataTypes: List[Json]): Set[String] = {
+  private def getUsedDatatypesInDatatypes(dataTypes: List[JValue]): Set[String] = {
     if (dataTypes.isEmpty)
       Set()
     else {
@@ -273,7 +271,7 @@ object SwaggerUtil{
     }
   }
 
-  private def getUsedDatatypesInJson(jsonApiDocs: List[Json]): Set[String] = {
+  private def getUsedDatatypesInJson(jsonApiDocs: List[JValue]): Set[String] = {
     if (jsonApiDocs.isEmpty)
       Set()
     else {
@@ -295,7 +293,7 @@ object SwaggerUtil{
     }
   }
 
-  private def validateThatAllDatatypesAreDefined(tag: String, jsonApiDocs: List[Json], dataTypes: List[Json]): Unit = {
+  private def validateThatAllDatatypesAreDefined(tag: String, jsonApiDocs: List[JValue], dataTypes: List[JValue]): Unit = {
     val definedTypes: Set[String] = dataTypes.flatMap(_.asMap.keys).toSet ++ ApiDocUtil.atomTypes
     val usedTypes: Set[String]    = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
     val undefinedTypes            = usedTypes -- definedTypes
@@ -307,13 +305,13 @@ object SwaggerUtil{
       throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$tag": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
   }
 
-  def getEndpoint(basePath: String, path: String, apidocs: List[Json]): JsObject = {
+  def getEndpoint(basePath: String, path: String, apidocs: List[JValue]): JObject = {
     val relevantApiDocs = apidocs.filter(_("uri").asString==path)
 
-    JsonUtil.flattenJsObjects(relevantApiDocs.map(getApi(basePath, _)))
+    JsonUtil.flattenJObjects(relevantApiDocs.map(getApi(basePath, _)))
   }
 
-  private def getAllPaths(apidocs: List[Json]): Set[String] =
+  private def getAllPaths(apidocs: List[JValue]): Set[String] =
     apidocs.map(_("uri").asString).toSet
 
   private def sortMapByKey[T](group: Map[String, T]): List[(String, T)] =
@@ -321,7 +319,7 @@ object SwaggerUtil{
       case (key, _) => key
     }
 
-  def getMain(basePath: String, apidocs: List[String]): JsObject = {
+  def getMain(basePath: String, apidocs: List[String]): JObject = {
 
     if (!basePath.endsWith("/"))
       throw new Exception("Basepath must end with slash: "+basePath)
@@ -342,7 +340,7 @@ object SwaggerUtil{
     )
 
     val groupedJsonApiDocsAsJsValue = (groupedJsonApiDocs map {
-      case (key, jsonApiDoc) => Json.obj(
+      case (key, jsonApiDoc) => JsonUtil.obj(
         key -> getEndpoint(basePath, key, jsonApiDoc)
       )
     }).toList
@@ -350,8 +348,8 @@ object SwaggerUtil{
     //println("jsonapidocs: "+groupedJsonApiDocs)
 
     header ++
-    Json.obj(
-      "paths" -> JsonUtil.flattenJsObjects(groupedJsonApiDocsAsJsValue),
+    JsonUtil.obj(
+      "paths" -> JsonUtil.flattenJObjects(groupedJsonApiDocsAsJsValue),
       "definitions" -> getDefinitions(dataTypes)
     )
   }

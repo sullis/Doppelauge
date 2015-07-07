@@ -1,4 +1,4 @@
-package no.samordnaopptak.apidoc
+package no.samordnaopptak.json
 
 import play.api.libs.json._
 
@@ -32,16 +32,13 @@ object JsonMatcher{
   val ___anyBoolean = JsString("________anyBoolean_______")
 
 
-  private def wrapperToJsValue(wrapper: Json.JsValueWrapper) =
-    Json.arr(wrapper).value(0)
-
   /** This class does something Custom. */
-  case class Custom(func: JsonUtil.Json => Boolean, name: String = "") extends JsonUtil.Json {
+  case class Custom(func: JValue => Boolean, name: String = "") extends JValue {
     override def pp() = "Custom: "+name
     override def asJsValue = JsNull
   }
 
-  case class RegExp(pattern: String) extends JsonUtil.Json {
+  case class RegExp(pattern: String) extends JValue {
     val regexp = new scala.util.matching.Regex(pattern)
 
     def check(string: String): Boolean =
@@ -50,17 +47,17 @@ object JsonMatcher{
     override def asJsValue = JsNull
   }
 
-  case class Or(anyMatchers: Any*) extends JsonUtil.Json {
+  case class Or(anyMatchers: Any*) extends JValue {
     val matchers = anyMatchers.map(JsonUtil(_))
     override def asJsValue = JsNull
   }
 
-  case class And(anyMatchers: Any*) extends JsonUtil.Json {
+  case class And(anyMatchers: Any*) extends JValue {
     val matchers = anyMatchers.map(JsonUtil(_))
     override def asJsValue = JsNull
   }
 
-  case class Maybe(anyValue: Any) extends JsonUtil.Json {
+  case class Maybe(anyValue: Any) extends JValue {
     val matcher = Or(
       JsNull,
       anyValue
@@ -79,14 +76,14 @@ object JsonMatcher{
     else
       false
 
-  private def getWantedNumArrayElements(matcher: JsonUtil.JArray): Int =
-    matcher.value.dropWhile(_ != JsonUtil.JString(___numElements)).tail.head.asInt
+  private def getWantedNumArrayElements(matcher: JArray): Int =
+    matcher.value.dropWhile(_ != JString(___numElements)).tail.head.asInt
 
-  private def getWantedNumObjectElements(matcher: Map[String, JsonUtil.Json]): Int =
+  private def getWantedNumObjectElements(matcher: Map[String, JValue]): Int =
     matcher(___numElements).asInt
 
   // Seq(1, ___numElements, 2, __ignoreOrder, 3) -> Seq(1,3)
-  private def getValuesWithoutNumsAndIgnores(values: Seq[JsonUtil.Json]): Seq[JsonUtil.Json] =
+  private def getValuesWithoutNumsAndIgnores(values: Seq[JValue]): Seq[JValue] =
     if (values.isEmpty)
       values
     else if (values.head.asJsValue==JsString(___numElements))
@@ -96,7 +93,7 @@ object JsonMatcher{
     else
       Seq(values.head) ++ getValuesWithoutNumsAndIgnores(values.tail)
 
-  private def matchOrderedJsonArrays(json: JsonUtil.JArray, allowOthers: Boolean, matchers: Seq[JsonUtil.Json], pos: Int, values: Seq[JsonUtil.Json], throwException: Boolean, path: String): Boolean = {
+  private def matchOrderedJsonArrays(json: JArray, allowOthers: Boolean, matchers: Seq[JValue], pos: Int, values: Seq[JValue], throwException: Boolean, path: String): Boolean = {
     if (matchers.isEmpty)
       true
 
@@ -124,7 +121,7 @@ object JsonMatcher{
     }
   }
 
-  private def matchJsonArrays(matcher: JsonUtil.JArray, json: JsonUtil.JArray, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+  private def matchJsonArrays(matcher: JArray, json: JArray, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
     val hasAllowOthers = matcher.value.contains(JsonUtil(___allowOtherValues))
     val hasIgnoreOrder = matcher.value.contains(JsonUtil(___ignoreOrder)) || ignoreArrayOrder
     val hasNumElements = matcher.value.contains(JsonUtil(___numElements))
@@ -145,7 +142,7 @@ object JsonMatcher{
       matchJsonFailed(s"${json.pp()} contains more fields than ${matcher.pp()} (Diff: ${cleanMatcher.size}<${cleanJson.size}).\n Maybe you forgot to add an ___allowOtherValues value to the matcher.", throwException, path)
 
     else if (hasIgnoreOrder)
-      cleanMatcher.forall( (matchValue: JsonUtil.Json) =>
+      cleanMatcher.forall( (matchValue: JValue) =>
         if (matchValue.asJsValue == ___allowOtherValues)
           true
         else if (cleanJson.exists(matchJson(matchValue, _, false, ignoreArrayOrder, path))==false) {
@@ -159,15 +156,15 @@ object JsonMatcher{
       matchOrderedJsonArrays(json, hasAllowOthers, cleanMatcher, 0, cleanJson, throwException, path)
   }
 
-  private def matchJsonObjects(matcher: JsonUtil.Json, jsonWithoutMaybes: JsonUtil.Json, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+  private def matchJsonObjects(matcher: JValue, jsonWithoutMaybes: JValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
     val maybeKeys = matcher.asMap.filter{
       case (_, value: Maybe) => true
       case _                 => false
     }.keys
     val unusedMaybeKeys = maybeKeys.filter( key => !jsonWithoutMaybes.keys.contains(key))
-    val maybes = JsonUtil.JObject(
+    val maybes = JObject(
       unusedMaybeKeys.map(key =>
-        key -> JsonUtil.JNull
+        key -> JNull
       ).toMap
     )
 
@@ -200,7 +197,7 @@ object JsonMatcher{
 
     } else
       matcher.asMap.forall(_ match{
-        case (key: String, value: JsonUtil.Json) =>
+        case (key: String, value: JValue) =>
           if (key == ___numElements)
             true
           else if (key == ___allowOtherJsonsKey)
@@ -221,7 +218,7 @@ object JsonMatcher{
     sw.toString()
   }
 
-  private def matchCustom(custom: Custom, json: JsonUtil.Json, throwException: Boolean, path: String): Boolean = {
+  private def matchCustom(custom: Custom, json: JValue, throwException: Boolean, path: String): Boolean = {
     val result = try{
       custom.func(json)
     } catch {
@@ -236,8 +233,8 @@ object JsonMatcher{
       matchJsonFailed(s""""The custom matcher function $custom returned false when called with "${json.pp()}".""", throwException, path)
   }
 
-  private def matchOr(or: Or, json: JsonUtil.Json, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
-    def inner(matchers: Seq[JsonUtil.Json]): Boolean =
+  private def matchOr(or: Or, json: JValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+    def inner(matchers: Seq[JValue]): Boolean =
       if (matchers.isEmpty && throwException)
         matchJsonFailed(s"""Doesn't match:\n${or.matchers.map(_.pp()).mkString("Or(", ", ", ")")}\n VS. ${json.pp()}""", throwException, path)
       else if (matchers.isEmpty)
@@ -250,8 +247,8 @@ object JsonMatcher{
     inner(or.matchers)
   }
 
-  private def matchAnd(and: And, json: JsonUtil.Json, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
-    def inner(matchers: Seq[JsonUtil.Json]): Boolean =
+  private def matchAnd(and: And, json: JValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+    def inner(matchers: Seq[JValue]): Boolean =
       if (matchers.isEmpty)
         true
       else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
@@ -264,7 +261,7 @@ object JsonMatcher{
     inner(and.matchers)
   }
 
-  private def matchJson(matcher: JsonUtil.Json, json: JsonUtil.Json, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
+  private def matchJson(matcher: JValue, json: JValue, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean = {
 
     if (verbose && matcher.isString && json.isString)
       println("matching "+matcher.asString+", vs. "+json.asString)
@@ -279,13 +276,13 @@ object JsonMatcher{
       case (r: RegExp  ) if json.isString => if (r.check(json.asString)) true else matchJsonFailed(s""""${json.asString}" doesn't match the regexp "${r.pattern}".""", throwException, path)
       case (r: RegExp  ) => matchJsonFailed(s"""RegExp matcher expected a string. Not-string value: "${json.pp()}"""", throwException, path)
       case _ => (matcher.asJsValue, json) match {
-        case (`___anyString`,  j: JsonUtil.JString) => true
-        case (`___anyNumber`,  j: JsonUtil.JNumber) => true
-        case (`___anyObject`,  j: JsonUtil.JObject) => true
-        case (`___anyArray`,   j: JsonUtil.JArray) => true
-        case (`___anyBoolean`, j: JsonUtil.JBoolean) => true
-        case (m: JsObject,     j: JsonUtil.JObject) => matchJsonObjects(matcher.asInstanceOf[JsonUtil.JObject],j,throwException,ignoreArrayOrder,path)
-        case (m: JsArray,      j: JsonUtil.JArray)  => matchJsonArrays(matcher.asInstanceOf[JsonUtil.JArray],j,throwException,ignoreArrayOrder,path)
+        case (`___anyString`,  j: JString) => true
+        case (`___anyNumber`,  j: JNumber) => true
+        case (`___anyObject`,  j: JObject) => true
+        case (`___anyArray`,   j: JArray) => true
+        case (`___anyBoolean`, j: JBoolean) => true
+        case (m: JsObject,     j: JObject) => matchJsonObjects(matcher.asInstanceOf[JObject],j,throwException,ignoreArrayOrder,path)
+        case (m: JsArray,      j: JArray)  => matchJsonArrays(matcher.asInstanceOf[JArray],j,throwException,ignoreArrayOrder,path)
         case (m, j) => if (m==j.asJsValue) true else matchJsonFailed(s"Doesn't match. Expected ${matcher.pp()}. Got ${json.pp()}", throwException, path)
       }
     }

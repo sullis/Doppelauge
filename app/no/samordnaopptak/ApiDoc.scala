@@ -4,8 +4,9 @@ package no.samordnaopptak.apidoc
 //import scala.reflect.runtime.{universe => ru}
 
 import play.api.Play.current
-import play.api.libs.json._
 import com.fasterxml.jackson.annotation.JsonIgnore
+
+import no.samordnaopptak.json._
 
 import TestByAnnotation.Test
 
@@ -244,15 +245,15 @@ object ApiDocUtil{
       Raw(key, elements ++ List(element))
 
 
-    private def getParameters(): JsObject =
-      JsObject(
+    private def getParameters(): JObject =
+      JObject(
         elements.map(element => {
           if (element=="...")
-            "..." -> Json.obj(
+            "..." -> JsonUtil.obj(
               "type" -> "etc.",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> JsonUtil.arr(),
               "required" -> false
             )
           else {
@@ -264,7 +265,7 @@ object ApiDocUtil{
             val typeInfo = TypeInfo(name, rest(0).trim)
             val comment = if (rest.length==1) "" else rest(1).trim
 
-            name -> Json.obj(
+            name -> JsonUtil.obj(
               "type" -> typeInfo.type_,
               if (comment=="")
                 "noComment" -> true
@@ -338,7 +339,7 @@ object ApiDocUtil{
 
      User -> {...}
  */
-    private def parseDataType(line: String): JsObject = {
+    private def parseDataType(line: String): JObject = {
       val parameters = getParameters()
       val fieldNames = parameters.keys.toList.toSet
 
@@ -366,12 +367,12 @@ object ApiDocUtil{
         validateDataTypeFields(className, name, fieldNames, addedFields, removedFields)
       }
 
-      Json.obj(
+      JsonUtil.obj(
         name -> parameters
       )
     }
 
-    def getApidoc(): JsObject = {
+    def getApidoc(): JObject = {
       if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ") || key.startsWith("OPTIONS ")) {
 
         if (!elements.isEmpty)
@@ -382,7 +383,7 @@ object ApiDocUtil{
         val uri = key.drop(pos).trim
         val uriParms = findUriParms(uri)
 
-        Json.obj(
+        JsonUtil.obj(
           "method" -> method,
           "uri"    -> uri,
           "uriParms" -> uriParms
@@ -390,23 +391,23 @@ object ApiDocUtil{
       }
 
       else if (key=="DESCRIPTION")
-        Json.obj(
+        JsonUtil.obj(
           "shortDescription" -> elements.head,
           "longDescription"  -> (if (elements.length==1) "" else elements.tail.mkString("<br>"))
         )
 
       else if (key=="PARAMETERS")
-        Json.obj(
+        JsonUtil.obj(
           "parameters" -> getParameters()
         )
 
       else if (key=="ERRORS")
-        Json.obj(
-          "errors" -> JsArray(
+        JsonUtil.obj(
+          "errors" -> JArray(
             elements.map(element => {
               val code = element.substring(0,4).trim.toInt
               val description = element.drop(4).trim
-              Json.obj(
+              JsonUtil.obj(
                 "code" -> code,
                 "message" -> description
               )})
@@ -421,8 +422,8 @@ object ApiDocUtil{
         val typeInfo = TypeInfo("", splitted(0))
         val comment = if (splitted.length==1) "" else splitted(1)
 
-        Json.obj(
-          "result" -> Json.obj(
+        JsonUtil.obj(
+          "result" -> JsonUtil.obj(
             "type" -> typeInfo.type_,
             "comment" -> comment,
             "isArray" -> typeInfo.isArray,
@@ -433,7 +434,7 @@ object ApiDocUtil{
       }
 
       else if (key.contains(":"))
-        Json.obj(
+        JsonUtil.obj(
           "datatype" -> parseDataType(key)
         )
 
@@ -478,13 +479,13 @@ object ApiDocUtil{
   }
 
   // public because of testing.
-  def getRaw(apidoc: String): JsObject = {
+  def getRaw(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
-    JsObject(raws.map(raw => raw.key -> JsArray(raw.elements.map(JsString))))
+    JObject(raws.map(raw => raw.key -> JArray(raw.elements.map(JString))))
   }
 
 
-  private def validateJson(jsonJson: JsObject) = {
+  private def validateJson(jsonJson: JObject) = {
     val json = JsonUtil(jsonJson)
     val uriParms = json("uriParms").asStringArray
     val parameters = json("parameters").asOption(_.asMap).getOrElse(Set())
@@ -501,9 +502,9 @@ object ApiDocUtil{
   }
 
 
-  def getJson(apidoc: String): JsObject = {
+  def getJson(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
-    var ret = Json.obj()
+    var ret = JsonUtil.obj()
     raws.reverse.map(_.getApidoc).foreach(apidoc =>
       if ( ! apidoc.keys.contains("datatype"))
         ret = ret ++ apidoc
@@ -512,23 +513,23 @@ object ApiDocUtil{
     ret
   }
 
-  def getDataTypes_old(apidoc: String): JsObject = {
+  def getDataTypes_old(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
-    var ret = Json.obj()
+    var ret = JsonUtil.obj()
     raws.reverse.map(_.getApidoc).foreach(apidoc =>
       if (JsonUtil(apidoc)("datatype").isDefined)
-        ret = ret ++ (apidoc \ "datatype").get.asInstanceOf[JsObject]
+        ret = ret ++ apidoc("datatype")
     )
     ret
   }
 
-  def getDataTypes(apidoc: String): JsObject =
-    JsonUtil.flattenJsObjects(
+  def getDataTypes(apidoc: String): JObject =
+    JsonUtil.flattenJObjects(
       parseRaw(apidoc)
         .reverse
         .map(raw => JsonUtil(raw.getApidoc()))
         .filter(_("datatype").isDefined)
-        .map(_("datatype").asJsObject)
+        .map(_("datatype"))
     )
 
 }
