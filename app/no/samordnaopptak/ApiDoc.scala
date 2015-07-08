@@ -173,6 +173,51 @@ object ApiDocUtil{
     (args,endpos+1)
   }
 
+
+
+  @Test(code="""
+      self.parseScalaTypeSignature("test.lib.User(+a,-b)") === ("test.lib.User", Set("a"), Set("b"))
+    """)
+  private def parseScalaTypeSignature(signature: String): (String, Set[String], Set[String]) = {
+
+    val leftParPos = signature.indexOf('(')
+    val rightParPos = signature.indexOf(')')
+
+    if(leftParPos== -1 && rightParPos!= -1)
+      throw new Exception("Malformed line: "+signature)
+    if(leftParPos!= -1 && rightParPos== -1)
+      throw new Exception("Malformed line: "+signature)
+    if(leftParPos > rightParPos)
+      throw new Exception("Malformed line: "+signature)
+
+    if(leftParPos == -1) {
+
+      (signature, Set(), Set())
+
+    } else {
+
+      val className = signature.take(leftParPos).trim
+      val argsString = signature.substring(leftParPos+1, rightParPos).trim
+
+      if (argsString=="") {
+
+        (className, Set(), Set())
+
+      } else {
+        val modifiedFields = argsString.split(",").toList.map(_.trim)
+
+        val addedFields = modifiedFields.filter(_.startsWith("+")).map(_.drop(1)).toSet
+        val removedFields = modifiedFields.filter(_.startsWith("-")).map(_.drop(1)).toSet
+
+        if (addedFields.size+removedFields.size != modifiedFields.size)
+          throw new Exception("Malformed line: "+signature+". One or more modifier fields does not start with '-' or '+'")
+
+        (className, addedFields, removedFields)
+      }
+    }
+  }
+
+
   @Test(code="""
     instance.testTypeInfo("Array String (header)").type_ === "String"
     instance.testTypeInfo("Array String (header)").isArray === true
@@ -282,55 +327,6 @@ object ApiDocUtil{
       )
 
 
-
-    /*
-     "test.lib.User(+a,-b)"
-     
-     ->
-
-     ("test.lib.User", Set("a"), Set("b"))
-     */
-
-    private def parseScalaTypeSignature(signature: String): (String, Set[String], Set[String]) = {
-
-      val leftParPos = signature.indexOf('(')
-      val rightParPos = signature.indexOf(')')
-
-      if(leftParPos== -1 && rightParPos!= -1)
-        throw new Exception("Malformed line: "+signature)
-      if(leftParPos!= -1 && rightParPos== -1)
-        throw new Exception("Malformed line: "+signature)
-      if(leftParPos > rightParPos)
-        throw new Exception("Malformed line: "+signature)
-
-      if(leftParPos == -1) {
-
-        (signature, Set(), Set())
-
-      } else {
-
-        val className = signature.take(leftParPos).trim
-        val argsString = signature.substring(leftParPos+1, rightParPos).trim
-
-        if (argsString=="") {
-
-          (className, Set(), Set())
-
-        } else {
-          val modifiedFields = argsString.split(",").toList.map(_.trim)
-
-          val addedFields = modifiedFields.filter(_.startsWith("+")).map(_.drop(1)).toSet
-          val removedFields = modifiedFields.filter(_.startsWith("-")).map(_.drop(1)).toSet
-
-          if (addedFields.size+removedFields.size != modifiedFields.size)
-            throw new Exception("Malformed line: "+signature+". One or more modifier fields does not start with '-' or '+'")
-
-          (className, addedFields, removedFields)
-        }
-      }
-    }
-
-
     /*
      User: test.lib.User(+a,-b)
      ...
@@ -338,7 +334,7 @@ object ApiDocUtil{
      ->
 
      User -> {...}
- */
+     */
     private def parseDataType(line: String): JObject = {
       val parameters = getParameters()
       val fieldNames = parameters.keys.toList.toSet
@@ -371,6 +367,7 @@ object ApiDocUtil{
         name -> parameters
       )
     }
+
 
     def getApidoc(): JObject = {
       if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ") || key.startsWith("OPTIONS ")) {
