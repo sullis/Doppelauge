@@ -1,4 +1,4 @@
-package no.samordnaopptak.apidoc.TestByAnnotation;
+package no.samordnaopptak.test.TestByAnnotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

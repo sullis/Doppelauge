@@ -4,7 +4,7 @@ package no.samordnaopptak.apidoc.controllers
 import play.api.mvc._
 import play.api.Play.current
 
-import no.samordnaopptak.apidoc.TestByAnnotation.Test
+import no.samordnaopptak.test.TestByAnnotation.Test
 
 import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}

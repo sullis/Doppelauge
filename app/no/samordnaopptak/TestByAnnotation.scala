@@ -1,4 +1,4 @@
-package no.samordnaopptak.apidoc.TestByAnnotation
+package no.samordnaopptak.test.TestByAnnotation
 
 
 
@@ -227,11 +227,11 @@ object TestObject{
     self.convertToUsePrivateMethodCaller("", "salv") === ""
     self.convertToUsePrivateMethodCaller("a", "salv") === "a"
     self.convertToUsePrivateMethodCaller("a\nb\nc", "salv") === "a\nb\nc"
-    self.convertToUsePrivateMethodCaller("salv.ai()", "salv") === "no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\")"
-    self.convertToUsePrivateMethodCaller("salv.ai(a)", "salv") === "no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a)"
-    self.convertToUsePrivateMethodCaller("salv.ai(a, 2, \"b\")", "salv") === "no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a, 2, \"b\")"
-    self.convertToUsePrivateMethodCaller("  salv.ai(a, 2, \"b\") == 50", "salv") === "  no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a, 2, \"b\") == 50"
-    self.convertToUsePrivateMethodCaller("  salv.ai(a, 2, \"b\") + salv.b() == 50", "salv") === "  no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a, 2, \"b\") + no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(instance, \"b\") == 50"
+    self.convertToUsePrivateMethodCaller("salv.ai()", "salv") === "no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\")"
+    self.convertToUsePrivateMethodCaller("salv.ai(a)", "salv") === "no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a)"
+    self.convertToUsePrivateMethodCaller("salv.ai(a, 2, \"b\")", "salv") === "no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a, 2, \"b\")"
+    self.convertToUsePrivateMethodCaller("  salv.ai(a, 2, \"b\") == 50", "salv") === "  no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a, 2, \"b\") == 50"
+    self.convertToUsePrivateMethodCaller("  salv.ai(a, 2, \"b\") + salv.b() == 50", "salv") === "  no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(instance, \"ai\", a, 2, \"b\") + no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(instance, \"b\") == 50"
   """)
   private def convertToUsePrivateMethodCaller(code: String, selfName: String = "self"): String = {
     val selfStart = nextSelfCallPos(code, selfName)
@@ -254,7 +254,7 @@ object TestObject{
      */
 
     codeBefore +
-    "no.samordnaopptak.apidoc.TestByAnnotation.TestObject.privateMethodCaller(" + (
+    "no.samordnaopptak.test.TestByAnnotation.TestObject.privateMethodCaller(" + (
       "instance, " +
       "\"" + methodName + "\"" +
       (if (argsStringIsEmpty(arguments))

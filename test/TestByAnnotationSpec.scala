@@ -1,6 +1,6 @@
 package test
 
-import no.samordnaopptak.apidoc.TestByAnnotation._
+import no.samordnaopptak.test.TestByAnnotation._
 
 import org.specs2.mutable._
 

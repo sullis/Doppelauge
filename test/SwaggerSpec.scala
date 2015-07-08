@@ -4,9 +4,11 @@ import org.specs2.mutable._
 import play.api.test._
 import play.api.libs.json._
 
-import no.samordnaopptak.apidoc.TestByAnnotation
-import no.samordnaopptak.apidoc.{SwaggerUtil}
 import no.samordnaopptak.json.JsonMatcher._
+
+import no.samordnaopptak.test.TestByAnnotation
+
+import no.samordnaopptak.apidoc.{SwaggerUtil}
 
 object SwaggerTestData{
 

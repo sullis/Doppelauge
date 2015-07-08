@@ -2,7 +2,8 @@ package test
 
 import org.specs2.mutable._
 
-import no.samordnaopptak.apidoc.TestByAnnotation._
+import no.samordnaopptak.test.TestByAnnotation._
+
 import no.samordnaopptak.apidoc.RoutesHelper
 
 

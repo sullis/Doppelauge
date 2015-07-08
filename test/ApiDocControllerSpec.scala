@@ -10,12 +10,14 @@ import play.api.test._
 import play.api.test.Helpers._
 import play.api.libs.json._
 
-import no.samordnaopptak.apidoc.TestByAnnotation
+import no.samordnaopptak.json.JsonMatcher._
+
+import no.samordnaopptak.test.TestByAnnotation
+
 import no.samordnaopptak.apidoc.controllers.ApiDocController
 import no.samordnaopptak.apidoc.{ApiDoc, SwaggerUtil}
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
 
-import no.samordnaopptak.json.JsonMatcher._
 
 
 class Include {

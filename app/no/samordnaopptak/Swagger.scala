@@ -1,7 +1,6 @@
 package no.samordnaopptak.apidoc
 
-import TestByAnnotation.Test
-
+import no.samordnaopptak.test.TestByAnnotation.Test
 import no.samordnaopptak.json._
 
 

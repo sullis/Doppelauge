@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 
 import no.samordnaopptak.json._
 
-import TestByAnnotation.Test
+import no.samordnaopptak.test.TestByAnnotation.Test
 
 
 object ApiDocUtil{
@@ -513,15 +513,6 @@ object ApiDocUtil{
     ret
   }
 
-  def getDataTypes_old(apidoc: String): JObject = {
-    val raws = parseRaw(apidoc)
-    var ret = J.obj()
-    raws.reverse.map(_.getApidoc).foreach(apidoc =>
-      if (J(apidoc)("datatype").isDefined)
-        ret = ret ++ apidoc("datatype")
-    )
-    ret
-  }
 
   def getDataTypes(apidoc: String): JObject =
     J.flattenJObjects(

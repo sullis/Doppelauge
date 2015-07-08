@@ -1,6 +1,6 @@
 package no.samordnaopptak.apidoc
 
-import TestByAnnotation.Test
+import no.samordnaopptak.test.TestByAnnotation.Test
 
 
 case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scalaMethod: String)
