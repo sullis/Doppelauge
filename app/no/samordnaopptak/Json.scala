@@ -1,6 +1,5 @@
 package no.samordnaopptak.json
 
-
 import play.api.libs.json._
 
 class JsonException(val message: String) extends Exception(message)
@@ -191,7 +190,10 @@ object J {
         }
       )
       case value: Seq[_] => JArray(value.map(apply(_)).toList)
+      case `None` => JNull
+      case Some(value) => apply(value)
       case _ if a==null => JNull
+      case value: Json.JsValueWrapper => apply(Json.arr(value)(0).get)
       case _ => throw new Exception(s"""Unable to convert "$a" to JValue. Class: ${a.getClass}""")
     }
 
