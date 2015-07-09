@@ -112,7 +112,7 @@ case class JObject(value: Map[String, JValue]) extends JValue{
   override def asJsObject = JsObject(
     value.map{
       case (k: String, v: JValue) => k -> v.asJsValue
-    }
+    }.toSeq
   )
   override def size = value.size
   override def keys = value.keys.toSet
@@ -171,6 +171,7 @@ object J {
       )
       case j: JsArray => JArray(j.value.map(jsValueToJValue(_)).toList)
       case `JsNull` => JNull
+      case _: JsUndefined => JUndefined("<unknownkey>", JNull)
     }
 
   def apply(a: Any): JValue =
@@ -193,7 +194,7 @@ object J {
       case `None` => JNull
       case Some(value) => apply(value)
       case _ if a==null => JNull
-      case value: Json.JsValueWrapper => apply(Json.arr(value)(0).get)
+      case value: Json.JsValueWrapper => apply(Json.arr(value)(0))
       case _ => throw new Exception(s"""Unable to convert "$a" to JValue. Class: ${a.getClass}""")
     }
 

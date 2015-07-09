@@ -8,10 +8,6 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 
-libraryDependencies += specs2 % Test
-
-//libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
-
 scalacOptions in (Compile,doc) := Seq("-groups", "-implicits")
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"

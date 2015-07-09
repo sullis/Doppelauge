@@ -36,7 +36,7 @@ object RoutesHelper{
 
 
   def getRouteEntries(): List[RouteEntry] =
-    play.api.Play.routes.documentation.map(doc =>
+    play.api.Play.routes.get.documentation.map(doc =>
       RouteEntry(doc._1, doc._2, getRestClassName(doc._3), getRestMethodName(doc._3))
     ).map(routeEntry =>
       //println("routeEntry: "+routeEntry)
