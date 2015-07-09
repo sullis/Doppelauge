@@ -17,6 +17,14 @@ This API-doc does the following validation checks:
 
 
 
+Play 2.3 vs. Play 2.4
+=====================
+
+The master branch uses Play 2.4
+Play 2.3 is supported in the play_2.3 branch.
+
+
+
 QUICK START
 ===========
 
