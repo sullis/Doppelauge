@@ -113,6 +113,11 @@ class JsonMatcherSpec extends Specification {
 
     "match regexp strings" in {
       matchJson(
+        Json.obj("a" -> RegExp("b")),
+        Json.obj("a" -> "b")
+      )
+
+      matchJson(
         J.obj("a" -> RegExp("b")),
         Json.obj("a" -> "b")
       )

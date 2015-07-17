@@ -34,12 +34,15 @@ object JsonMatcher{
 
 
   /** This class does something Custom. */
-  case class Custom(func: JValue => Boolean, name: String = "") extends JValue {
+  class Custom(val func: JValue => Boolean, val name: String = "") extends JsString("Custom: "+name) with JValue {
     override def pp() = "Custom: "+name
     override def asJsValue = JsNull
   }
 
-  case class RegExp(pattern: String) extends JValue {
+  def Custom(func: JValue => Boolean, name: String = "") = new Custom(func, name)
+
+
+  class RegExp(val pattern: String) extends JsString("RegExp: "+pattern) with JValue {
     val regexp = new scala.util.matching.Regex(pattern)
 
     def check(string: String): Boolean =
@@ -47,24 +50,33 @@ object JsonMatcher{
 
     override def asJsValue = JsNull
   }
+  def RegExp(pattern: String) = new RegExp(pattern)
 
-  case class Or(anyMatchers: Any*) extends JValue {
+
+  class Or(anyMatchers: Any*) extends JsString("Or: "+anyMatchers.map(_.toString).mkString(",")) with JValue{
     val matchers = anyMatchers.map(J(_))
     override def asJsValue = JsNull
   }
+  def Or(anyMatchers: Any*) = new Or(anyMatchers :_*)
 
-  case class And(anyMatchers: Any*) extends JValue {
+
+  class And(anyMatchers: Any*) extends JsString("And: "+anyMatchers.map(_.toString).mkString(",")) with JValue{
     val matchers = anyMatchers.map(J(_))
     override def asJsValue = JsNull
   }
+  def And(anyMatchers: Any*) = new And(anyMatchers :_*)
 
-  case class Maybe(anyValue: Any) extends JValue {
+
+
+  class Maybe(anyValue: Any) extends JsString("Maybe: "+anyValue.toString) with JValue {
     val matcher = Or(
       JsNull,
       anyValue
     )
     override def asJsValue = JsNull
   }
+  def Maybe(anyValue: Any) = new Maybe(anyValue)
+
 
   val ___allowOtherValues: JsString = JsString(___allowOtherJsonsKey)
   val ___ignoreOrder: JsString = JsString(___ignoreOrderJsonKey)

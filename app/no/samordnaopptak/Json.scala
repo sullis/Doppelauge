@@ -5,7 +5,6 @@ import play.api.libs.json._
 class JsonException(val message: String) extends Exception(message)
 class JsonParseException(message: String) extends JsonException(message)
 
-
 trait JValue {
 
   private var visitedKeys: Set[String] = Set()
@@ -161,6 +160,7 @@ object J {
 
   private def jsValueToJValue(value: JsValue): JValue =
     value match {
+      case j: JValue   => j
       case j: JsNumber => JNumber(j.value)
       case j: JsString => JString(j.value)
       case j: JsBoolean => JBoolean(j.value)
