@@ -3,8 +3,14 @@ package no.samordnaopptak.apidoc
 import no.samordnaopptak.test.TestByAnnotation.Test
 import no.samordnaopptak.json._
 
+/*
+ Generates swagger 2 data
+ */
 
 object SwaggerUtil{
+
+  val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float")
+
 
   // https://github.com/swagger-api/swagger-core/wiki/Datatypes
   def atomTypeToSwaggerType(atomType: String) = {
@@ -94,7 +100,7 @@ object SwaggerUtil{
 
   private def getType(json: JValue, addDescription: Boolean = true) = {
     val type_      = json("type").asString
-    val isAtomType = ApiDocUtil.atomTypes.contains(type_)
+    val isAtomType = atomTypes.contains(type_)
     val isArray    = json("isArray").asBoolean
     val isEnum     = json("isEnum").asBoolean
     val type2 =
@@ -233,9 +239,9 @@ object SwaggerUtil{
       self.allTags("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
       self.allTags("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "usernames", "users")
   """)
-  private def allTags(basePath: String, apidocs: List[String]): Set[String] = {
-    val ret = apidocs.map(
-      ApiDocUtil.getJson(_)
+  private def allTags(basePath: String, apidocstrings: List[String]): Set[String] = {
+    val ret = apidocstrings.map(
+      apidocstring => ApiDocParser.getJson(apidocstring)
     ).map(jsonApiDoc =>
       jsonApiDoc("uri").asString
     ).map(
@@ -293,7 +299,7 @@ object SwaggerUtil{
   }
 
   private def validateThatAllDatatypesAreDefined(tag: String, jsonApiDocs: List[JValue], dataTypes: List[JValue]): Unit = {
-    val definedTypes: Set[String] = dataTypes.flatMap(_.asMap.keys).toSet ++ ApiDocUtil.atomTypes
+    val definedTypes: Set[String] = dataTypes.flatMap(_.asMap.keys).toSet ++ atomTypes
     val usedTypes: Set[String]    = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
     val undefinedTypes            = usedTypes -- definedTypes
     /*
@@ -318,17 +324,17 @@ object SwaggerUtil{
       case (key, _) => key
     }
 
-  def getMain(basePath: String, apidocs: List[String]): JObject = {
+  def getMain(basePath: String, apidocstrings: List[String]): JObject = {
 
     if (!basePath.endsWith("/"))
       throw new Exception("Basepath must end with slash: "+basePath)
 
-    val dataTypes = apidocs.map(apidoc => J(ApiDocUtil.getDataTypes(apidoc)))
+    val dataTypes = apidocstrings.map(apidocstring => ApiDocParser.getDataTypes(apidocstring))
     validateUniqueDataTypes(dataTypes)
 
-    val tags = allTags(basePath, apidocs).toList.sorted
+    val tags = allTags(basePath, apidocstrings).toList.sorted
 
-    val jsonApiDocs = apidocs.map(a => J(ApiDocUtil.getJson(a)))
+    val jsonApiDocs = apidocstrings.map(a => ApiDocParser.getJson(a))
 
     validateThatAllDatatypesAreDefined(basePath, jsonApiDocs, dataTypes)
 

@@ -1,146 +1,15 @@
 package no.samordnaopptak.apidoc
 
 
-//import scala.reflect.runtime.{universe => ru}
-
-import play.api.Play.current
-import com.fasterxml.jackson.annotation.JsonIgnore
-
 import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation.Test
 
+/*
+ The internal format, close to the textual representation.
+ */
 
-object ApiDocUtil{
-
-  val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float")
-
-  class MismatchFieldException(message: String) extends Exception(message)
-  class UnknownFieldException(message: String) extends Exception(message)
-  class AlreadyDefinedFieldException(message: String) extends Exception(message)
-  class MismatchPathParametersException(message: String) extends Exception(message)
-
-  private def safeLoadClass(className: String): java.lang.Class[_] =
-    try{
-      play.api.Play.classloader.loadClass(className)
-     } catch {
-        case e: java.lang.ClassNotFoundException => null.asInstanceOf[java.lang.Class[_]]
-    }
- 
-  /*
-
-  null, List("lib", "ApiDoc", "MismatchFieldException") -> loadClass(
-                                                              null,
-                                                              List("lib.ApiDoc"), "MismatchFieldException"
-                                                           )
-
-  null, List("lib.ApiDoc", "MismatchFieldException")    -> loadClass(
-                                                              play.api.Play.classloader.loadClass("lib.ApiDoc"),
-                                                              List("MismatchFieldException")
-                                                           )
-
-  Class("lib.ApiDoc"), List("MismatchFieldException")   -> parent.getClasses.find(_.getCannonicalName()=="lib.ApiDoc.MimatchFieldException").get
-
-   */
-
-  private def loadInnerClass(parent: java.lang.Class[_], className: String, elms: List[String]): java.lang.Class[_] = {
-    //println(className+": "+"parent: "+(if (parent==null) "null" else parent.getCanonicalName())+", elms: "+elms)
-
-    if (parent==null && elms.isEmpty) {
-      play.api.Play.classloader.loadClass(className)
-
-    } else if (parent==null) {
-      val class_ = safeLoadClass(elms(0))
-      if (class_ != null)
-        loadInnerClass(class_, className, elms.tail)
-      else if (elms.size==1)
-        play.api.Play.classloader.loadClass(className)
-      else
-        loadInnerClass(null, className, elms(0)+"."+elms(1) :: elms.tail.tail)
-
-    } else if (elms.isEmpty) {
-      parent
-
-    } else {
-      val class_ = parent.getClasses.find(_.getCanonicalName()==parent.getCanonicalName()+"."+elms(0))
-      if (class_ != None)
-        loadInnerClass(class_.get, className, elms.tail)
-      else
-        play.api.Play.classloader.loadClass(className)
-    }
-  }
-
-  def loadInnerClass(className: String): java.lang.Class[_] =
-    loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className.split('.').toList)
-
-
-  @Test(code="""
-    self.findUriParms("/api/v1/acl/{service}")        === List("service")
-    self.findUriParms("/api/v1/acl/{service}/{hest}") === List("service", "hest")
-    self.findUriParms("/api/v1/acl/")                 === List()
-    self.findUriParms("/api/v1/acl")                  === List()
-  """)
-  private def findUriParms(autoUri: String): List[String] =
-    if (autoUri=="")
-      List()
-    else if (autoUri.startsWith("{")) {
-      val next = autoUri.indexOf('}')
-      autoUri.substring(1, next) :: findUriParms(autoUri.drop(next+1))
-    } else
-      findUriParms(autoUri.drop(1))
-
-
-  def validateDataTypeFields(className: String, dataTypeName: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
-
-    val class_ = try{
-      loadInnerClass(className)
-    } catch {
-      case e: java.lang.ClassNotFoundException =>
-        //println("couldn't load class "+className+". Trying models instead")
-        loadInnerClass("models."+className)
-    }
-
-    def getClassFieldNames(parameterAnnotations: List[Array[java.lang.annotation.Annotation]], fields: List[java.lang.reflect.Field]): List[String] = {
-      if (fields.isEmpty)
-        List()
-      else {
-        val field = fields.head
-        val annotations = if (parameterAnnotations.isEmpty) field.getDeclaredAnnotations().toList else parameterAnnotations.head.toList
-        val rest = getClassFieldNames(parameterAnnotations.drop(1), fields.tail) // List().drop(1) == List()
-
-        val fieldName = field.getName()
-        if(fieldName.contains("$"))
-          rest
-        else
-          annotations.find(_.isInstanceOf[JsonIgnore]) match {
-            case Some(annotation: JsonIgnore) if annotation.value==true => rest
-            case None => fieldName :: rest
-          }
-      }
-    }
-
-    if(class_.getConstructors.isEmpty)
-      throw new Exception(s"""While evaluating "${dataTypeName}": Class $class_ does not have any constructors.""")
-
-    val classFields = getClassFieldNames(
-      class_.getConstructors.head.getParameterAnnotations().toList,
-      class_.getDeclaredFields().toList
-    ).toSet
-
-    if ( (removedFields &~ classFields).size > 0)
-      throw new UnknownFieldException(s"""While evaluating "${dataTypeName}": One or more removedFields are not defined for class '$className': """ + (removedFields &~ classFields) + ". classFields: "+classFields)
-
-    if ( (addedFields & classFields).size > 0)
-      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more addedFields are already defined for class '$className': """+(addedFields & classFields))
-
-    if ( (addedFields & removedFields).size > 0)
-      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more fields are both present in addedFields and removedFields (for '$className'): """+(addedFields & removedFields))
-
-    val modifiedClassFields = classFields ++ addedFields -- removedFields
-
-    if ( fields != modifiedClassFields)
-      throw new MismatchFieldException(s"""While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: """+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)))
-  }
+object ApiDocParser{
 
   private def getIndentLength(line: String) =
     line.prefixLength(_==' ')
@@ -172,6 +41,22 @@ object ApiDocUtil{
 
     (args,endpos+1)
   }
+
+
+  @Test(code="""
+    self.findUriParms("/api/v1/acl/{service}")        === List("service")
+    self.findUriParms("/api/v1/acl/{service}/{hest}") === List("service", "hest")
+    self.findUriParms("/api/v1/acl/")                 === List()
+    self.findUriParms("/api/v1/acl")                  === List()
+  """)
+  private def findUriParms(autoUri: String): List[String] =
+    if (autoUri=="")
+      List()
+    else if (autoUri.startsWith("{")) {
+      val next = autoUri.indexOf('}')
+      autoUri.substring(1, next) :: findUriParms(autoUri.drop(next+1))
+    } else
+      findUriParms(autoUri.drop(1))
 
 
 
@@ -339,7 +224,7 @@ object ApiDocUtil{
       val parameters = getParameters()
       val fieldNames = parameters.keys.toList.toSet
 
-      val (name, signature) = if (line.endsWith(":")) {
+      val (dataTypeName, signature) = if (line.endsWith(":")) {
 
         val signature = key.dropRight(1).trim
         val splitPos = line.indexOf('(')
@@ -352,19 +237,19 @@ object ApiDocUtil{
       } else {
 
         val splitPos = line.indexOf(':')
-        val name = line.take(splitPos).trim
+        val dataTypeName = line.take(splitPos).trim
         val signature = line.drop(splitPos+1).trim
 
-        (name, signature)
+        (dataTypeName, signature)
       }
 
       if (signature != "!") {
         val (className, addedFields, removedFields) = parseScalaTypeSignature(signature)
-        validateDataTypeFields(className, name, fieldNames, addedFields, removedFields)
+        ApiDocValidation.validateDataTypeFields(className, dataTypeName, fieldNames, addedFields, removedFields)
       }
 
       J.obj(
-        name -> parameters
+        dataTypeName -> parameters
       )
     }
 
@@ -482,23 +367,6 @@ object ApiDocUtil{
   }
 
 
-  private def validateJson(jsonJson: JObject) = {
-    val json = J(jsonJson)
-    val uriParms = json("uriParms").asStringArray
-    val parameters = json("parameters").asOption(_.asMap).getOrElse(Set())
-    val pathParms = parameters.filter(_._2("paramType").asString == "path")
-    val pathParmKeys = pathParms.toMap.keys
-
-    if (uriParms.size != pathParmKeys.size)
-      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: $json).""")
-
-    pathParmKeys.foreach(pathParm =>
-      if (!uriParms.contains(pathParm))
-        throw new MismatchPathParametersException(s"""The path parameter "${pathParm}" is not defined in the path.""")
-    )
-  }
-
-
   def getJson(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
     var ret = J.obj()
@@ -506,7 +374,7 @@ object ApiDocUtil{
       if ( ! apidoc.keys.contains("datatype"))
         ret = ret ++ apidoc
     )
-    validateJson(ret)
+    ApiDocValidation.validateJson(ret)
     ret
   }
 
@@ -515,7 +383,7 @@ object ApiDocUtil{
     J.flattenJObjects(
       parseRaw(apidoc)
         .reverse
-        .map(raw => J(raw.getApidoc()))
+        .map(raw => raw.getApidoc())
         .filter(_("datatype").isDefined)
         .map(_("datatype"))
     )

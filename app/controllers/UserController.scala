@@ -7,7 +7,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import play.api.mvc._
 import play.api.Play.current
 
-import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil, SwaggerUtil}
+import no.samordnaopptak.apidoc.ApiDoc
 import no.samordnaopptak.json._
 
 
@@ -33,7 +33,7 @@ object UserController extends Controller {
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
    */
 
-  val user = User("1235f",UserData("CommonFirstName", "CommonLastName"), "cat")
+  var user = User("1235f",UserData("CommonFirstName", "CommonLastName"), "cat")
 
   @ApiDoc(doc="""
     GET /useradmin/api/v1/user
@@ -104,7 +104,7 @@ object UserController extends Controller {
   """)
   def post2()  = Action { request =>
     val json = J(request.body.asJson.get)
-    val user = User(
+    user = User(
       json("id").asString,
       UserData(
         json("data")("firstName").asString,

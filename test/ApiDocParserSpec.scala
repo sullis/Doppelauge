@@ -8,7 +8,7 @@ import no.samordnaopptak.json.JsonMatcher
 
 import no.samordnaopptak.test.TestByAnnotation
 
-import no.samordnaopptak.apidoc.ApiDocUtil
+import no.samordnaopptak.apidoc.{ApiDocParser, ApiDocValidation}
 
 import com.fasterxml.jackson.annotation._
 
@@ -304,100 +304,64 @@ object ApiDocSamples{
 }
 
 
-class ApiDocSpec extends Specification {
+class ApiDocParserSpec extends Specification {
 
-  class Inner1{
-    case class Inner2()
-  }
-
-  "ApiDoc" should {
+  "ApiDocParser" should {
 
     "pass the annotation tests" in { // First run the smallest unit tests.
       play.api.test.Helpers.running(FakeApplication()) {
-        TestByAnnotation.TestObject(ApiDocUtil)
+        TestByAnnotation.TestObject(ApiDocParser)
       }
       true
     }
 
-    "Get Class objects from inner classes" in {
-      play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.loadInnerClass("test.lib.ApiDocSpec.Inner1.Inner2")
-        true
-      }
-    }
-
-    "Validate data type fields, with no added or removed fields" in {
-      play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated"),        Set(), Set())
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id"),                                   Set(), Set()) should throwA[ApiDocUtil.MismatchFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated", "id2"), Set(), Set()) should throwA[ApiDocUtil.MismatchFieldException]
-      }
-    }
-
-    "Validate data type fields, with added field" in {
-      play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "id2", "attributes", "unrelated"),        Set("id2"), Set())
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "id2", "attributes", "unrelated"),        Set("id"),  Set()) should throwA[ApiDocUtil.AlreadyDefinedFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated"),               Set("id2"), Set()) should throwA[ApiDocUtil.MismatchFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "id2", "id3", "attributes", "unrelated"), Set("id2"), Set()) should throwA[ApiDocUtil.MismatchFieldException]
-      }
-    }
-
-    "Validate data type fields, with removed field" in {
-      play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("attributes", "unrelated"),              Set(),     Set("id"))
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id","attributes", "unrelated"),         Set("id"), Set("id"))  should throwA[ApiDocUtil.AlreadyDefinedFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("unrelated"),                            Set(),     Set("id"))  should throwA[ApiDocUtil.MismatchFieldException]
-        ApiDocUtil.validateDataTypeFields("test.lib.User", "hepp", Set("id", "attributes", "unrelated"),        Set(),     Set("id2")) should throwA[ApiDocUtil.UnknownFieldException]
-      }
-    }
 
     "Throw exception for badly formatted indentation (the first line sets the indentation standard, which the rest of the lines must follow)" in {
-      ApiDocUtil.getRaw("""
+      ApiDocParser.getRaw("""
          HALLO
        HALLO2
       """) must throwA(new Exception("""Bad indentation for line "HALLO2""""))
     }
 
     "Throw exception for illegal parameter type" in {
-      ApiDocUtil.getJson(ApiDocSamples.docWithIllegalParamType) must throwA(
+      ApiDocParser.getJson(ApiDocSamples.docWithIllegalParamType) must throwA(
         new Exception(""""gakk" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
       )
     }
 
     "Get ClassNotFoundException for datatype with undefined corresponding scala class" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.getJson(ApiDocSamples.docWithUndefinedClass) must throwA[java.lang.ClassNotFoundException]
+        ApiDocParser.getJson(ApiDocSamples.docWithUndefinedClass) must throwA[java.lang.ClassNotFoundException]
       }
     }
 
     "Test getting class from models instead, if we get ClassNotFoundException" in {
       play.api.test.Helpers.running(FakeApplication()) {
         if (play.api.Play.current.configuration.getString("application.name").get == "studieadmin")
-          ApiDocUtil.getJson(ApiDocSamples.docWithClassFromModels)
+          ApiDocParser.getJson(ApiDocSamples.docWithClassFromModels)
       }
       true
     }
 
-    "Get ApiDocUtil.MismatchFieldException for datatype with mismatched corresponding scala class" in {
+    "Get ApiDocParser.MismatchFieldException for datatype with mismatched corresponding scala class" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.getJson(ApiDocSamples.docWithMismatchedClass) must throwA[ApiDocUtil.MismatchFieldException]
+        ApiDocParser.getJson(ApiDocSamples.docWithMismatchedClass) must throwA[ApiDocValidation.MismatchFieldException]
       }
     }
 
-    "Get ApiDocUtil.MismatchPathParametersException for datatype with mismatched path parameters" in {
+    "Get ApiDocParser.MismatchPathParametersException for datatype with mismatched path parameters" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.getJson(ApiDocSamples.docWithMismatchedPathParameters1) must throwA[ApiDocUtil.MismatchPathParametersException]
-        ApiDocUtil.getJson(ApiDocSamples.docWithMismatchedPathParameters2) must throwA[ApiDocUtil.MismatchPathParametersException]
-        ApiDocUtil.getJson(ApiDocSamples.docWithMismatchedPathParameters3) must throwA[ApiDocUtil.MismatchPathParametersException]
-        ApiDocUtil.getJson(ApiDocSamples.docWithMismatchedPathParameters4) must throwA[ApiDocUtil.MismatchPathParametersException]
+        ApiDocParser.getJson(ApiDocSamples.docWithMismatchedPathParameters1) must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getJson(ApiDocSamples.docWithMismatchedPathParameters2) must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getJson(ApiDocSamples.docWithMismatchedPathParameters3) must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getJson(ApiDocSamples.docWithMismatchedPathParameters4) must throwA[ApiDocValidation.MismatchPathParametersException]
       }
     }
 
     "Use class name with same name as datatype, if class name for datatype is undefined" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocUtil.getJson(ApiDocSamples.docWithClassWithSameName1)
-        ApiDocUtil.getJson(ApiDocSamples.docWithClassWithSameName2)
+        ApiDocParser.getJson(ApiDocSamples.docWithClassWithSameName1)
+        ApiDocParser.getJson(ApiDocSamples.docWithClassWithSameName2)
       }
       true
     }
@@ -429,7 +393,7 @@ class ApiDocSpec extends Specification {
             "..."
           )
         ),
-        ApiDocUtil.getRaw(ApiDocSamples.doc1)
+        ApiDocParser.getRaw(ApiDocSamples.doc1)
       )
     }
 
@@ -495,13 +459,13 @@ class ApiDocSpec extends Specification {
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
-          ApiDocUtil.getJson(ApiDocSamples.doc1)
+          ApiDocParser.getJson(ApiDocSamples.doc1)
         }
       )
     }
 
     "Check Array result" in {
-      val a = no.samordnaopptak.apidoc.ApiDocUtil.getJson(ApiDocSamples.docWithArrayResult)
+      val a = no.samordnaopptak.apidoc.ApiDocParser.getJson(ApiDocSamples.docWithArrayResult)
       //println("a: "+Json.prettyPrint(a))
 
       JsonMatcher.matchJson(
@@ -524,7 +488,7 @@ class ApiDocSpec extends Specification {
     }
 
     "Check doc with Enum parameters and result" in {
-      val a = no.samordnaopptak.apidoc.ApiDocUtil.getJson(ApiDocSamples.docWithEnums)
+      val a = no.samordnaopptak.apidoc.ApiDocParser.getJson(ApiDocSamples.docWithEnums)
       //println("a: "+Json.prettyPrint(a))
 
       JsonMatcher.matchJson(
@@ -568,7 +532,7 @@ class ApiDocSpec extends Specification {
     }
 
     "Check datatype with Enum" in {
-      val a = no.samordnaopptak.apidoc.ApiDocUtil.getDataTypes(ApiDocSamples.docWithEnums)
+      val a = no.samordnaopptak.apidoc.ApiDocParser.getDataTypes(ApiDocSamples.docWithEnums)
       //println("a: "+Json.prettyPrint(a))
 
       JsonMatcher.matchJson(
@@ -641,7 +605,7 @@ class ApiDocSpec extends Specification {
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
-          ApiDocUtil.getDataTypes(ApiDocSamples.doc1)
+          ApiDocParser.getDataTypes(ApiDocSamples.doc1)
         }
       )
     }
