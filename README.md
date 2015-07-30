@@ -43,14 +43,13 @@ Basic usage:
 
 
     @no.samordnaopptak.apidoc.ApiDoc(doc="""
-      GET /api/v1/users/{id}
+      GET /api/v1/users/{id}/{type}
 
       DESCRIPTION
         Get user
 
       PARAMETERS 
         id: String <- The user id
-        names: Array String <- All names in an array of strings
         type: Enum(Woman, Man, Dog) String <- The user can either be a woman, a man, or a dog.
 
       ERRORS
@@ -64,7 +63,7 @@ Basic usage:
 Define parameter types:
 
     @no.samordnaopptak.apidoc.ApiDoc(doc="""
-      GET /api/v1/users/{phone}
+      GET /api/v1/users/{phone}/{age}
 
       DESCRIPTION
         Get user
@@ -75,7 +74,7 @@ Define parameter types:
         phone: String(query)             <- 'query' parameter type
         mobile: String(query, optional)  <- Optional 'query' parameter type
         email: String(form)              <- 'form' parameter type
-        age: Enum(10,20,30,40) Int       <- Enum Int parameter.
+        age: Enum(10,20,30,40) Int       <- Enum Int parameter. (also a 'path' parameter type)
     """)
     def getUser(id: String) = ...
 
@@ -103,8 +102,9 @@ Defining types:
 
       User:
         id: String
-        firstName: String  <- The first name of the user.
+        firstName: String          <- The first name of the user.
         age: Enum(10,20,30,40) Int <- Age can be either 10, 20, 30 or 40
+        nickNames: Array String    <- All nickNames in an array of strings
     """)
     def getUser(id: String) = ...
 
