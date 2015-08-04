@@ -16,8 +16,10 @@ object ApplicationBuild extends Build {
 
     // Add your own project settings here
     organization := "no.samordnaopptak",
-    
+
     publishMavenStyle := true,
+
+/*    
 
     publishTo := {
       val nexus = "https://repo.usit.uio.no/nexus/"
@@ -26,11 +28,13 @@ object ApplicationBuild extends Build {
       else
         Some("releases"  at nexus + "content/repositories/opsys-internal-release")
     },
+ */
 
     mappings in (Compile, packageBin) ~= { (ms: Seq[(File, String)]) =>
       ms filter {
         case (file, toPath) => {
-          val doit = toPath.startsWith("controllers/ApiDocController") || toPath.startsWith("no/samordnaopptak/apidoc")
+          //println("file: "+file+"\ntoPath: "+toPath+"\n")
+          val doit = toPath.startsWith("no/samordnaopptak") || toPath.contains("swagger-ui")
           if (doit){
             println("file: "+file+"\ntoPath: "+toPath+"\n")
           }

@@ -15,3 +15,4 @@ libraryDependencies += specs2 % Test
 scalacOptions in (Compile,doc) := Seq("-groups", "-implicits")
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
+

@@ -1,8 +1,8 @@
 package test
 
-import no.samordnaopptak.test.TestByAnnotation._
+import org.specs2.mutable.Specification
 
-import org.specs2.mutable._
+import no.samordnaopptak.test.TestByAnnotation.{Test, TestObject}
 
 
 class ClassToTestWith {
