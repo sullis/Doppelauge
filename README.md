@@ -39,12 +39,13 @@ QUICK START
 HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 ================================================
 
-1. execute "activator publish" in the terminal of the api-doc project.
+1. Add api-doc dependency to build.sbt:
+```
+resolvers += "jitpack" at "https://jitpack.io"
+libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.9"
+```
 
-2. Copy the file "target/scala-2.11/api_doc_2.11-1.0.jar" into the "lib" directory of your play project.
-   If you don't have a "lib" directory, you must create it first.
-
-3. If webjars is not a dependency in your project, add these lines to build.sbt:
+2. If webjars is not a dependency in your project, add these lines to build.sbt:
 
    ```
    libraryDependencies ++= Seq(
