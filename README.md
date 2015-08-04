@@ -40,6 +40,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 ================================================
 
 1. Add api-doc dependency to build.sbt:
+
 ```
 resolvers += "jitpack" at "https://jitpack.io"
 libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.9"
