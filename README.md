@@ -36,6 +36,57 @@ QUICK START
 
 
 
+HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
+================================================
+
+1. execute "activator publish" in the terminal of the api-doc project.
+
+2. Copy the file "target/scala-2.11/api_doc_2.11-1.0.jar" into the "lib" directory of your play project.
+   If you don't have a "lib" directory, you must create it first.
+
+3. If webjars is not a dependency in your project, add these lines to build.sbt:
+
+   libraryDependencies ++= Seq(
+    "org.webjars" %% "webjars-play" % "2.4.0-1"
+   )
+
+3. Add the following line to conf/routes:
+   GET   /webjars/*file   controllers.WebJarAssets.at(file)
+   GET     /api/v1/api-docs                        controllers.ApiDocController.get()
+
+4. Create the controller:
+
+   ```scala
+package controllers
+
+import play.api._
+import play.api.mvc._
+
+import no.samordnaopptak.apidoc.ApiDoc
+import no.samordnaopptak.apidoc.{AnnotationHelper, RoutesHelper, RouteEntry, SwaggerUtil}
+
+class ApiDocController extends Controller {
+  @ApiDoc(doc="""
+    GET /api/v1/api-docs
+
+    DESCRIPTION
+      Get main swagger json documentation
+      You can add more detailed information here.
+  """)
+  def get() = Action {
+    val apidocs = AnnotationHelper.getApiDocsFromAnnotations() //routeEntries)
+    Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
+  }
+
+
+}
+```
+
+5. Now the api-docs should be available at the following address:
+   /webjars/api_doc/1.0/swagger-ui/dist/index.html?url=/api/v1/api-docs
+
+
+
 Examples
 ==========
 
