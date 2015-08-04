@@ -51,9 +51,11 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
    )
 
 3. Add the following line to conf/routes:
+   ```
    GET   /webjars/*file   controllers.WebJarAssets.at(file)
    GET     /api/v1/api-docs                        controllers.ApiDocController.get()
-
+   ```
+   
 4. Create the controller:
 
    ```scala
@@ -83,8 +85,9 @@ class ApiDocController extends Controller {
 ```
 
 5. Now the api-docs should be available at the following address:
+   ```
    /webjars/api_doc/1.0/swagger-ui/dist/index.html?url=/api/v1/api-docs
-
+   ```
 
 
 Examples
