@@ -39,11 +39,14 @@ QUICK START
 HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 ================================================
 
+
 1. Add api-doc dependency to build.sbt:
-```
-resolvers += "jitpack" at "https://jitpack.io"
-libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.9"
-```
+
+  ```
+  resolvers += "jitpack" at "https://jitpack.io"
+  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.9"
+  ```
+
 
 2. If webjars is not a dependency in your project, add these lines to build.sbt:
    ```
@@ -51,6 +54,7 @@ libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.9"
     "org.webjars" %% "webjars-play" % "2.4.0-1"
    )
    ```
+
 
 3. Add the following line to conf/routes:
    ```
@@ -81,7 +85,7 @@ class ApiDocController extends Controller {
     Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
   }
 }
-```
+  ```
 
 5. Now the api-docs should be available at the following address:
    ```
