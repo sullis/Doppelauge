@@ -46,14 +46,16 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 
 3. If webjars is not a dependency in your project, add these lines to build.sbt:
 
+   ```
    libraryDependencies ++= Seq(
     "org.webjars" %% "webjars-play" % "2.4.0-1"
    )
+   ```
 
 3. Add the following line to conf/routes:
    ```
-   GET   /webjars/*file   controllers.WebJarAssets.at(file)
-   GET     /api/v1/api-docs                        controllers.ApiDocController.get()
+   GET   /webjars/*file    controllers.WebJarAssets.at(file)
+   GET   /api/v1/api-docs  controllers.ApiDocController.get()
    ```
    
 4. Create the controller:
@@ -73,14 +75,11 @@ class ApiDocController extends Controller {
 
     DESCRIPTION
       Get main swagger json documentation
-      You can add more detailed information here.
   """)
   def get() = Action {
-    val apidocs = AnnotationHelper.getApiDocsFromAnnotations() //routeEntries)
+    val apidocs = AnnotationHelper.getApiDocsFromAnnotations()
     Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
   }
-
-
 }
 ```
 
