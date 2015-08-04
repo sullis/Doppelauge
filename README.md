@@ -51,7 +51,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 2. If webjars is not a dependency in your project, add these lines to build.sbt:
    ```
    libraryDependencies ++= Seq(
-    "org.webjars" %% "webjars-play" % "2.4.0-1"
+      "org.webjars" %% "webjars-play" % "2.4.0-1"
    )
    ```
 
@@ -65,26 +65,26 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 4. Create the controller:
 
    ```scala
-package controllers
+  package controllers
+  
+  import play.api._
+  import play.api.mvc._
+  
+  import no.samordnaopptak.apidoc.ApiDoc
+  import no.samordnaopptak.apidoc.{AnnotationHelper, RoutesHelper, RouteEntry, SwaggerUtil}
 
-import play.api._
-import play.api.mvc._
-
-import no.samordnaopptak.apidoc.ApiDoc
-import no.samordnaopptak.apidoc.{AnnotationHelper, RoutesHelper, RouteEntry, SwaggerUtil}
-
-class ApiDocController extends Controller {
-  @ApiDoc(doc="""
-    GET /api/v1/api-docs
-
-    DESCRIPTION
-      Get main swagger json documentation
-  """)
-  def get() = Action {
-    val apidocs = AnnotationHelper.getApiDocsFromAnnotations()
-    Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
+  class ApiDocController extends Controller {
+    @ApiDoc(doc="""
+      GET /api/v1/api-docs
+  
+      DESCRIPTION
+        Get main swagger json documentation
+    """)
+    def get() = Action {
+      val apidocs = AnnotationHelper.getApiDocsFromAnnotations()
+      Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
+    }
   }
-}
   ```
 
 5. Now the api-docs should be available at the following address:
