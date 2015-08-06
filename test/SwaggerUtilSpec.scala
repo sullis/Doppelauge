@@ -37,6 +37,8 @@ object SwaggerTestData{
       extra: Extra(optional)
       type: Enum(man, woman, dog) String(optional)
       age: Enum(2,65,9) String
+      birthday: Date
+      created: DateTime
 
     Extra: !
       extrastring: String <- Extra type
@@ -282,7 +284,7 @@ object SwaggerTestData{
   "definitions": {
         "User": {
             "id" : "User",
-            "required" : ["id", "names", "age", "${___ignoreOrder.value}"],
+            "required" : ["id", "names", "age", "birthday", "created", "${___ignoreOrder.value}"],
             "properties": {
                 "id": {
                     "type": "integer",
@@ -312,6 +314,14 @@ object SwaggerTestData{
                     "enum": [
                        "2","65","9"
                     ]
+                },
+                "birthday": {
+                    "type": "string",
+                    "format": "date"
+                },
+                "created": {
+                    "type": "string",
+                    "format": "date-time"
                 }
             }
         },

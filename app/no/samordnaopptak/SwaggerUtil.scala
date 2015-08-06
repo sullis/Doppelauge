@@ -9,7 +9,7 @@ import no.samordnaopptak.json._
 
 object SwaggerUtil{
 
-  val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float")
+  val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float", "Date", "DateTime")
 
 
   // https://github.com/swagger-api/swagger-core/wiki/Datatypes
@@ -24,6 +24,8 @@ object SwaggerUtil{
       case "Any" => ("any","")
       case "Double" => ("number","double")
       case "Float" => ("number","float")
+      case "Date" => ("string", "date")
+      case "DateTime" => ("string", "date-time")
     }
     if (format=="")
       J.obj(
