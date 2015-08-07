@@ -187,13 +187,14 @@ object SwaggerUtil{
           if (apidoc.hasKey("parameters"))
             (apidoc("parameters").asMap.map {
               case (name: String, attributes: JValue) =>
+                val in = attributes("paramType").asString
                 J.obj(
                   "name" -> name,
-                  "in" -> attributes("paramType").asString,
+                  "in" -> in,
                   "required" -> attributes("required").asBoolean,
                   "description" -> (if (attributes.hasKey("noComment")) "" else attributes("comment").asString)
                 ) ++ (
-                  if (attributes("isEnum").asBoolean==true)
+                  if (in != "body")
                     getType(attributes, addDescription=false)
                   else
                     J.obj(
@@ -220,7 +221,6 @@ object SwaggerUtil{
             case (name, _) => name
           }
           name -> J.obj(
-            "id" -> name,
             "required" -> required,
             "properties" -> JObject(
               attributes.asMap.map {

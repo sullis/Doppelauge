@@ -69,7 +69,8 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
   
   import play.api._
   import play.api.mvc._
-  
+  import play.api.libs.json.Json
+
   import no.samordnaopptak.apidoc.ApiDoc
   import no.samordnaopptak.apidoc.{AnnotationHelper, RoutesHelper, RouteEntry, SwaggerUtil}
 
@@ -82,7 +83,13 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
     """)
     def get() = Action {
       val apidocs = AnnotationHelper.getApiDocsFromAnnotations()
-      Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
+      Ok(
+        SwaggerUtil.getMain("/", apidocs).asJsValue ++
+        // add the required info object
+        Json.obj("info" -> Json.obj(
+          "title" → "Generated Swagger API",
+          "version" → "1.0"
+      )))
     }
   }
   ```
