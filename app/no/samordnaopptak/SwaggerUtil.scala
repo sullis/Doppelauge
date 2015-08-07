@@ -221,7 +221,6 @@ object SwaggerUtil{
             case (name, _) => name
           }
           name -> J.obj(
-            "id" -> name,
             "required" -> required,
             "properties" -> JObject(
               attributes.asMap.map {

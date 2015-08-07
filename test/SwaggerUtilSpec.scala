@@ -281,7 +281,6 @@ object SwaggerTestData{
 
   "definitions": {
         "User": {
-            "id" : "User",
             "required" : ["id", "names", "age", "birthday", "created", "${___ignoreOrder.value}"],
             "properties": {
                 "id": {
@@ -324,7 +323,6 @@ object SwaggerTestData{
             }
         },
         "Extra": {
-            "id" : "Extra",
             "required": ["extrastring"],
             "properties": {
                "extrastring": {
