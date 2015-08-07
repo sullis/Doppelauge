@@ -212,9 +212,7 @@ object SwaggerTestData{
                   "name" : "id",
                   "required" : true,
                   "description" : "",
-                  "schema" : {
-                    "type" : "string"
-                  },
+                  "type" : "string",
                   "in" : "path",
                   "required" : true
                 }
