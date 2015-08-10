@@ -41,6 +41,8 @@ object UserController extends Controller {
     DESCRIPTION
       Get user
       You can add more detailed information here.
+      _ Use underscrores to
+      __ indent lines
 
     PARAMETERS
       offset: Int (query, optional) <- default = 0

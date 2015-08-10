@@ -253,6 +253,11 @@ object ApiDocParser{
       )
     }
 
+    def replace_leading_underscores(line: String): String =
+      if (line(0)=='_')
+        "&nbsp;" + replace_leading_underscores(line.drop(1))
+      else
+        line
 
     def getApidoc(): JObject = {
       if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ") || key.startsWith("OPTIONS ")) {
@@ -275,7 +280,7 @@ object ApiDocParser{
       else if (key=="DESCRIPTION")
         J.obj(
           "shortDescription" -> elements.head,
-          "longDescription"  -> (if (elements.length==1) "" else elements.tail.mkString("<br>"))
+          "longDescription"  -> (if (elements.length==1) "" else elements.tail.map(replace_leading_underscores).mkString("<br>"))
         )
 
       else if (key=="PARAMETERS")
@@ -338,9 +343,8 @@ object ApiDocParser{
 
     else {
       val indentLength = getIndentLength(lines.head)
-      var line = lines.head.trim
-      while(line(0)=='_')
-        line = "&nbsp;" + line.drop(1)
+
+      val line = lines.head.trim
 
       if (indentLength < mainIndentLength)
         throw new Exception(s"""Bad indentation for line "$line"""")
