@@ -5,6 +5,7 @@ import play.api.mvc._
 
 import no.samordnaopptak.apidoc.{AnnotationHelper, SwaggerUtil, ApiDoc}
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
+import no.samordnaopptak.json.J
 
 
 class ApiDocController extends Controller {
@@ -16,6 +17,14 @@ class ApiDocController extends Controller {
  */
   
 
+  // The required swagger info object
+  val swaggerInfoObject = J.obj(
+    "info" -> J.obj(
+      "title"   -> "Generated Swagger API",
+        "version" -> "1.0"
+    )
+  )
+
   @ApiDoc(doc="""
     GET /api/v1/api-docs
 
@@ -25,7 +34,9 @@ class ApiDocController extends Controller {
   """)
   def get(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) = {
     val apidocs = AnnotationHelper.getApiDocsFromAnnotations(routeEntries)
-    Ok(SwaggerUtil.getMain("/", apidocs).asJsValue)
+    val generatedSwaggerDocs = SwaggerUtil.getMain("/", apidocs)
+    val json = generatedSwaggerDocs ++ swaggerInfoObject
+    Ok(json.asJsValue)
   }
 }
 

@@ -66,15 +66,24 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 
    ```scala
   package controllers
-  
+
   import play.api._
   import play.api.mvc._
-  import play.api.libs.json.Json
 
   import no.samordnaopptak.apidoc.ApiDoc
-  import no.samordnaopptak.apidoc.{AnnotationHelper, RoutesHelper, RouteEntry, SwaggerUtil}
+  import no.samordnaopptak.apidoc.{AnnotationHelper, SwaggerUtil}
+  import no.samordnaopptak.json.J
 
   class ApiDocController extends Controller {
+
+    // The required swagger info object
+    val swaggerInfoObject = J.obj(
+      "info" -> J.obj(
+        "title"   -> "Generated Swagger API",
+        "version" -> "1.0"
+      )
+    )
+
     @ApiDoc(doc="""
       GET /api/v1/api-docs
   
@@ -83,13 +92,9 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
     """)
     def get() = Action {
       val apidocs = AnnotationHelper.getApiDocsFromAnnotations()
-      Ok(
-        SwaggerUtil.getMain("/", apidocs).asJsValue ++
-        // add the required info object
-        Json.obj("info" -> Json.obj(
-          "title" → "Generated Swagger API",
-          "version" → "1.0"
-      )))
+      val generatedSwaggerDocs = SwaggerUtil.getMain("/", apidocs)
+      val json = generatedSwaggerDocs ++ swaggerInfoObject
+      Ok(json.asJsValue)
     }
   }
   ```
