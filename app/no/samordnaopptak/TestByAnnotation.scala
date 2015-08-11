@@ -167,7 +167,7 @@ object TestObject{
     val methods = parents.flatMap(_.getDeclaredMethods)
     /*
     println("methods names: ")
-    methods.println(m => println(getMethodName(m)))
+    methods.foreach(m => println(getMethodName(m)))
      */
     val method = methods.find(getMethodName(_) == methodName).getOrElse(throw new IllegalArgumentException("Method " + methodName + " not found"))
     method.setAccessible(true)
@@ -281,28 +281,38 @@ object TestObject{
     } else
       throw new Exception(createExceptionString(linenum, methodName, s""""$line" does not contain "===" or "=/=")"""))
 
-  private def createAssertionCodeLine(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) =
-  s"""
-  {
-    val TestByAnnotation___comp_value_a = $a
-    val TestByAnnotation___comp_value_b = $b
-    if (!(TestByAnnotation___comp_value_a $comparitor TestByAnnotation___comp_value_b))
-       throw new Exception("\"\"\n
-  """ +
-  createExceptionString(
-    linenum,
-    methodName,
-    s"""Assertion failed for the assertion " $line \".\n\n""" +
-      "This is not correct: " +
-      "\"\"\" + TestByAnnotation___comp_value_a + \"\"\" " +
-      comparitor +
-      " \"\"\" + TestByAnnotation___comp_value_b + \"\"\" \n\n "
-  ) +
-  "\"\"\")}"
+  private def createAssertionCodeLine(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) = {
+    val exceptionString =
+      createExceptionString(
+        linenum,
+        methodName,
+        s"""Assertion failed for the assertion " $line \".\n\n""" +
+          "This is not correct: " +
+          "\"\"\" + TestByAnnotation___comp_value_a + \"\"\" " +
+          comparitor +
+          " \"\"\" + TestByAnnotation___comp_value_b + \"\"\" \n\n "
+      )
 
+    s"""
+    {
+      val TestByAnnotation___comp_value_a = $a
+      val TestByAnnotation___comp_value_b = $b
+      if (!(TestByAnnotation___comp_value_a $comparitor TestByAnnotation___comp_value_b)){
+         println(Console.RED+"TEST FAILED: " + Console.RESET + \"\"\" """ + exceptionString + s""" \"\"\" )
+         false
+      } else
+         true
+  }"""
+  }
 
   private def printTest(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) =
     println(Console.GREEN+s"TestByAnnotitation '$methodName'/#${linenum}: "+Console.RESET + a + Console.GREEN + " " + (if (comparitor=="==") "===" else "=/=") + Console.RESET + " " + b)
+
+  def getStackTraceString(t: Throwable) = {
+    val sw = new java.io.StringWriter()
+    t.printStackTrace(new java.io.PrintWriter(sw))
+    sw.toString()
+  }
 
   import scala.reflect.runtime.universe._
 
@@ -328,15 +338,24 @@ object TestObject{
       println("tree: "+tree)
       println()
        */
-      tb.eval(
-        Block(
-          List(
-            ValDef(Modifiers(), TermName("instance"), TypeTree(), reify{o.asInstanceOf[T]}.tree)
-          ),
-          //reify{import Gakk._}.tree,
-          tree
-        )
-      )
+
+      val result =
+        try{
+          tb.eval(
+            Block(
+              List(
+                ValDef(Modifiers(), TermName("instance"), TypeTree(), reify{o.asInstanceOf[T]}.tree)
+              ),
+              //reify{import Gakk._}.tree,
+              tree
+            )
+          )
+        } catch {
+          case e: Throwable => throw new Exception(Console.RED+"Test #"+linenum+" failed.\nbacktrace: "+getStackTraceString(e))
+        }
+
+      if (!result.asInstanceOf[Boolean])
+        throw new Exception
     }
 
     def evalLines(lineNum: Int, codeLines: List[String]): Unit =
