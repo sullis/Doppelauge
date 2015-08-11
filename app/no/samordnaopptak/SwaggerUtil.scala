@@ -4,7 +4,7 @@ import no.samordnaopptak.test.TestByAnnotation.Test
 import no.samordnaopptak.json._
 
 /*
- Generates swagger 2 data
+ Generates swagger 2.0 data
  */
 
 object SwaggerUtil{

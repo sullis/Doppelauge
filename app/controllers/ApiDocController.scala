@@ -17,7 +17,7 @@ class ApiDocController extends Controller {
  */
   
 
-  // The required swagger info object
+  // The required swagger info object (see https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#infoObject)
   val swaggerInfoObject = J.obj(
     "info" -> J.obj(
       "title"   -> "Generated Swagger API",
