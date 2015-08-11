@@ -72,17 +72,22 @@ object RoutesHelper{
     self.urisMatches("/api/v1/50", "/api/v1/{haljapino}") === true
     self.urisMatches("/api/v1/50/fields", "/api/v1/{haljapino}/fields") === true
 
+    self.urisMatches("/api/v1/50?hello=5",         "/api/v1/50") === true
+    self.urisMatches("/api/v1/50?hello=5&gakk=6",  "/api/v1/{haljapino}") === true
+    self.urisMatches("/api/v1/50/fields?hello=gakk", "/api/v1/{haljapino}/fields") === true
+
     self.urisMatches("/api/v1/50", "/api/v1/50/80") === false
     self.urisMatches("/api/v1/50", "/api/v1") === false
     self.urisMatches("/api/v1/50", "/api/v1/") === false
     self.urisMatches("/api/v1/50", "/api/v1/{haljapino}/{ai}") === false
     self.urisMatches("/api/v1/50", "/api/v1/{haljapino}/a") === false
     self.urisMatches("/api/v1/", "/api/v1/{haljapino}") === false
+
+    self.urisMatches("/api/v1/?hello=gakk", "/api/v1/{haljapino}") === false
   """)
   def urisMatches(uri: String, routeUri: String): Boolean = {
-    val s_uri      = uri.split("/")
+    val s_uri      = uri.split('?')(0).split("/")
     val s_routeUri = getAutoUriFromConfUri(routeUri).split("/")
-
     s_uri.size == s_routeUri.size &&
     s_uri.zip(s_routeUri).forall(g => {
       val uri_element = g._1
