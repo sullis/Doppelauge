@@ -226,7 +226,7 @@ class JsonUtilSpec extends Specification {
       )
     }
 
-    "Json.size, Json.keys and Json.++" in {
+    "Json.size/Json.keys/Json.++" in {
       val o = J(
         play.api.libs.json.Json.obj(
           "a" -> 50,
@@ -237,17 +237,46 @@ class JsonUtilSpec extends Specification {
         play.api.libs.json.Json.arr("a","b","c")
       )
 
-      o.size must equalTo(2)
-      a.size must equalTo(3)
-      o.keys must equalTo(Set("a","b"))
-      a.keys must throwA[JsonException]
+      "Json.size" in {
+        o.size must equalTo(2)
+        a.size must equalTo(3)
+      }
 
-      (json ++ json) must equalTo(json)
-      (o ++ o) must equalTo(o)
+      "Json.keys and Json.++" in {
+        o.keys must equalTo(Set("a","b"))
+        a.keys must throwA[JsonException]
+      }
 
-      (json ++ o).size must equalTo(json.size + o.size)
+      "Json.++ (1)" in{
+        (J.obj() ++ J.obj()) must equalTo(J.obj())
 
-      (a ++ o) must throwA[JsonException]
+        val j1 = J.obj("a" -> 1)
+        val j2 = J.obj("b" -> 2)
+        val j12 = J.obj("a" -> 1, "b" -> 2)
+        val j21 = J.obj("b" -> 2, "a" -> 1)
+
+        j12 must equalTo(j21)
+
+        (J.obj() ++ j1) must equalTo(j1)
+        (j1 ++ J.obj()) must equalTo(j1)
+
+        (j1 ++ j2) must equalTo(j12)
+        (j2 ++ j1) must equalTo(j12)
+
+        (j1 ++ J.obj("a"->2)) must throwA[JsonMergeObjectsException]
+      }
+
+      "Json.++ (2)" in {
+        (json ++ J.obj()) must equalTo(json)
+
+        (json ++ json) must throwA[JsonMergeObjectsException]
+        (o ++ o) must throwA[JsonMergeObjectsException]
+
+        (json ++ o).size must equalTo(json.size + o.size)
+
+        (a ++ o) must throwA[JsonIllegalConversionException]
+        (o ++ a) must throwA[JsonIllegalConversionException]
+      }
     }
 
     "parseIt" in {

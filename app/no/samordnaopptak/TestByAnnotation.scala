@@ -302,7 +302,8 @@ object TestObject{
          false
       } else
          true
-  }"""
+    }
+    """
   }
 
   private def printTest(linenum: Int, methodName: String, line: String, comparitor: String, a: String, b: String) =

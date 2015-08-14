@@ -3,6 +3,8 @@ package no.samordnaopptak.json
 import play.api.libs.json._
 
 class JsonException(val message: String) extends Exception(message)
+class JsonMergeObjectsException(message: String) extends JsonException(message)
+class JsonIllegalConversionException(message: String) extends JsonException(message)
 class JsonParseException(message: String) extends JsonException(message)
 
 trait JValue {
@@ -21,14 +23,17 @@ trait JValue {
   protected def error =
     throw new JsonException(s"""Trying to access something illegal in JValue (see backtrace). value: ${pp()}""")
 
+  protected def illegalConversionError =
+    throw new JsonIllegalConversionException(s"""Can not convert Json object to this type. value: ${pp()}""")
+
   def asJsValue: JsValue
-  def asJsObject: JsObject = error
-  def asJsArray: JsArray = error
-  def asMap: Map[String, JValue] = error
-  def asArray: List[JValue] = error
-  def asString: String = error
-  def asNumber: BigDecimal = error
-  def asBoolean: Boolean = error
+  def asJsObject: JsObject = illegalConversionError
+  def asJsArray: JsArray = illegalConversionError
+  def asMap: Map[String, JValue] = illegalConversionError
+  def asArray: List[JValue] = illegalConversionError
+  def asString: String = illegalConversionError
+  def asNumber: BigDecimal = illegalConversionError
+  def asBoolean: Boolean = illegalConversionError
 
   def isArray: Boolean = false
   def isObject: Boolean = false
@@ -38,11 +43,11 @@ trait JValue {
   def isNull: Boolean = false
 
   def isDefined: Boolean = true
-  def hasKey(key: String): Boolean = error  // it might be undefined even if it has key. (i.e. when the value is null)
-  def keys: Set[String] = error
-  def size: Int = error
+  def hasKey(key: String): Boolean = illegalConversionError  // it might be undefined even if it has key. (i.e. when the value is null)
+  def keys: Set[String] = illegalConversionError
+  def size: Int = illegalConversionError
 
-  def ++(other: JValue): JObject = error
+  def ++(other: JValue): JObject = illegalConversionError
 
   def asLongArray = asArray.map(_.asLong)
   def asIntArray = asArray.map(_.asInt)
@@ -117,8 +122,15 @@ case class JObject(value: Map[String, JValue]) extends JValue{
   override def keys = value.keys.toSet
   override def hasKey(key: String) = keys.contains(key)
 
-  override def ++(other: JValue): JObject =
-    JObject(value ++ other.asMap)
+  override def ++(other: JValue): JObject = {
+    val otherValue = other.asMap
+    val result = value ++ otherValue
+
+    if (result.size != value.size+otherValue.size)
+      throw new JsonMergeObjectsException("JObject.++: objects intersects :" + value.keys.toSet.intersect(otherValue.keys.toSet))
+
+    JObject(result)
+  }
 }
 
 object JObject{
