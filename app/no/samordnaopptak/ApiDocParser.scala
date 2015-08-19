@@ -30,7 +30,29 @@ case class Description(shortDescription: String, longDescription: Option[String]
   )
 }
 
-case class Variable(name: String, type_ : String, paramType: Option[String], isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
+
+object ParamType extends Enumeration{
+  type Type = Value
+  val body, path, query, header, formData, undefined = Value
+
+  def fromString(string: String): Type =
+    string match {
+      case "body" => body
+      case "path" => path
+      case "query" => query
+      case "header" => header
+      case "formData" => formData
+      case _ => throw new Exception(s""""$string" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
+    }
+
+  def toJson(paramType: Type) =
+    if (paramType==undefined)
+      JNull
+    else
+      JString(paramType.toString)
+}
+
+case class Variable(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
   val isEnum = enumArgs.size > 0
 
   def toJson = J.obj(
@@ -43,7 +65,7 @@ case class Variable(name: String, type_ : String, paramType: Option[String], isA
       "isArray" -> isArray,
       "isEnum" -> isEnum,
       "enumArgs" -> enumArgs,
-      "paramType" -> paramType,
+      "paramType" -> ParamType.toJson(paramType),
       "required"  -> required
     )
   )
@@ -197,11 +219,11 @@ object ApiDocParser{
   @Test(code="""
     instance.testTypeInfo("Array String (header)").type_ === "String"
     instance.testTypeInfo("Array String (header)").isArray === true
-    instance.testTypeInfo("Array String (header)").paramType === "header"
+    instance.testTypeInfo("Array String (header)").paramType.toString === "header"
 
     instance.testTypeInfo("Enum(a,b) String (header)").type_ === "String"
     instance.testTypeInfo("Enum(a,b) String (header)").isEnum === true
-    instance.testTypeInfo("Enum(a,b) String (header)").paramType === "header"
+    instance.testTypeInfo("Enum(a,b) String (header)").paramType.toString === "header"
 
     instance.testTypeInfo("Enum(2,65,9) Int(query)").type_ === "Int"
     instance.testTypeInfo("Enum(2,65,9) Int(query)").optional === false
@@ -246,19 +268,17 @@ object ApiDocParser{
     if (paramTypes.size >= 2)
       throw new Exception(s"""Syntax error: Too many parameter options in "$parmName $typetypetype" ($paramTypes)""")
 
-    val paramType    = if (paramTypes.size == 1)                                                           // paramType = "header"
-                          paramTypes.head
-                       else if (parmName=="body")
-                         "body"
+    val paramType    = if (paramTypes.size == 1) {                                                           // paramType = "header"
+                          ParamType.fromString(paramTypes.head)
+                       } else if (parmName=="body")
+                         ParamType.body
                        else
-                         "path"
+                         ParamType.path
     /*
     println("parmName: "+parmName)
     println("typtyptyp: "+typetypetype)
      */
 
-    if ( ! Set("body", "path", "query", "header", "formData").contains(paramType))
-      throw new Exception(s""""$paramType" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
   }
 
   private case class Raw(key: String, elements: List[String]) {
@@ -275,7 +295,7 @@ object ApiDocParser{
               type_ = "etc.",
               isArray = false,
               enumArgs = List(),
-              paramType = None,
+              paramType = ParamType.undefined,
               required = false,
               comment = None
             )
@@ -294,7 +314,7 @@ object ApiDocParser{
               comment = if (comment=="") None else Some(comment),
               isArray = typeInfo.isArray,
               enumArgs = typeInfo.enumArgs,
-              paramType = Some(typeInfo.paramType),
+              paramType = typeInfo.paramType,
               required = !typeInfo.optional
             )
           }
@@ -393,7 +413,7 @@ object ApiDocParser{
           Variable(
             name = "result",
             type_ = typeInfo.type_,
-            paramType = None,
+            paramType = ParamType.undefined,
             isArray = typeInfo.isArray,
             enumArgs = typeInfo.enumArgs,
             required = true,
@@ -486,11 +506,11 @@ object ApiDocParser{
 
 
   def getJson(apidoc: String): JObject = {
-    val ret = getApiDocs(apidoc).toJson
+    val apiDocs = getApiDocs(apidoc)
 
-    ApiDocValidation.validateJson(ret)
+    ApiDocValidation.validate(apiDocs)
 
-    ret
+    apiDocs.toJson
   }
 
 

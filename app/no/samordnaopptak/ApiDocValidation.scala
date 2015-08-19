@@ -120,21 +120,22 @@ object ApiDocValidation{
       throw new MismatchFieldException(s"""While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: """+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)))
   }
 
-
-  def validateJson(json: JObject) = {
-    val uriParms = json("uriParms").asStringArray
-    val parameters = json("parameters").asOption(_.asMap).getOrElse(Set())
-    val pathParms = parameters.filter(_._2("paramType").asString == "path")
-    val pathParmKeys = pathParms.toMap.keys
+  def validate(apiDocs: ApiDocs) = {
+    val uriParms = apiDocs.methodAndUri.uriParms
+    val parameters: List[Variable] = apiDocs.parameters match{
+      case None => List()
+      case Some(parameters) => parameters.parameters
+    }
+    val pathParms = parameters.filter(_.paramType == ParamType.path)
+    val pathParmKeys = pathParms.map(_.name)
 
     if (uriParms.size != pathParmKeys.size)
-      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: $json).""")
+      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: ${apiDocs.toJson}).""")
 
     pathParmKeys.foreach(pathParm =>
       if (!uriParms.contains(pathParm))
         throw new MismatchPathParametersException(s"""The path parameter "${pathParm}" is not defined in the path.""")
     )
   }
-
 
 }
