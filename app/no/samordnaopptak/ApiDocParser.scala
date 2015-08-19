@@ -1,9 +1,11 @@
 package no.samordnaopptak.apidoc
 
+import scala.reflect.ClassTag
 
 import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation.Test
+
 
 /*
  The internal format, close to the textual representation.
@@ -74,6 +76,29 @@ case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
     name -> parameters.toJson
   )
 }
+
+case class ApiDocs(methodAndUri: MethodAndUri, description: Option[Description], parameters: Option[Parameters], errors: Option[Errors], result: Option[Result]) extends ApiDocElement{
+
+  private def addMaybe(apiDoc: Option[ApiDocElement], key: String = "") =
+    (apiDoc, key) match {
+      case (None,    _)   => J.obj()
+      case (Some(a), "")  => a.toJson
+      case (Some(a), key) => J.obj(key -> a.toJson)
+    }
+
+  def toJson =
+    methodAndUri.toJson ++
+    addMaybe(description) ++
+    addMaybe(parameters, "parameters") ++
+    addMaybe(errors, "errors") ++
+    addMaybe(result)
+}
+
+case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
+  def toJson = J.flattenJObjects(dataTypes.map(_.toJson))
+}
+
+
 
 object ApiDocParser{
 
@@ -425,25 +450,43 @@ object ApiDocParser{
   }
 
 
-  private def apiDocs2Json(apiDocs: List[ApiDocElement]) =
-    J.flattenJObjects(
-      apiDocs.map {
-        case a: MethodAndUri => a.toJson
-        case a: Description => a.toJson
-        case a: Errors => J.obj("errors" -> a.toJson)
-        case a: Parameters => J.obj("parameters" -> a.toJson)
-        case a: Result => a.toJson
-        case a: DataType => a.toJson
+  private def findElementOfType[T: ClassTag](elements: List[ApiDocElement]): T =
+    if (elements.isEmpty)
+      throw new Exception("Missing")
+    else
+      elements.head match {
+        case a: T => a
+        case _ => findElementOfType[T](elements.tail)
       }
+
+  private def maybeFindElementOfType[T: ClassTag](elements: List[ApiDocElement]): Option[T] =
+    if (elements.isEmpty)
+      None
+    else
+      elements.head match {
+        case a: T => Some(a)
+        case _ => maybeFindElementOfType[T](elements.tail)
+      }
+
+  private def getApiDocs(apidocString: String) = {
+    val elements = parseRaw(apidocString).map(_.getApidoc())
+    ApiDocs(
+      findElementOfType[MethodAndUri](elements),
+      maybeFindElementOfType[Description](elements),
+      maybeFindElementOfType[Parameters](elements),
+      maybeFindElementOfType[Errors](elements),
+      maybeFindElementOfType[Result](elements)
     )
+  }
+
+  private def getDataTypes2(apidocString: String) = {
+    val elements = parseRaw(apidocString).map(_.getApidoc())
+    DataTypes(elements.filter(_.isInstanceOf[DataType]).map(_.asInstanceOf[DataType]))
+  }
+
 
   def getJson(apidoc: String): JObject = {
-    val ret =
-      apiDocs2Json(
-        parseRaw(apidoc)
-          .map(_.getApidoc())
-          .filter(!_.isInstanceOf[DataType])
-      )
+    val ret = getApiDocs(apidoc).toJson
 
     ApiDocValidation.validateJson(ret)
 
@@ -452,10 +495,5 @@ object ApiDocParser{
 
 
   def getDataTypes(apidoc: String): JObject =
-    J.flattenJObjects(
-      parseRaw(apidoc)
-        .map(_.getApidoc())
-        .filter(_.isInstanceOf[DataType])
-        .map(_.toJson)
-    )
+    getDataTypes2(apidoc).toJson
 }
