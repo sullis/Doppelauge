@@ -455,7 +455,9 @@ class ApiDocParserSpec extends Specification {
             "isArray" -> false,
             "isEnum" -> false,
             "enumArgs" -> Json.arr(),
-            "comment" -> "Result comment"
+            "comment" -> "Result comment",
+            "paramType" -> JsNull,
+            "required" -> true
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
@@ -481,7 +483,9 @@ class ApiDocParserSpec extends Specification {
             "comment" -> "",
             "isArray" -> true,
             "isEnum" -> false,
-            "enumArgs" -> Json.arr()
+            "enumArgs" -> Json.arr(),
+            "paramType" -> JsNull,
+            "required" -> true
           )
         )
       )
@@ -525,7 +529,9 @@ class ApiDocParserSpec extends Specification {
             "comment" -> "",
             "isArray" -> false,
             "isEnum" -> true,
-            "enumArgs" -> Json.arr("a","b","c","4")
+            "enumArgs" -> Json.arr("a","b","c","4"),
+            "paramType" -> JsNull,
+            "required" -> true
           )
         )
       )
@@ -536,7 +542,6 @@ class ApiDocParserSpec extends Specification {
       //println("a: "+Json.prettyPrint(a))
 
       JsonMatcher.matchJson(
-        a,
         Json.obj(
           "EnumModel" -> Json.obj(
             "enumVal" -> Json.obj(
@@ -549,7 +554,8 @@ class ApiDocParserSpec extends Specification {
               "required" -> true
             )
           )
-        )
+        ),
+        a
       )
     }
 
@@ -600,7 +606,9 @@ class ApiDocParserSpec extends Specification {
               "isArray" -> false,
               "isEnum" -> false,
               "enumArgs" -> Json.arr(),
-              "required" -> false
+              "required" -> false,
+              "noComment" -> true,
+              "paramType" -> JsNull
             )
           )
         ),

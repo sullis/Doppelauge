@@ -9,6 +9,72 @@ import no.samordnaopptak.test.TestByAnnotation.Test
  The internal format, close to the textual representation.
  */
 
+trait ApiDocElement {
+  def toJson: JValue
+}
+
+case class MethodAndUri(method: String, uri: String, uriParms: List[String]) extends ApiDocElement {
+  def toJson = J.obj(
+    "method" -> method,
+    "uri"    -> uri,
+    "uriParms" -> uriParms
+  )
+}
+
+case class Description(shortDescription: String, longDescription: Option[String]) extends ApiDocElement {
+  def toJson = J.obj(
+    "shortDescription" -> shortDescription,
+    "longDescription"  -> longDescription.getOrElse("")
+  )
+}
+
+case class Variable(name: String, type_ : String, paramType: Option[String], isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
+  val isEnum = enumArgs.size > 0
+
+  def toJson = J.obj(
+    name -> J.obj(
+      "type" -> type_ ,
+      comment match {
+        case None          => "noComment" -> true
+        case Some(comment) => "comment" -> comment
+      },
+      "isArray" -> isArray,
+      "isEnum" -> isEnum,
+      "enumArgs" -> enumArgs,
+      "paramType" -> paramType,
+      "required"  -> required
+    )
+  )
+}
+
+case class Parameters(parameters: List[Variable]) extends ApiDocElement{
+  def fieldNames = parameters.map(_.name).toSet
+  def toJson = J.flattenJObjects(parameters.map(_.toJson))
+}
+
+case class Error(code: Int, message: String) extends ApiDocElement{
+  def toJson = J.obj(
+    "code" -> code,
+    "message" -> message
+  )
+}
+
+case class Errors(errors: List[Error]) extends ApiDocElement{
+  def toJson = JArray(errors.map(_.toJson))
+}
+
+case class Result(variable: Variable) extends ApiDocElement{
+  assert(variable.name == "result")
+
+  def toJson = variable.toJson
+}
+
+case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
+  def toJson = J.obj(
+    name -> parameters.toJson
+  )
+}
+
 object ApiDocParser{
 
   private def getIndentLength(line: String) =
@@ -175,16 +241,18 @@ object ApiDocParser{
       Raw(key, elements ++ List(element))
 
 
-    private def getParameters(): JObject =
-      JObject(
+    private def getParameters(): Parameters =
+      Parameters(
         elements.map(element => {
           if (element=="...")
-            "..." -> J.obj(
-              "type" -> "etc.",
-              "isArray" -> false,
-              "isEnum" -> false,
-              "enumArgs" -> J.arr(),
-              "required" -> false
+            Variable(
+              name = "...",
+              type_ = "etc.",
+              isArray = false,
+              enumArgs = List(),
+              paramType = None,
+              required = false,
+              comment = None
             )
           else {
             val nameLength = element.indexOf(':', 0)
@@ -195,17 +263,14 @@ object ApiDocParser{
             val typeInfo = TypeInfo(name, rest(0).trim)
             val comment = if (rest.length==1) "" else rest(1).trim
 
-            name -> J.obj(
-              "type" -> typeInfo.type_,
-              if (comment=="")
-                "noComment" -> true
-              else
-                "comment" -> comment,
-              "isArray" -> typeInfo.isArray,
-              "isEnum" -> typeInfo.isEnum,
-              "enumArgs" -> typeInfo.enumArgs,
-              "paramType" -> typeInfo.paramType,
-              "required"  -> !typeInfo.optional
+            Variable(
+              name = name,
+              type_ = typeInfo.type_,
+              comment = if (comment=="") None else Some(comment),
+              isArray = typeInfo.isArray,
+              enumArgs = typeInfo.enumArgs,
+              paramType = Some(typeInfo.paramType),
+              required = !typeInfo.optional
             )
           }
         })
@@ -220,9 +285,9 @@ object ApiDocParser{
 
      User -> {...}
      */
-    private def parseDataType(line: String): JObject = {
+    private def parseDataType(line: String): DataType = {
       val parameters = getParameters()
-      val fieldNames = parameters.keys.toList.toSet
+      val fieldNames = parameters.fieldNames
 
       val (dataTypeName, signature) = if (line.endsWith(":")) {
 
@@ -248,9 +313,7 @@ object ApiDocParser{
         ApiDocValidation.validateDataTypeFields(className, dataTypeName, fieldNames, addedFields, removedFields)
       }
 
-      J.obj(
-        dataTypeName -> parameters
-      )
+      DataType(dataTypeName, parameters)
     }
 
     def replace_leading_underscores(line: String): String =
@@ -259,46 +322,38 @@ object ApiDocParser{
       else
         line
 
-    def getApidoc(): JObject = {
+    def getApidoc(): ApiDocElement = {
       if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ") || key.startsWith("OPTIONS ")) {
 
         if (!elements.isEmpty)
           throw new Exception(s"""Elements for "$key" are not empty: $elements""")
 
         val pos = key.indexOf(' ')
-        val method = key.substring(0,pos).trim
         val uri = key.drop(pos).trim
-        val uriParms = findUriParms(uri)
 
-        J.obj(
-          "method" -> method,
-          "uri"    -> uri,
-          "uriParms" -> uriParms
+        MethodAndUri(
+          method = key.substring(0,pos).trim,
+          uri = uri,
+          uriParms = findUriParms(uri)
         )
       }
 
       else if (key=="DESCRIPTION")
-        J.obj(
-          "shortDescription" -> elements.head,
-          "longDescription"  -> (if (elements.length==1) "" else elements.tail.map(replace_leading_underscores).mkString("<br>"))
+        Description(
+          shortDescription = elements.head,
+          longDescription  = if (elements.length==1) None else Some(elements.tail.map(replace_leading_underscores).mkString("<br>"))
         )
 
       else if (key=="PARAMETERS")
-        J.obj(
-          "parameters" -> getParameters()
-        )
+        getParameters()
 
       else if (key=="ERRORS")
-        J.obj(
-          "errors" -> JArray(
-            elements.map(element => {
-              val code = element.substring(0,4).trim.toInt
-              val description = element.drop(4).trim
-              J.obj(
-                "code" -> code,
-                "message" -> description
-              )})
-          ))
+        Errors(elements.map(element =>
+          Error(
+            code = element.substring(0,4).trim.toInt,
+            message = element.drop(4).trim
+          )
+        ))
 
       else if (key=="RESULT") {
         if (elements.length!=1)
@@ -309,27 +364,25 @@ object ApiDocParser{
         val typeInfo = TypeInfo("", splitted(0))
         val comment = if (splitted.length==1) "" else splitted(1)
 
-        J.obj(
-          "result" -> J.obj(
-            "type" -> typeInfo.type_,
-            "comment" -> comment,
-            "isArray" -> typeInfo.isArray,
-            "isEnum" -> typeInfo.isEnum,
-            "enumArgs" -> typeInfo.enumArgs
+        Result(
+          Variable(
+            name = "result",
+            type_ = typeInfo.type_,
+            paramType = None,
+            isArray = typeInfo.isArray,
+            enumArgs = typeInfo.enumArgs,
+            required = true,
+            comment = Some(comment)
           )
         )
-      }
 
-      else if (key.contains(":"))
-        J.obj(
-          "datatype" -> parseDataType(key)
-        )
+      } else if (key.contains(":"))
+        parseDataType(key)
 
       else
         throw new Exception(s"""Unknown key: "$key"""")
     }
   }
-
 
   private def parseRaw(
     lines: List[String],
@@ -363,6 +416,7 @@ object ApiDocParser{
 
     parseRaw(lines.tail, Raw(line, List()), List(), indentLength)
   }
+          
 
   // public because of testing.
   def getRaw(apidoc: String): JObject = {
@@ -371,14 +425,28 @@ object ApiDocParser{
   }
 
 
-  def getJson(apidoc: String): JObject = {
-    val raws = parseRaw(apidoc)
-    var ret = J.obj()
-    raws.reverse.map(_.getApidoc).foreach(apidoc =>
-      if ( ! apidoc.keys.contains("datatype"))
-        ret = ret ++ apidoc
+  private def apiDocs2Json(apiDocs: List[ApiDocElement]) =
+    J.flattenJObjects(
+      apiDocs.map {
+        case a: MethodAndUri => a.toJson
+        case a: Description => a.toJson
+        case a: Errors => J.obj("errors" -> a.toJson)
+        case a: Parameters => J.obj("parameters" -> a.toJson)
+        case a: Result => a.toJson
+        case a: DataType => a.toJson
+      }
     )
+
+  def getJson(apidoc: String): JObject = {
+    val ret =
+      apiDocs2Json(
+        parseRaw(apidoc)
+          .map(_.getApidoc())
+          .filter(!_.isInstanceOf[DataType])
+      )
+
     ApiDocValidation.validateJson(ret)
+
     ret
   }
 
@@ -386,10 +454,8 @@ object ApiDocParser{
   def getDataTypes(apidoc: String): JObject =
     J.flattenJObjects(
       parseRaw(apidoc)
-        .reverse
-        .map(raw => raw.getApidoc())
-        .filter(_("datatype").isDefined)
-        .map(_("datatype"))
+        .map(_.getApidoc())
+        .filter(_.isInstanceOf[DataType])
+        .map(_.toJson)
     )
-
 }
