@@ -347,6 +347,17 @@ Notes
     }
   ```
 
+* "INCLUDE" can be used to include annotations from another function:
+
+  ```scala
+    @ApiDoc(doc="""
+      PARAMETERS 
+        id: String (header) <- ID of the user
+
+      INCLUDE test.Include.includedDocFunc
+    """)
+  ```
+    
 
 License
 ==========
