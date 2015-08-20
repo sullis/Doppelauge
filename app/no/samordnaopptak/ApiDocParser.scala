@@ -52,7 +52,7 @@ object ParamType extends Enumeration{
       JString(paramType.toString)
 }
 
-case class Variable(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
+case class Field(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
   val isEnum = enumArgs.size > 0
 
   def toJson = J.obj(
@@ -71,9 +71,13 @@ case class Variable(name: String, type_ : String, paramType: ParamType.Type, isA
   )
 }
 
-case class Parameters(parameters: List[Variable]) extends ApiDocElement{
-  def fieldNames = parameters.map(_.name).toSet
-  def toJson = J.flattenJObjects(parameters.map(_.toJson))
+case class Parameters(fields: List[Field]) extends ApiDocElement{
+  def fieldNames = fields.map(_.name).toSet
+
+  def usedDataTypes: Set[String] =
+    fields.map(_.type_).toSet
+
+  def toJson = J.flattenJObjects(fields.map(_.toJson))
 }
 
 case class Error(code: Int, message: String) extends ApiDocElement{
@@ -87,13 +91,15 @@ case class Errors(errors: List[Error]) extends ApiDocElement{
   def toJson = JArray(errors.map(_.toJson))
 }
 
-case class Result(variable: Variable) extends ApiDocElement{
-  assert(variable.name == "result")
+case class Result(field: Field) extends ApiDocElement{
+  assert(field.name == "result")
 
-  def toJson = variable.toJson
+  def toJson = field.toJson
 }
 
 case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
+  def usedDataTypes: Set[String] = parameters.usedDataTypes
+
   def toJson = J.obj(
     name -> parameters.toJson
   )
@@ -117,6 +123,13 @@ case class ApiDocs(methodAndUri: MethodAndUri, description: Option[Description],
 }
 
 case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
+  val names = dataTypes.map(_.name)
+  if (names.size != names.distinct.size)
+    throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
+
+  def usedDataTypes: Set[String] =
+    dataTypes.flatMap(_.usedDataTypes).toSet
+
   def toJson = J.flattenJObjects(dataTypes.map(_.toJson))
 }
 
@@ -290,7 +303,7 @@ object ApiDocParser{
       Parameters(
         elements.map(element => {
           if (element=="...")
-            Variable(
+            Field(
               name = "...",
               type_ = "etc.",
               isArray = false,
@@ -308,7 +321,7 @@ object ApiDocParser{
             val typeInfo = TypeInfo(name, rest(0).trim)
             val comment = if (rest.length==1) "" else rest(1).trim
 
-            Variable(
+            Field(
               name = name,
               type_ = typeInfo.type_,
               comment = if (comment=="") None else Some(comment),
@@ -410,7 +423,7 @@ object ApiDocParser{
         val comment = if (splitted.length==1) "" else splitted(1)
 
         Result(
-          Variable(
+          Field(
             name = "result",
             type_ = typeInfo.type_,
             paramType = ParamType.undefined,
@@ -499,7 +512,7 @@ object ApiDocParser{
     )
   }
 
-  private def getDataTypes2(apidocString: String) = {
+  def getDataTypes(apidocString: String) = {
     val elements = parseRaw(apidocString).map(_.getApidoc())
     DataTypes(elements.filter(_.isInstanceOf[DataType]).map(_.asInstanceOf[DataType]))
   }
@@ -512,8 +525,4 @@ object ApiDocParser{
 
     apiDocs.toJson
   }
-
-
-  def getDataTypes(apidoc: String): JObject =
-    getDataTypes2(apidoc).toJson
 }

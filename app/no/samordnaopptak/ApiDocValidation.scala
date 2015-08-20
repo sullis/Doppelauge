@@ -122,11 +122,11 @@ object ApiDocValidation{
 
   def validate(apiDocs: ApiDocs) = {
     val uriParms = apiDocs.methodAndUri.uriParms
-    val parameters: List[Variable] = apiDocs.parameters match{
-      case None => List()
-      case Some(parameters) => parameters.parameters
+    val parameters = apiDocs.parameters match{
+      case None => Parameters(List())
+      case Some(parameters) => parameters
     }
-    val pathParms = parameters.filter(_.paramType == ParamType.path)
+    val pathParms = parameters.fields.filter(_.paramType == ParamType.path)
     val pathParmKeys = pathParms.map(_.name)
 
     if (uriParms.size != pathParmKeys.size)

@@ -136,6 +136,41 @@ object SwaggerUtil{
       type2 ++ description
   }
 
+  private def getTypeFromField(field: Field) = {
+    val isAtomType = atomTypes.contains(field.type_)
+
+    val type2 =
+      if (isAtomType)
+        atomTypeToSwaggerType(field.type_)
+      else
+        J.obj(
+          "$ref" -> ("#/definitions/" + field.type_)
+        )
+
+    val description =
+      field.comment match {
+        case None => J.obj()
+        case Some(comment) => J.obj("description" -> comment)
+      }
+
+    if (field.isArray)
+      J.obj(
+        "type" -> "array",
+        "items" -> type2
+      ) ++
+      description
+
+    else if (field.isEnum)
+      type2 ++
+      J.obj(
+        "enum" -> field.enumArgs
+      ) ++
+      description
+
+    else
+      type2 ++ description
+  }
+
   private def getResponseErrors(errors: JValue) = {
     //println("errors: "+errors)
     val code = errors("code").asNumber.toString
@@ -211,29 +246,21 @@ object SwaggerUtil{
     )
   }
 
-  private def getDefinition(dataType: JValue): JObject =
-    JObject(
-      dataType.asMap.map {
-        case (name: String, attributes: JValue) => {
-          val required = attributes.asMap.filter {
-            case (_, attributes) => attributes("required").asBoolean
-          }.map{
-            case (name, _) => name
-          }
-          name -> J.obj(
-            "required" -> required,
-            "properties" -> JObject(
-              attributes.asMap.map {
-                case (name, attributes) => name -> getType(attributes)
-              }.toList
-            )
-          )
-        }
-      }.toList
-    )
+  private def getDefinition(dataType: DataType): JObject = {
+    val fields = dataType.parameters.fields
 
-  private def getDefinitions(dataTypes: List[JValue]): JObject =
-    J.flattenJObjects(dataTypes.map(getDefinition(_)))
+    J.obj(
+      dataType.name -> J.obj(
+        "required"   -> fields.filter(_.required).map(_.name),
+        "properties" -> fields.map( field =>
+          field.name -> getTypeFromField(field)
+        ).toMap
+      )
+    )
+  }
+
+  private def getDefinitions(dataTypes: DataTypes): JObject =
+    J.flattenJObjects(dataTypes.dataTypes.map(getDefinition(_)))
 
   @Test(code="""
       self.allTags("/api/v1/", List()) === Set()
@@ -251,31 +278,6 @@ object SwaggerUtil{
     ).toSet
 
     ret
-  }
-
-  private def validateUniqueDataTypes(dataTypes: List[JValue]) = {
-    val names = dataTypes.flatMap(_.asMap.keys)
-    if (names.size != names.distinct.size)
-      throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
-  }
-
-
-  // {User -> {id -> {type -> String}}} -> Set(String)
-  private def getUsedDataTypesInDataType(dataType: JValue): Set[String] = {
-    val dataTypeValues = dataType.asMap.values
-    val attributeValues = dataTypeValues.flatMap(_.asMap.values)
-    //println("attributeValues: "+attributeValues.map(_("type").asString).toSet)
-    attributeValues.map(_("type").asString).toSet
-  }
-
-  private def getUsedDatatypesInDatatypes(dataTypes: List[JValue]): Set[String] = {
-    if (dataTypes.isEmpty)
-      Set()
-    else {
-      val dataType = dataTypes.head
-      val subTypes = getUsedDataTypesInDataType(dataType)
-      subTypes ++ getUsedDatatypesInDatatypes(dataTypes.tail)
-    }
   }
 
   private def getUsedDatatypesInJson(jsonApiDocs: List[JValue]): Set[String] = {
@@ -300,9 +302,9 @@ object SwaggerUtil{
     }
   }
 
-  private def validateThatAllDatatypesAreDefined(tag: String, jsonApiDocs: List[JValue], dataTypes: List[JValue]): Unit = {
-    val definedTypes: Set[String] = dataTypes.flatMap(_.asMap.keys).toSet ++ atomTypes
-    val usedTypes: Set[String]    = getUsedDatatypesInDatatypes(dataTypes) ++ getUsedDatatypesInJson(jsonApiDocs)
+  private def validateThatAllDatatypesAreDefined(tag: String, jsonApiDocs: List[JValue], dataTypes: DataTypes): Unit = {
+    val definedTypes: Set[String] = dataTypes.names.toSet ++ atomTypes
+    val usedTypes: Set[String]    = dataTypes.usedDataTypes ++ getUsedDatatypesInJson(jsonApiDocs)
     val undefinedTypes            = usedTypes -- definedTypes
     /*
     println("definedTypes: "+definedTypes)
@@ -331,8 +333,7 @@ object SwaggerUtil{
     if (!basePath.endsWith("/"))
       throw new Exception("Basepath must end with slash: "+basePath)
 
-    val dataTypes = apidocstrings.map(apidocstring => ApiDocParser.getDataTypes(apidocstring))
-    validateUniqueDataTypes(dataTypes)
+    val dataTypes = ApiDocParser.getDataTypes(apidocstrings.mkString("\n"))
 
     val tags = allTags(basePath, apidocstrings).toList.sorted
 

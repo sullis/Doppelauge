@@ -555,7 +555,7 @@ class ApiDocParserSpec extends Specification {
             )
           )
         ),
-        a
+        a.toJson
       )
     }
 
@@ -613,7 +613,7 @@ class ApiDocParserSpec extends Specification {
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
-          ApiDocParser.getDataTypes(ApiDocSamples.doc1)
+          ApiDocParser.getDataTypes(ApiDocSamples.doc1).toJson
         }
       )
     }
