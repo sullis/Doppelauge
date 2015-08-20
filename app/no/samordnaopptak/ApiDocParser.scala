@@ -55,6 +55,8 @@ object ParamType extends Enumeration{
 case class Field(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
   val isEnum = enumArgs.size > 0
 
+  def usedDataTypes: Set[String] = Set(type_)
+
   def toJson = J.obj(
     name -> J.obj(
       "type" -> type_ ,
@@ -75,7 +77,7 @@ case class Parameters(fields: List[Field]) extends ApiDocElement{
   def fieldNames = fields.map(_.name).toSet
 
   def usedDataTypes: Set[String] =
-    fields.map(_.type_).toSet
+    fields.flatMap(_.usedDataTypes).toSet
 
   def toJson = J.flattenJObjects(fields.map(_.toJson))
 }
@@ -94,6 +96,8 @@ case class Errors(errors: List[Error]) extends ApiDocElement{
 case class Result(field: Field) extends ApiDocElement{
   assert(field.name == "result")
 
+  def usedDataTypes: Set[String] = field.usedDataTypes
+
   def toJson = field.toJson
 }
 
@@ -105,7 +109,18 @@ case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
   )
 }
 
-case class ApiDocs(methodAndUri: MethodAndUri, description: Option[Description], parameters: Option[Parameters], errors: Option[Errors], result: Option[Result]) extends ApiDocElement{
+case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], result: Option[Result]) extends ApiDocElement{
+
+  def usedDataTypes: Set[String] =
+    Set() ++
+    (parameters match {
+      case None => Set()
+      case Some(parameters) => parameters.usedDataTypes
+    }) ++
+    (result match {
+      case None => Set()
+      case Some(result) => result.usedDataTypes
+    })
 
   private def addMaybe(apiDoc: Option[ApiDocElement], key: String = "") =
     (apiDoc, key) match {
@@ -116,7 +131,7 @@ case class ApiDocs(methodAndUri: MethodAndUri, description: Option[Description],
 
   def toJson =
     methodAndUri.toJson ++
-    addMaybe(description) ++
+    description.toJson ++
     addMaybe(parameters, "parameters") ++
     addMaybe(errors, "errors") ++
     addMaybe(result)
@@ -483,13 +498,13 @@ object ApiDocParser{
   }
 
 
-  private def findElementOfType[T: ClassTag](elements: List[ApiDocElement]): T =
+  private def findElementOfType[T: ClassTag](elements: List[ApiDocElement], name: String, apidocString: String): T =
     if (elements.isEmpty)
-      throw new Exception("Missing")
+      throw new Exception("Missing "+name+" in "+apidocString)
     else
       elements.head match {
         case a: T => a
-        case _ => findElementOfType[T](elements.tail)
+        case _ => findElementOfType[T](elements.tail, name, apidocString)
       }
 
   private def maybeFindElementOfType[T: ClassTag](elements: List[ApiDocElement]): Option[T] =
@@ -501,11 +516,11 @@ object ApiDocParser{
         case _ => maybeFindElementOfType[T](elements.tail)
       }
 
-  private def getApiDocs(apidocString: String) = {
+  def getApiDocs(apidocString: String) = {
     val elements = parseRaw(apidocString).map(_.getApidoc())
     ApiDocs(
-      findElementOfType[MethodAndUri](elements),
-      maybeFindElementOfType[Description](elements),
+      findElementOfType[MethodAndUri](elements, "method and URI", apidocString),
+      findElementOfType[Description](elements, "DESCRIPTION", apidocString),
       maybeFindElementOfType[Parameters](elements),
       maybeFindElementOfType[Errors](elements),
       maybeFindElementOfType[Result](elements)
