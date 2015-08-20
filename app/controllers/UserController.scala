@@ -50,11 +50,9 @@ object UserController extends Controller {
       enumParameterExample: Enum(4,5,6,7) Int(query) <- enum value
 
     RESULT
-      User
-
-    ERRORS
-      404 User not found
-      400 Syntax Error
+      200: User
+      404: Any <- User not found
+      400: User <- Syntax error
 
     User: no.samordnaopptak.apidoc.controllers.User(-type_,+type)
       id: String
@@ -76,12 +74,11 @@ object UserController extends Controller {
       Get an array of users
       You can add more detailed information here.
 
-    ERRORS
-      404 User not found
-      400 Syntax Error
-
     RESULT
-      Array User
+      200: Array User
+      404: String <- User not found
+      400: Int <- Syntax Error
+
   """)
   def get2()  = Action { request =>
     Ok(J.arr(user.toJson).asJsValue)
@@ -97,12 +94,10 @@ object UserController extends Controller {
     PARAMETERS
       body: User
 
-    ERRORS
-      404 User not found
-      400 Syntax Error
-
     RESULT
-      User
+      203: User
+      404: User <- User not found
+      400: UserData <- Syntax Error
   """)
   def post2()  = Action { request =>
     val json = J(request.body.asJson.get)

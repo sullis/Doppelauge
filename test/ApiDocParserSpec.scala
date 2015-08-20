@@ -40,7 +40,8 @@ object ApiDocSamples{
       401 Syntax Error
 
     RESULT
-      User <- Result comment
+      203: User <- Result comment
+      405: String <- Error comment
 
     User:          test.lib.User             (+something,   -unrelated)
       id: String <- The ID of the user
@@ -72,7 +73,7 @@ object ApiDocSamples{
       id: String <- ID of the user
 
     RESULT
-      202: String
+      202: String <- Hello
   """
 
   val doc3b = """
@@ -93,10 +94,12 @@ object ApiDocSamples{
     GET /api/v1/acl
 
     DESCRIPTION
-      Get all acls
+      Get all acls, several return types
 
     RESULT
-      203: String
+      203: String <- result1
+      204: Int <- result2
+      404: Array String <- Not found
   """
 
   val doc5 = """
@@ -382,7 +385,9 @@ class ApiDocParserSpec extends Specification {
             "400 What?",
             "401 Syntax Error"),
           "RESULT" -> Json.arr(
-            "User <- Result comment"),
+            "203: User <- Result comment",
+            "405: String <- Error comment"
+          ),
           "User:          test.lib.User             (+something,   -unrelated)" -> Json.arr(
             "id: String <- The ID of the user",
             "attributes: Array Attributes",
@@ -450,15 +455,25 @@ class ApiDocParserSpec extends Specification {
               "code" -> 401,
               "message" -> "Syntax Error")
           ),
-          "result" -> Json.obj(
-            "type" -> "User",
-            "isArray" -> false,
-            "isEnum" -> false,
-            "enumArgs" -> Json.arr(),
-            "comment" -> "Result comment",
-            "paramType" -> JsNull,
-            "required" -> true,
-            "code" -> 200
+          "results" -> Json.obj(
+            "203" -> Json.obj(
+              "type" -> "User",
+              "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
+              "comment" -> "Result comment",
+              "paramType" -> JsNull,
+              "required" -> true
+            ),
+            "405" -> Json.obj(
+              "type" -> "String",
+              "isArray" -> false,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
+              "comment" -> "Error comment",
+              "paramType" -> JsNull,
+              "required" -> true
+            )
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
@@ -479,15 +494,16 @@ class ApiDocParserSpec extends Specification {
           "uriParms" -> Json.arr(),
           "shortDescription" -> "Get Usernames",
           "longDescription" -> "",
-          "result" -> Json.obj(
-            "type" -> "String",
-            "comment" -> "",
-            "isArray" -> true,
-            "isEnum" -> false,
-            "enumArgs" -> Json.arr(),
-            "paramType" -> JsNull,
-            "required" -> true,
-            "code" -> 205
+          "results" -> Json.obj(
+            "205" -> Json.obj(
+              "type" -> "String",
+              "comment" -> "",
+              "isArray" -> true,
+              "isEnum" -> false,
+              "enumArgs" -> Json.arr(),
+              "paramType" -> JsNull,
+              "required" -> true
+            )
           )
         )
       )
@@ -526,15 +542,16 @@ class ApiDocParserSpec extends Specification {
               "required" -> true
             )
           ),
-          "result" -> Json.obj(
-            "type" -> "String",
-            "comment" -> "",
-            "isArray" -> false,
-            "isEnum" -> true,
-            "enumArgs" -> Json.arr("a","b","c","4"),
-            "paramType" -> JsNull,
-            "required" -> true,
-            "code" -> 200
+          "results" -> Json.obj(
+            "200" -> Json.obj(
+              "type" -> "String",
+              "comment" -> "",
+              "isArray" -> false,
+              "isEnum" -> true,
+              "enumArgs" -> Json.arr("a","b","c","4"),
+              "paramType" -> JsNull,
+              "required" -> true
+            )
           )
         )
       )

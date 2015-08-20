@@ -121,9 +121,10 @@ Basic usage:
         id: String <- The user id
         type: Enum(Woman, Man, Dog) String <- The user can either be a woman, a man, or a dog.
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
+      RESULT
+        200: String
+        404: Any <- User not found
+        400: Any <- Syntax Error
     """)
     def getUser(id: String) = ...
 
@@ -162,12 +163,10 @@ Defining types:
       PARAMETERS 
         id: String <- Parameter comment
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
-
       RESULT
         200: User
+        404: User <- User not found
+        400: User <- Syntax Error
 
       User:
         id: String
@@ -194,12 +193,10 @@ Defining types, based on an almost matching existing class:
       PARAMETERS 
         id: String <- Parameter comment
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
-
       RESULT
         201: User
+        404: Any <- User not found
+        400: Any <- Syntax Error
 
       User(-firstName, +lastName):
         id: String
@@ -224,12 +221,10 @@ Defining types, based on an almost matching existing class, using @JsonIgnore:
       PARAMETERS 
         id: String <- Parameter comment
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
-
       RESULT
         203: User
+        404: Any <- User not found
+        400: Any <- Syntax Error
 
       User(+lastName):
         id: String
@@ -251,12 +246,10 @@ Defining types, based on a class defined elsewhere:
       PARAMETERS 
         id: String <- Parameter comment
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
-
       RESULT
         204: User
+        404: Any <- User not found
+        400: Any <- Syntax Error
 
       User: models.user.User(-firstName, +lastName)
         id: String
@@ -278,12 +271,10 @@ Defining types, not based on a class:
       PARAMETERS 
         id: String <- Parameter comment
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
-
       RESULT
         205: User
+        404: Any <- User not found
+        400: Any <- Syntax Error
 
       User: !
         id: String
@@ -304,12 +295,10 @@ Defining a type with unknown number of elements:
       PARAMETERS 
         id: String <- Parameter comment
 
-      ERRORS
-        400 User not found
-        400 Syntax Error
-
       RESULT
         206: User
+        400: Any <- User not found
+        401: Any <- Syntax Error
 
       User: !
         id: String

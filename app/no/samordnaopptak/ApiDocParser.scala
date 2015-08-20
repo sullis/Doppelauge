@@ -55,6 +55,9 @@ object ParamType extends Enumeration{
 case class Field(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
   val isEnum = enumArgs.size > 0
 
+  if(type_.count(_.isWhitespace) > 0)
+    throw new Exception("A type name can not contain white space: '"+ type_ +"'")
+
   def usedDataTypes: Set[String] = Set(type_)
 
   def toJson = J.obj(
@@ -91,6 +94,8 @@ case class Error(code: Int, message: String) extends ApiDocElement{
 
 case class Errors(errors: List[Error]) extends ApiDocElement{
   def toJson = JArray(errors.map(_.toJson))
+
+  printf("Warning, \"ERRORS\" is deprecated. Put error results into \"RESULT\" instead")
 }
 
 case class Result(code: Int, field: Field) extends ApiDocElement{
@@ -101,9 +106,22 @@ case class Result(code: Int, field: Field) extends ApiDocElement{
   def toJson = {
     val fieldJson = field.toJson
     J.obj(
-      "result" -> (fieldJson("result") ++ J.obj("code" -> code))
+      code.toString -> fieldJson("result")
     )
   }
+}
+
+case class Results(results: List[Result]) extends ApiDocElement{
+  val codes = results.map(_.code)
+
+  if (codes.distinct.size != codes.size)
+    throw new Exception("One or more ApiDoc RESULT codes defined more than once: "+codes.diff(codes.distinct).take(4) + ", Result data: "+results.map(_.toJson))
+
+  def usedDataTypes: Set[String] = results.flatMap(_.usedDataTypes).toSet
+
+  def toJson = J.obj(
+    "results" -> J.flattenJObjects(results.map(_.toJson))
+  )
 }
 
 case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
@@ -114,7 +132,7 @@ case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
   )
 }
 
-case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], result: Option[Result]) extends ApiDocElement{
+case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], results: Option[Results]) extends ApiDocElement{
 
   def usedDataTypes: Set[String] =
     Set() ++
@@ -122,9 +140,9 @@ case class ApiDocs(methodAndUri: MethodAndUri, description: Description, paramet
       case None => Set()
       case Some(parameters) => parameters.usedDataTypes
     }) ++
-    (result match {
+    (results match {
       case None => Set()
-      case Some(result) => result.usedDataTypes
+      case Some(results) => results.usedDataTypes
     })
 
   private def addMaybe(apiDoc: Option[ApiDocElement], key: String = "") =
@@ -139,7 +157,7 @@ case class ApiDocs(methodAndUri: MethodAndUri, description: Description, paramet
     description.toJson ++
     addMaybe(parameters, "parameters") ++
     addMaybe(errors, "errors") ++
-    addMaybe(result)
+    addMaybe(results)
 }
 
 case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
@@ -355,6 +373,35 @@ object ApiDocParser{
       )
 
 
+    private def getResults(): Results =
+      Results(
+        elements.map(element => {
+          val splitted1 = element.trim.split(":")
+          val (code, varnameAndComment) = if (splitted1.size==1)
+                                          (200, element)
+                                        else 
+                                         (splitted1(0).trim.toInt, splitted1.tail.mkString.trim)
+
+          val splitted2 = varnameAndComment.split("<-").map(_.trim)
+
+          val typeInfo = TypeInfo("", splitted2(0))
+          val comment = if (splitted2.length==1) "" else splitted2(1)
+
+          Result(
+            code,
+            Field(
+              name = "result",
+              type_ = typeInfo.type_,
+              paramType = ParamType.undefined,
+              isArray = typeInfo.isArray,
+              enumArgs = typeInfo.enumArgs,
+              required = true,
+            comment = Some(comment)
+            )
+          )
+        })
+      )
+
     /*
      User: test.lib.User(+a,-b)
      ...
@@ -434,32 +481,7 @@ object ApiDocParser{
         ))
 
       else if (key=="RESULT") {
-        if (elements.length!=1)
-          throw new Exception(s"Malformed RESULT elements (more or less than 1): $elements.")
-
-        val splitted1 = elements(0).trim.split(":")
-        val (code, varnameAndComment) = if (splitted1.size==1)
-                                          (200, elements(0))
-                                        else 
-                                         (splitted1(0).trim.toInt, splitted1.tail.mkString.trim)
-
-        val splitted2 = varnameAndComment.split("<-").map(_.trim)
-
-        val typeInfo = TypeInfo("", splitted2(0))
-        val comment = if (splitted2.length==1) "" else splitted2(1)
-
-        Result(
-          code,
-          Field(
-            name = "result",
-            type_ = typeInfo.type_,
-            paramType = ParamType.undefined,
-            isArray = typeInfo.isArray,
-            enumArgs = typeInfo.enumArgs,
-            required = true,
-            comment = Some(comment)
-          )
-        )
+        getResults()
 
       } else if (key.contains(":"))
         parseDataType(key)
@@ -535,7 +557,7 @@ object ApiDocParser{
       findElementOfType[Description](elements, "DESCRIPTION", apidocString),
       maybeFindElementOfType[Parameters](elements),
       maybeFindElementOfType[Errors](elements),
-      maybeFindElementOfType[Result](elements)
+      maybeFindElementOfType[Results](elements)
     )
   }
 

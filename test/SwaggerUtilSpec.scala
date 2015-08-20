@@ -24,7 +24,8 @@ object SwaggerTestData{
       400 Something went wrong
 
     RESULT
-      Array User <- An array of users
+      201: Array User <- An array of users
+      405: Array String <- An array of strings
 
     PARAMETERS
       type: Enum(man, dog, woman) String
@@ -151,12 +152,21 @@ object SwaggerTestData{
                  "400" : {
                     "description" : "Something went wrong"
                  },
-                 "200": {
+                 "201": {
                     "description": "An array of users",
                     "schema": {
                         "type": "array",
                         "items": {
                             "$$ref": "#/definitions/User"
+                        }
+                    }
+                 },
+                 "405": {
+                    "description": "An array of strings",
+                    "schema": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
                         }
                     }
                  }
@@ -338,7 +348,7 @@ object SwaggerTestData{
 }
 
 
-class SwaggerSpec extends Specification {
+class SwaggerUtilSpec extends Specification {
 
   "Swagger" should {
 

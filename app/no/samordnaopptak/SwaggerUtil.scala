@@ -153,6 +153,9 @@ object SwaggerUtil{
       )
     )
 
+  private def getResults(results: Results) =
+    J.flattenJObjects(results.results.map(getResult))
+
   private def getResponses(apidoc: ApiDocs): JObject = {
     val errorAsJson =
       apidoc.errors match {
@@ -161,9 +164,9 @@ object SwaggerUtil{
       }
 
     val resultAsJson =
-      apidoc.result match {
+      apidoc.results match {
         case None => J.obj()
-        case Some(result) => getResult(result)
+        case Some(results) => getResults(results)
       }
 
     errorAsJson ++ resultAsJson
