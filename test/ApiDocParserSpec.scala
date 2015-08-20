@@ -59,7 +59,7 @@ object ApiDocSamples{
       Get all users
 
     RESULT
-      String
+      201: String
   """
 
   val doc3 = """
@@ -72,7 +72,7 @@ object ApiDocSamples{
       id: String <- ID of the user
 
     RESULT
-      String
+      202: String
   """
 
   val doc3b = """
@@ -96,7 +96,7 @@ object ApiDocSamples{
       Get all acls
 
     RESULT
-      String
+      203: String
   """
 
   val doc5 = """
@@ -119,7 +119,7 @@ object ApiDocSamples{
       id: String <- ID of the user
 
     RESULT
-      String
+      204: String
   """
 
   val doc6b = """
@@ -143,7 +143,7 @@ object ApiDocSamples{
       Get Usernames
 
     RESULT
-      Array String
+      205: Array String
   """
 
   val docWithEnums = """
@@ -170,7 +170,7 @@ object ApiDocSamples{
       Get all acls
 
     RESULT
-      String
+      206: String
 
     Attributes: !
       firstAndLast: Array String
@@ -457,7 +457,8 @@ class ApiDocParserSpec extends Specification {
             "enumArgs" -> Json.arr(),
             "comment" -> "Result comment",
             "paramType" -> JsNull,
-            "required" -> true
+            "required" -> true,
+            "code" -> 200
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
@@ -485,7 +486,8 @@ class ApiDocParserSpec extends Specification {
             "isEnum" -> false,
             "enumArgs" -> Json.arr(),
             "paramType" -> JsNull,
-            "required" -> true
+            "required" -> true,
+            "code" -> 205
           )
         )
       )
@@ -531,7 +533,8 @@ class ApiDocParserSpec extends Specification {
             "isEnum" -> true,
             "enumArgs" -> Json.arr("a","b","c","4"),
             "paramType" -> JsNull,
-            "required" -> true
+            "required" -> true,
+            "code" -> 200
           )
         )
       )

@@ -93,12 +93,17 @@ case class Errors(errors: List[Error]) extends ApiDocElement{
   def toJson = JArray(errors.map(_.toJson))
 }
 
-case class Result(field: Field) extends ApiDocElement{
+case class Result(code: Int, field: Field) extends ApiDocElement{
   assert(field.name == "result")
 
   def usedDataTypes: Set[String] = field.usedDataTypes
 
-  def toJson = field.toJson
+  def toJson = {
+    val fieldJson = field.toJson
+    J.obj(
+      "result" -> (fieldJson("result") ++ J.obj("code" -> code))
+    )
+  }
 }
 
 case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
@@ -432,12 +437,19 @@ object ApiDocParser{
         if (elements.length!=1)
           throw new Exception(s"Malformed RESULT elements (more or less than 1): $elements.")
 
-        val splitted = elements(0).trim.split("<-").map(_.trim)
+        val splitted1 = elements(0).trim.split(":")
+        val (code, varnameAndComment) = if (splitted1.size==1)
+                                          (200, elements(0))
+                                        else 
+                                         (splitted1(0).trim.toInt, splitted1.tail.mkString.trim)
 
-        val typeInfo = TypeInfo("", splitted(0))
-        val comment = if (splitted.length==1) "" else splitted(1)
+        val splitted2 = varnameAndComment.split("<-").map(_.trim)
+
+        val typeInfo = TypeInfo("", splitted2(0))
+        val comment = if (splitted2.length==1) "" else splitted2(1)
 
         Result(
+          code,
           Field(
             name = "result",
             type_ = typeInfo.type_,

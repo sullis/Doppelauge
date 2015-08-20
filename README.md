@@ -167,7 +167,7 @@ Defining types:
         400 Syntax Error
 
       RESULT
-        User
+        200: User
 
       User:
         id: String
@@ -199,7 +199,7 @@ Defining types, based on an almost matching existing class:
         400 Syntax Error
 
       RESULT
-        User
+        201: User
 
       User(-firstName, +lastName):
         id: String
@@ -229,7 +229,7 @@ Defining types, based on an almost matching existing class, using @JsonIgnore:
         400 Syntax Error
 
       RESULT
-        User
+        203: User
 
       User(+lastName):
         id: String
@@ -256,7 +256,7 @@ Defining types, based on a class defined elsewhere:
         400 Syntax Error
 
       RESULT
-        User
+        204: User
 
       User: models.user.User(-firstName, +lastName)
         id: String
@@ -283,7 +283,7 @@ Defining types, not based on a class:
         400 Syntax Error
 
       RESULT
-        User
+        205: User
 
       User: !
         id: String
@@ -309,7 +309,7 @@ Defining a type with unknown number of elements:
         400 Syntax Error
 
       RESULT
-        User
+        206: User
 
       User: !
         id: String

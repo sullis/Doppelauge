@@ -57,7 +57,7 @@ object SwaggerTestData{
       400 Something went wrong
 
     RESULT
-      User <- A User from post
+      201: User <- A User from post
 
     PARAMETERS
       body: User
@@ -94,7 +94,7 @@ object SwaggerTestData{
       Get Cats description
 
     RESULT
-      Array String <- Cats
+      202: Array String <- Cats
     """,
 
     """
@@ -193,7 +193,7 @@ object SwaggerTestData{
                  "400" : {
                     "description" : "Something went wrong"
                  },
-                 "200": {
+                 "201": {
                     "description": "A User from post",
                     "schema": {
                        "$$ref": "#/definitions/User"
@@ -243,7 +243,7 @@ object SwaggerTestData{
                   "Cats"
               ],
               "responses": {
-                 "200": {
+                 "202": {
                     "description": "Cats",
                     "schema": {
                         "type": "array",

@@ -145,7 +145,7 @@ object SwaggerUtil{
 
   private def getResult(result: Result) =
     J.obj(
-      "200" -> (
+      result.code.toString -> (
         J.obj(
           "description" -> result.field.comment.getOrElse(""),
           "schema" -> getTypeFromField(result.field, addDescription=false)
