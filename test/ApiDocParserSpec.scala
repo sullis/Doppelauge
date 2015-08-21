@@ -1,10 +1,9 @@
-package test.lib
+package test
 
 import org.specs2.mutable._
 import play.api.test._
-import play.api.libs.json._
 
-import no.samordnaopptak.json.JsonMatcher
+import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation
 
@@ -43,7 +42,7 @@ object ApiDocSamples{
       203: User <- Result comment
       405: String <- Error comment
 
-    User:          test.lib.User             (+something,   -unrelated)
+    User:          test.User             (+something,   -unrelated)
       id: String <- The ID of the user
       attributes: Array Attributes
       something: String
@@ -257,7 +256,7 @@ object ApiDocSamples{
     DESCRIPTION
       Get all acls
 
-    UnknownType: test.lib.User
+    UnknownType: test.User
       id: String
   """
 
@@ -280,7 +279,7 @@ object ApiDocSamples{
     DESCRIPTION
       Get all acls
 
-    test.lib.User:
+    test.User:
       id: String
       attributes: Array String
       unrelated: String
@@ -292,7 +291,7 @@ object ApiDocSamples{
     DESCRIPTION
       Get all acls
 
-    test.lib.User(-id, +id2):
+    test.User(-id, +id2):
       id2: String
       attributes: Array String
       unrelated: String
@@ -371,29 +370,29 @@ class ApiDocParserSpec extends Specification {
 
     "Create raw Json data from ApiDoc" in {
       JsonMatcher.matchJson(
-        Json.obj(
-          "GET /api/v1/users/{id}" -> Json.arr(),
-          "DESCRIPTION" -> Json.arr(
+        J.obj(
+          "GET /api/v1/users/{id}" -> J.arr(),
+          "DESCRIPTION" -> J.arr(
             "Get all users",
             """More detailed description of "Get all users""""),
-          "PARAMETERS" -> Json.arr(
+          "PARAMETERS" -> J.arr(
             "id: String <- ID of the user",
             "id2: String (header)",
             "q: String (query, optional)",
             "body: User"),
-          "ERRORS" -> Json.arr(
+          "ERRORS" -> J.arr(
             "400 What?",
             "401 Syntax Error"),
-          "RESULT" -> Json.arr(
+          "RESULT" -> J.arr(
             "203: User <- Result comment",
             "405: String <- Error comment"
           ),
-          "User:          test.lib.User             (+something,   -unrelated)" -> Json.arr(
+          "User:          test.User             (+something,   -unrelated)" -> J.arr(
             "id: String <- The ID of the user",
             "attributes: Array Attributes",
             "something: String"
           ),
-          "Attributes: !" -> Json.arr(
+          "Attributes: !" -> J.arr(
             "firstAndLast: Array String",
             "..."
           )
@@ -404,74 +403,74 @@ class ApiDocParserSpec extends Specification {
 
     "Create Json data from ApiDoc" in {
       JsonMatcher.matchJson(
-        Json.obj(
+        J.obj(
           "method" -> "GET",
           "uri"    -> "/api/v1/users/{id}",
-          "uriParms" -> Json.arr("id"),
+          "uriParms" -> J.arr("id"),
           "shortDescription" -> "Get all users",
           "longDescription" -> """More detailed description of "Get all users"""",
-          "parameters" -> Json.obj(
-            "id" -> Json.obj(
+          "parameters" -> J.obj(
+            "id" -> J.obj(
               "type" -> "String",
               "comment" -> "ID of the user",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
-            "id2" -> Json.obj(
+            "id2" -> J.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "header",
               "required" -> true
             ),
-            "q" -> Json.obj(
+            "q" -> J.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "query",
               "required" -> false
             ),
-            "body" -> Json.obj(
+            "body" -> J.obj(
               "type" -> "User",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "body",
               "required" -> true
             )),
-          "errors" -> Json.arr(
-            Json.obj(
+          "errors" -> J.arr(
+            J.obj(
               "code" -> 400,
               "message" -> "What?"),
-            Json.obj(
+            J.obj(
               "code" -> 401,
               "message" -> "Syntax Error")
           ),
-          "results" -> Json.obj(
-            "203" -> Json.obj(
+          "results" -> J.obj(
+            "203" -> J.obj(
               "type" -> "User",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "comment" -> "Result comment",
-              "paramType" -> JsNull,
+              "paramType" -> JNull,
               "required" -> true
             ),
-            "405" -> Json.obj(
+            "405" -> J.obj(
               "type" -> "String",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "comment" -> "Error comment",
-              "paramType" -> JsNull,
+              "paramType" -> JNull,
               "required" -> true
             )
           )
@@ -484,24 +483,24 @@ class ApiDocParserSpec extends Specification {
 
     "Check Array result" in {
       val a = no.samordnaopptak.apidoc.ApiDocParser.getJson(ApiDocSamples.docWithArrayResult)
-      //println("a: "+Json.prettyPrint(a))
+      //println("a: "+J.prettyPrint(a))
 
       JsonMatcher.matchJson(
         a,
-        Json.obj(
+        J.obj(
           "method" -> "GET",
           "uri"    -> "/api/v1/usernames",
-          "uriParms" -> Json.arr(),
+          "uriParms" -> J.arr(),
           "shortDescription" -> "Get Usernames",
           "longDescription" -> "",
-          "results" -> Json.obj(
-            "205" -> Json.obj(
+          "results" -> J.obj(
+            "205" -> J.obj(
               "type" -> "String",
               "comment" -> "",
               "isArray" -> true,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
-              "paramType" -> JsNull,
+              "enumArgs" -> J.arr(),
+              "paramType" -> JNull,
               "required" -> true
             )
           )
@@ -511,45 +510,45 @@ class ApiDocParserSpec extends Specification {
 
     "Check doc with Enum parameters and result" in {
       val a = no.samordnaopptak.apidoc.ApiDocParser.getJson(ApiDocSamples.docWithEnums)
-      //println("a: "+Json.prettyPrint(a))
+      //println("a: "+J.prettyPrint(a))
 
       JsonMatcher.matchJson(
         a,
-        Json.obj(
+        J.obj(
           "method" -> "GET",
           "uri"    -> "/api/v1/username/{id}",
-          "uriParms" -> Json.arr("id"),
+          "uriParms" -> J.arr("id"),
           "shortDescription" -> "Get Username",
           "longDescription" -> "",
-          "parameters" -> Json.obj(
-            "id" -> Json.obj(
+          "parameters" -> J.obj(
+            "id" -> J.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> true,
-              "enumArgs" -> Json.arr("1","2","3"),
+              "enumArgs" -> J.arr("1","2","3"),
               "paramType" -> "path",
               "required" -> true
             ),
-            "body" -> Json.obj(
+            "body" -> J.obj(
               "type" -> "EnumModel",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
-     //         "enumArgs" -> Json.arr("a1","b2","c3"),
+              "enumArgs" -> J.arr(),
+     //         "enumArgs" -> J.arr("a1","b2","c3"),
               "paramType" -> "body",
               "required" -> true
             )
           ),
-          "results" -> Json.obj(
-            "200" -> Json.obj(
+          "results" -> J.obj(
+            "200" -> J.obj(
               "type" -> "String",
               "comment" -> "",
               "isArray" -> false,
               "isEnum" -> true,
-              "enumArgs" -> Json.arr("a","b","c","4"),
-              "paramType" -> JsNull,
+              "enumArgs" -> J.arr("a","b","c","4"),
+              "paramType" -> JNull,
               "required" -> true
             )
           )
@@ -559,17 +558,17 @@ class ApiDocParserSpec extends Specification {
 
     "Check datatype with Enum" in {
       val a = no.samordnaopptak.apidoc.ApiDocParser.getDataTypes(ApiDocSamples.docWithEnums)
-      //println("a: "+Json.prettyPrint(a))
+      //println("a: "+J.prettyPrint(a))
 
       JsonMatcher.matchJson(
-        Json.obj(
-          "EnumModel" -> Json.obj(
-            "enumVal" -> Json.obj(
+        J.obj(
+          "EnumModel" -> J.obj(
+            "enumVal" -> J.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> true,
-              "enumArgs" -> Json.arr("a1","b2","c3"),
+              "enumArgs" -> J.arr("a1","b2","c3"),
               "paramType" -> "path",
               "required" -> true
             )
@@ -581,54 +580,54 @@ class ApiDocParserSpec extends Specification {
 
     "Get datatypes from ApiDoc" in {
       JsonMatcher.matchJson(
-        Json.obj(
-          "User" -> Json.obj(
-            "id" -> Json.obj(
+        J.obj(
+          "User" -> J.obj(
+            "id" -> J.obj(
               "type" -> "String",
               "comment" -> "The ID of the user",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
-            "attributes" -> Json.obj(
+            "attributes" -> J.obj(
               "type" -> "Attributes",
               "noComment" -> true,
               "isArray" -> true,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
-            "something" -> Json.obj(
+            "something" -> J.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "path",
               "required" -> true
             )
           ),
-          "Attributes" -> Json.obj(
-            "firstAndLast" -> Json.obj(
+          "Attributes" -> J.obj(
+            "firstAndLast" -> J.obj(
               "type" -> "String",
               "noComment" -> true,
               "isArray" -> true,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "paramType" -> "path",
               "required" -> true
             ),
-            "..." -> Json.obj(
+            "..." -> J.obj(
               "type" -> "etc.",
               "isArray" -> false,
               "isEnum" -> false,
-              "enumArgs" -> Json.arr(),
+              "enumArgs" -> J.arr(),
               "required" -> false,
               "noComment" -> true,
-              "paramType" -> JsNull
+              "paramType" -> JNull
             )
           )
         ),

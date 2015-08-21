@@ -223,9 +223,9 @@ object SwaggerUtil{
 
   @Test(code="""
       self.allTags("/api/v1/", List()) === Set()
-      self.allTags("/api/v1/", test.lib.ApiDocSamples.allUsers) === Set("users", "usernames")
-      self.allTags("/api/v1/", test.lib.ApiDocSamples.allAcls)  === Set("acl")
-      self.allTags("/api/v1/", test.lib.ApiDocSamples.all)      === Set("acl", "usernames", "users")
+      self.allTags("/api/v1/", test.ApiDocSamples.allUsers) === Set("users", "usernames")
+      self.allTags("/api/v1/", test.ApiDocSamples.allAcls)  === Set("acl")
+      self.allTags("/api/v1/", test.ApiDocSamples.all)      === Set("acl", "usernames", "users")
   """)
   private def allTags(basePath: String, apidocstrings: List[String]): Set[String] = {
     val ret = apidocstrings.map(

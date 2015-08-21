@@ -1,10 +1,9 @@
-package test.lib
+package test
 
 import org.specs2.mutable._
 import play.api.test._
-import play.api.libs.json._
 
-import no.samordnaopptak.json.JsonMatcher._
+import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation
 
@@ -291,7 +290,7 @@ object SwaggerTestData{
 
   "definitions": {
         "User": {
-            "required" : ["id", "names", "age", "birthday", "created", "${___ignoreOrder.value}"],
+            "required" : ["id", "names", "age", "birthday", "created", "${JsonMatcher.___ignoreOrder.value}"],
             "properties": {
                 "id": {
                     "type": "integer",
@@ -362,7 +361,7 @@ class SwaggerUtilSpec extends Specification {
 
     "Produce the main thing" in {
       val produced = SwaggerUtil.getMain("/api/v1/", SwaggerTestData.apidocstrings)
-      val correct = Json.parse(SwaggerTestData.jsonstring)
+      val correct = J.parse(SwaggerTestData.jsonstring)
 
       /*
       println("groups: "+SwaggerUtil.allTags("/api/v1/", SwaggerTestData.apidocstrings))
@@ -370,7 +369,7 @@ class SwaggerUtilSpec extends Specification {
       println()
        */
 
-      matchJson(correct, produced)
+      JsonMatcher.matchJson(correct, produced)
     }
 
     "validate that a datatype is only defined one place" in {

@@ -95,7 +95,7 @@ case class Error(code: Int, message: String) extends ApiDocElement{
 case class Errors(errors: List[Error]) extends ApiDocElement{
   def toJson = JArray(errors.map(_.toJson))
 
-  printf("Warning, \"ERRORS\" is deprecated. Put error results into \"RESULT\" instead")
+  println("Warning, \"ERRORS\" is deprecated. Put error results into \"RESULT\" instead")
 }
 
 case class Result(code: Int, field: Field) extends ApiDocElement{
@@ -225,7 +225,7 @@ object ApiDocParser{
 
 
   @Test(code="""
-      self.parseScalaTypeSignature("test.lib.User(+a,-b)") === ("test.lib.User", Set("a"), Set("b"))
+      self.parseScalaTypeSignature("test.User(+a,-b)") === ("test.User", Set("a"), Set("b"))
     """)
   private def parseScalaTypeSignature(signature: String): (String, Set[String], Set[String]) = {
 
@@ -403,7 +403,7 @@ object ApiDocParser{
       )
 
     /*
-     User: test.lib.User(+a,-b)
+     User: test.User(+a,-b)
      ...
      
      ->

@@ -8,9 +8,8 @@ import no.samordnaopptak.apidoc.controllers.routes
 
 import play.api.test._
 import play.api.test.Helpers._
-import play.api.libs.json._
 
-import no.samordnaopptak.json.JsonMatcher._
+import no.samordnaopptak.json._
 
 import no.samordnaopptak.apidoc.controllers.ApiDocController
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
@@ -31,7 +30,7 @@ class ApiDocControllerSpec extends Specification {
 
   def checkResult(
     result: play.api.mvc.Result,
-    matcher: JsValue,
+    matcher: JValue,
     statusCode: Int = OK,
     mustNotContain: List[String] = List()
   ){
@@ -40,8 +39,9 @@ class ApiDocControllerSpec extends Specification {
     if (contentType(futureResult) != Some("application/json"))
       throw new Exception("contentType(futureResult) is not Some(\"application/json\"), but "+contentType(futureResult))
 
-    val json: JsValue = contentAsJson(futureResult)
-    matchJson(matcher, json)
+    val json = contentAsJson(futureResult)
+
+    JsonMatcher.matchJson(matcher, json)
 
     mustNotContain.foreach(contentAsString(futureResult) must not contain(_))
   }
@@ -61,11 +61,11 @@ class ApiDocControllerSpec extends Specification {
 
         checkResult(
           controller.get(routeEntries),
-          Json.obj(
-            "paths" -> Json.obj(
-              ___allowOtherFields
+          J.obj(
+            "paths" -> J.obj(
+              JsonMatcher.___allowOtherFields
             ),
-            ___allowOtherFields
+            JsonMatcher.___allowOtherFields
           )
         )
       }
