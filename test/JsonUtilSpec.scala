@@ -279,6 +279,20 @@ class JsonUtilSpec extends Specification {
       }
     }
 
+    "Ensure error messages contain the undefined field name" in {
+      val json = J.obj()
+      val result = json("hepp")
+      try {
+        result("happ")
+        throw new Exception("nope")
+      } catch {
+        case e: JsonIllegalConversionException => {
+          e.message.contains("hepp") must beTrue
+        }
+      }
+      true
+    }
+
     "parseIt" in {
 
       val jsonText = """
@@ -384,6 +398,5 @@ class JsonUtilSpec extends Specification {
       } must equalTo(List("a_",None,None))
 
     }
-
   }
 }

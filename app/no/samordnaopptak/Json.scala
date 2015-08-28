@@ -150,7 +150,7 @@ case class JArray(value: List[JValue]) extends JValue{
 }
 
 case class JUndefined(key: String, parent: JValue) extends JValue{
-  override def pp() = "<undefined>"
+  override def pp() = "Undefined key '"+key+"' in " + parent.pp()
   override def error = throw new JsonException("""Trying to access key """"+key+"""", which is not found in """+parent)
   override def asOption[R](command: JValue => R): Option[R] = None
   override def getOrElse[R](command: JValue => R, orElseValue: R): R = orElseValue
