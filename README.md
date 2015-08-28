@@ -44,7 +44,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 
   ```
   resolvers += "jitpack" at "https://jitpack.io"
-  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.13"
+  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.14"
   ```
 
 

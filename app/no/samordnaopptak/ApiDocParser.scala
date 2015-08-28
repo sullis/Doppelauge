@@ -442,7 +442,9 @@ object ApiDocParser{
     }
 
     def replace_leading_underscores(line: String): String =
-      if (line(0)=='_')
+      if (line == "")
+        ""
+      else if (line(0)=='_')
         "&nbsp;" + replace_leading_underscores(line.drop(1))
       else
         line

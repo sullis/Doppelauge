@@ -27,6 +27,8 @@ object ApiDocSamples{
     DESCRIPTION
       Get all users
       More detailed description of "Get all users"
+      _
+      Aiai
 
     PARAMETERS
       id: String <- ID of the user
@@ -374,7 +376,10 @@ class ApiDocParserSpec extends Specification {
           "GET /api/v1/users/{id}" -> J.arr(),
           "DESCRIPTION" -> J.arr(
             "Get all users",
-            """More detailed description of "Get all users""""),
+            """More detailed description of "Get all users"""",
+            "_",
+            "Aiai"
+          ),
           "PARAMETERS" -> J.arr(
             "id: String <- ID of the user",
             "id2: String (header)",
@@ -408,7 +413,7 @@ class ApiDocParserSpec extends Specification {
           "uri"    -> "/api/v1/users/{id}",
           "uriParms" -> J.arr("id"),
           "shortDescription" -> "Get all users",
-          "longDescription" -> """More detailed description of "Get all users"""",
+          "longDescription" -> """More detailed description of "Get all users"<br>&nbsp;<br>Aiai""",
           "parameters" -> J.obj(
             "id" -> J.obj(
               "type" -> "String",
