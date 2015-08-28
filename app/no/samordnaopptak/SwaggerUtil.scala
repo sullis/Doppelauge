@@ -160,7 +160,12 @@ object SwaggerUtil{
     val errorAsJson =
       apidoc.errors match {
         case None => J.obj()
-        case Some(errors) => J.flattenJObjects(errors.errors.map(getResponseError))
+        case Some(errors) => {
+          val codes = errors.errors.map(_.code)
+          if (codes.size != codes.toSet.size)
+            throw new Exception("Error codes defined more than once for the api doc " + apidoc.toJson.pp())
+          J.flattenJObjects(errors.errors.map(getResponseError))
+        }
       }
 
     val resultAsJson =
