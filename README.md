@@ -319,95 +319,120 @@ Fixing runtime exceptions
 Api-doc performs several validations during runtime.
 
 
-* MissingMethodException:
+* ```MissingMethodException```  :
   * Message: ```Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}```
-  * Solution 1: Add ApiDoc annotation for this method.
-  * Solution 2: Remove this method from the list of route entries:
-    ```scala
+  
+    Solution 1: Add ApiDoc annotation for this method.
+    
+    Solution 2: Filter out this method from the list of route entries when calling the ```no.samordnaopptak.apidoc.controllers.ApiDocController.validate``` method:
+    
+    ```scala 
      val routeEntries =
        no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
         .filter(_.scalaClass != classname && _.scalaMethod != methodname)
-     controllers.ApiDocController.validate(routeEntries)
+        
+     no.samordnaopptak.apidoc.controllers.ApiDocController.validate(routeEntries)
     ```
 
 
-* MethodMismatchException:
+* ```MethodMismatchException``` :
   * Message: ```Conflicting REST method declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}```
-  * Solution: Make sure the method for this endpoint in the routes file (```conf/routes```) matches with the api doc.
-    For instance if the routes file has ```POST```, the api doc method also have to be ```POST````.
+  
+    Solution: Make sure the method for this endpoint in the routes file (```conf/routes```) matches with the api doc.
+    For instance if the routes file has ```POST```, the api doc method also has to be ```POST```.
   
 
 
-* UriMismatchException:
+* ```UriMismatchException``` :
   * Message: ```Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}```
-  * Solution: Make sure the uri for this endpoint in the routes file (```conf/routes```) matches with the api doc.
-    For instance if the routes file has ```/api/v1/dosomething```, the api doc uri also have to be ```/api/v1/dosomething````.
+  
+    Solution: Make sure the uri for this endpoint in the routes file (```conf/routes```) matches with the api doc.
+    For instance if the routes file has ```/api/v1/dosomething```, the api doc uri also has to be ```/api/v1/dosomething```.
 
 
-* UnknownFieldException:
+* ```UnknownFieldException``` :
   * Message: ```While evaluating "${dataTypeName}": One or more removedFields are not defined for class '$className'```
-  * Example:
+  
+    Example:
     ```scala
       package here
      
       case class User(name: String)
-     
-      @ApiDoc(doc="""
-        User: here.User(-email)
-          name: String
-      """)
-    ```
-    The api-doc tells us that the type ```User``` does not contain the ```email``` field, but the scala class ```User``` doesn't contain an ```email``` field.
 
-* AlreadyDefinedFieldException:
+      object Controller {
+      
+        @ApiDoc(doc="""
+          User: here.User(-email)
+            name: String
+        """)
+        ...
+      }
+    ```
+    The api-doc tells us that the type ```User``` matches the scala class ```User```, except for the ```email``` field. But the scala class ```User``` doesn't contain an ```email``` field.
+
+* ```AlreadyDefinedFieldException``` :
   * Message: ```"While evaluating "${dataTypeName}": One or more addedFields are already defined for class '$className'```
-  * Example:
+  
+    Example:
     ```scala
       package here
      
       case class User(name: String)
-     
-      @ApiDoc(doc="""
-        User: here.User(+name)
-          name: String
-      """)
+
+      object Controller {
+      
+        @ApiDoc(doc="""
+          User: here.User(+name)
+            name: String
+        """)
+        ...
+      }
     ```
     The api-doc tells us that the type ```User``` also contains a ```name``` field, but this is not necessary to specify since the scala class ```User``` already contains a ```name``` field.
 
   * Message: ```While evaluating "${dataTypeName}": One or more fields are both present in addedFields and removedFields (for '$className')```
-  * Example:
+  
+    Example:
     ```scala
       package here
      
       case class User(name: String)
-     
-      @ApiDoc(doc="""
-        User: here.User(+email,-email)
-           name: String
-      """)
+
+      object Controller {
+        @ApiDoc(doc="""
+          User: here.User(+email,-email)
+             name: String
+        """)
+        ...
+      }
     ```
     Here, ```email``` is both added and removed from the type.
 
 
-* MismatchFieldException
+* ```MismatchFieldException``` :
   * Message: ```While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: ```
-  * Example:
+  
+    Example:
     ```scala
       package here
      
       case class User(name: String)
-     
-      @ApiDoc(doc="""
-        User: here.User
-           email: String
-      """)
+
+      object Controller {
+        @ApiDoc(doc="""
+          User: here.User
+             email: String
+        """)
+        ...
+      }
     ```
     A clear mismatch.
 
 
-* MismatchPathParametersException:
+* ```MismatchPathParametersException``` :
   * Message: ```Mismatch between the number of parameters in the uri, and the number of path parameters.```
-  * Example 1:
+  
+    Example 1:
     ```
       GET /api/v1/{name}/{id}
 
@@ -415,7 +440,8 @@ Api-doc performs several validations during runtime.
         id: String
     ```
     In this example, the ```name``` parameter is missing under ```PARAMETERS```
-  * Example 2:
+    
+    Example 2:
     ```scala
       POST /api/v1/user
 
@@ -423,28 +449,32 @@ Api-doc performs several validations during runtime.
         user: User        
       """)
     ```
-    In this example, ```user``` is defined as a path parameter, while it should have been defined as a ```body``` parameter. Two ways to solve this problem:
-      1. ```
+    In this example, ```user``` is defined as a path parameter, while it should have been defined as a ```body``` parameter. Two ways to solve this problem are:
+    
+      * 1:
+      ```
         POST /api/v1/user
 
         PARAMETERS 
           user: User (body)
       ```
-      Here we define the "parameter type" for user manually by adding "(body)" after the type name.
+      Here we define the "parameter type" for ```user``` manually by adding "(body)" after the type name. (By default, the parameter type has the value "path")
       
-      2. ```
+      * 2:
+      ```
         POST /api/v1/user
 
         PARAMETERS 
           body: User
       ```
-      Here the "parameter type" is set to ```body``` automatically for us since the default "parameter type" for a variable named `body` is "body".
+      Here the "parameter type" is set to ```body``` automatically since the default "parameter type" for a variable named `body` is "body".
       
       See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#parameterObject for a list of parameter types.
 
 
-  * ```The path parameter "${pathParm}" is not defined in the path```
-  * Example:
+  * Message: ```The path parameter "${pathParm}" is not defined in the path```
+  
+    Example:
     ```scala
       GET /api/v1/{name}
 
@@ -495,7 +525,7 @@ Notes
     }
   ```
 
-* "INCLUDE" can be used to include annotations from another function:
+* "INCLUDE" can be used to include annotations from another method:
 
   ```scala
     @ApiDoc(doc="""
