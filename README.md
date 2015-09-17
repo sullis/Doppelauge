@@ -309,6 +309,154 @@ Defining a type with unknown number of elements:
 
 
 
+See also the example controller: https://github.com/sun-opsys/api-doc/blob/master/app/controllers/UserController.scala
+
+
+
+Fixing runtime exceptions
+=========================
+
+Api-doc performs several validations during runtime.
+
+
+* MissingMethodException:
+  * Message: ```Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}```
+  * Solution 1: Add ApiDoc annotation for this method.
+  * Solution 2: Remove this method from the list of route entries:
+    ```scala
+     val routeEntries =
+       no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
+        .filter(_.scalaClass != classname && _.scalaMethod != methodname)
+     controllers.ApiDocController.validate(routeEntries)
+    ```
+
+
+* MethodMismatchException:
+  * Message: ```Conflicting REST method declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}```
+  * Solution: Make sure the method for this endpoint in the routes file (```conf/routes```) matches with the api doc.
+    For instance if the routes file has ```POST```, the api doc method also have to be ```POST````.
+  
+
+
+* UriMismatchException:
+  * Message: ```Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}```
+  * Solution: Make sure the uri for this endpoint in the routes file (```conf/routes```) matches with the api doc.
+    For instance if the routes file has ```/api/v1/dosomething```, the api doc uri also have to be ```/api/v1/dosomething````.
+
+
+* UnknownFieldException:
+  * Message: ```While evaluating "${dataTypeName}": One or more removedFields are not defined for class '$className'```
+  * Example:
+    ```scala
+      package here
+     
+      case class User(name: String)
+     
+      @ApiDoc(doc="""
+        User: here.User(-email)
+          name: String
+      """)
+    ```
+    The api-doc tells us that the type ```User``` does not contain the ```email``` field, but the scala class ```User``` doesn't contain an ```email``` field.
+
+* AlreadyDefinedFieldException:
+  * Message: ```"While evaluating "${dataTypeName}": One or more addedFields are already defined for class '$className'```
+  * Example:
+    ```scala
+      package here
+     
+      case class User(name: String)
+     
+      @ApiDoc(doc="""
+        User: here.User(+name)
+          name: String
+      """)
+    ```
+    The api-doc tells us that the type ```User``` also contains a ```name``` field, but this is not necessary to specify since the scala class ```User``` already contains a ```name``` field.
+
+  * Message: ```While evaluating "${dataTypeName}": One or more fields are both present in addedFields and removedFields (for '$className')```
+  * Example:
+    ```scala
+      package here
+     
+      case class User(name: String)
+     
+      @ApiDoc(doc="""
+        User: here.User(+email,-email)
+           name: String
+      """)
+    ```
+    Here, ```email``` is both added and removed from the type.
+
+
+* MismatchFieldException
+  * Message: ```While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: ```
+  * Example:
+    ```scala
+      package here
+     
+      case class User(name: String)
+     
+      @ApiDoc(doc="""
+        User: here.User
+           email: String
+      """)
+    ```
+    A clear mismatch.
+
+
+* MismatchPathParametersException:
+  * Message: ```Mismatch between the number of parameters in the uri, and the number of path parameters.```
+  * Example 1:
+    ```
+      GET /api/v1/{name}/{id}
+
+      PARAMETERS 
+        id: String
+    ```
+    In this example, the ```name``` parameter is missing under ```PARAMETERS```
+  * Example 2:
+    ```scala
+      POST /api/v1/user
+
+      PARAMETERS 
+        user: User        
+      """)
+    ```
+    In this example, ```user``` is defined as a path parameter, while it should have been defined as a ```body``` parameter. Two ways to solve this problem:
+      1. ```
+        POST /api/v1/user
+
+        PARAMETERS 
+          user: User (body)
+      ```
+      Here we define the "parameter type" for user manually by adding "(body)" after the type name.
+      
+      2. ```
+        POST /api/v1/user
+
+        PARAMETERS 
+          body: User
+      ```
+      Here the "parameter type" is set to ```body``` automatically for us since the default "parameter type" for a variable named `body` is "body".
+      
+      See https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md#parameterObject for a list of parameter types.
+
+
+  * ```The path parameter "${pathParm}" is not defined in the path```
+  * Example:
+    ```scala
+      GET /api/v1/{name}
+
+      DESCRIPTION
+        Get user
+
+      PARAMETERS 
+        id: String
+      """)
+    ```
+    Here the number of parameters matches, but there is a mismatch between `name` and `id`.
+
 
 Notes
 =========

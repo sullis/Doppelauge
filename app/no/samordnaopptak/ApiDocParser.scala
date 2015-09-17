@@ -42,7 +42,7 @@ object ParamType extends Enumeration{
       case "query" => query
       case "header" => header
       case "formData" => formData
-      case _ => throw new Exception(s""""$string" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
+      case _ => throw new Exception(s""""$string" is not a valid parameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
     }
 
   def toJson(paramType: Type) =
