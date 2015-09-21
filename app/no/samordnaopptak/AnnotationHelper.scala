@@ -146,7 +146,7 @@ object AnnotationHelper{
     routeEntries.foreach(routeEntry => {
 
       if (!hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
-        throw new MissingMethodException(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the corresponding Object)")
+        throw new MissingMethodException(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the companion object) (See README.md for more information)\n")
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
       val json = ApiDocParser.getJson(doc)
@@ -156,13 +156,15 @@ object AnnotationHelper{
       if (jsonMethod != routeEntry.restMethod)
         throw new MethodMismatchException(
           s"Conflicting REST method declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
-          s"autodoc: $jsonMethod. conf/routes: ${routeEntry.restMethod}"
+          s"autodoc: $jsonMethod. conf/routes: ${routeEntry.restMethod}\n" +
+          "(See README.md for more information)\n"
         )
 
       if (!hasSameUri(jsonUri, routeEntry.uri)) {
         throw new UriMismatchException(
           s"Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
-          s"autodoc: $jsonUri. conf/routes: ${routeEntry.uri}"
+          s"autodoc: $jsonUri. conf/routes: ${routeEntry.uri}\n" +
+          "(See README.md for more information)\n"
         )
       }
     }

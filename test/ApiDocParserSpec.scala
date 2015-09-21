@@ -329,7 +329,7 @@ class ApiDocParserSpec extends Specification {
 
     "Throw exception for illegal parameter type" in {
       ApiDocParser.getJson(ApiDocSamples.docWithIllegalParamType) must throwA(
-        new Exception(""""gakk" is not a valid paramameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
+        new Exception(""""gakk" is not a valid parameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
       )
     }
 

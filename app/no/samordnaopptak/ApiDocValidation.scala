@@ -106,18 +106,18 @@ object ApiDocValidation{
     ).toSet
 
     if ( (removedFields &~ classFields).size > 0)
-      throw new UnknownFieldException(s"""While evaluating "${dataTypeName}": One or more removedFields are not defined for class '$className': """ + (removedFields &~ classFields) + ". classFields: "+classFields)
+      throw new UnknownFieldException(s"""While evaluating "${dataTypeName}": One or more removedFields are not defined for class '$className': """ + (removedFields &~ classFields) + ". classFields: "+classFields + "\n(See README.md for more information)\n")
 
     if ( (addedFields & classFields).size > 0)
-      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more addedFields are already defined for class '$className': """+(addedFields & classFields))
+      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more addedFields are already defined for class '$className': """+(addedFields & classFields)+"\n(See README.md for more information)\n")
 
     if ( (addedFields & removedFields).size > 0)
-      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more fields are both present in addedFields and removedFields (for '$className'): """+(addedFields & removedFields))
+      throw new AlreadyDefinedFieldException(s"""While evaluating "${dataTypeName}": One or more fields are both present in addedFields and removedFields (for '$className'): """+(addedFields & removedFields)+"\n(See README.md for more information)\n")
 
     val modifiedClassFields = classFields ++ addedFields -- removedFields
 
     if ( fields != modifiedClassFields)
-      throw new MismatchFieldException(s"""While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: """+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)))
+      throw new MismatchFieldException(s"""While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: """+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)) + "\n(See README.md for more information)\n")
   }
 
   def validate(apiDocs: ApiDocs) = {
@@ -130,11 +130,11 @@ object ApiDocValidation{
     val pathParmKeys = pathParms.map(_.name)
 
     if (uriParms.size != pathParmKeys.size)
-      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: ${apiDocs.toJson}).""")
+      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: ${apiDocs.toJson}).""" + "\n(See README.md for more information)\n")
 
     pathParmKeys.foreach(pathParm =>
       if (!uriParms.contains(pathParm))
-        throw new MismatchPathParametersException(s"""The path parameter "${pathParm}" is not defined in the path.""")
+        throw new MismatchPathParametersException(s"""The path parameter "${pathParm}" is not defined in the path.""" + "\n(See README.md for more information)\n")
     )
   }
 
