@@ -572,17 +572,17 @@ class JsonMatcherSpec extends Specification {
 
     "match array with wrong order, using ___ignoreOrder to match anyway" in {
       matchJson(
-        Json.arr(2,3,5, ___ignoreOrder),
+        Json.arr(3,5,2, ___ignoreOrder),
         Json.arr(2,3,5)
       )
 
       matchJson(
-        Json.arr(2,3,5),
+        Json.arr(3,5,2),
         Json.arr(2,3,5, ___ignoreOrder)
-      )
+      ) should throwA[JsonMatcherException]
 
       matchJson(
-        Json.arr(2,3,5, ___ignoreOrder),
+        Json.arr(3,5,2, ___ignoreOrder),
         Json.arr(2,3,5, ___ignoreOrder)
       )
     }
