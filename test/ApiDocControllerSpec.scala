@@ -4,46 +4,50 @@ import play.api.Play.current
 
 import org.specs2.mutable._
 
-import no.samordnaopptak.apidoc.controllers.routes
+import controllers.routes
 
 import play.api.test._
 import play.api.test.Helpers._
 
 import no.samordnaopptak.json._
 
-import no.samordnaopptak.apidoc.controllers.ApiDocController
-import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
+import no.samordnaopptak.apidoc.{RoutesHelper, ApiDocUtil}
 
 
 
 class ApiDocControllerSpec extends Specification {
 
-  def inCleanEnvironment()(func: => Unit): Boolean = {
+  def inCleanEnvironment(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
       func
     }
     true
   }
 
-  def getFutureResult(result: play.api.mvc.Result) =
-    play.api.mvc.Action { result } (FakeRequest())
-
   def checkResult(
-    result: play.api.mvc.Result,
+    call: => play.api.mvc.Call,
     matcher: JValue,
     statusCode: Int = OK,
     mustNotContain: List[String] = List()
   ){
-    val futureResult = getFutureResult(result)
 
-    if (contentType(futureResult) != Some("application/json"))
-      throw new Exception("contentType(futureResult) is not Some(\"application/json\"), but "+contentType(futureResult))
+    val request = FakeRequest(
+      call.method,
+      call.url,
+      FakeHeaders(),
+      play.api.mvc.AnyContentAsEmpty
+    )
 
-    val json = contentAsJson(futureResult)
+    val result = route(request).get
+
+    if (contentType(result) != Some("application/json"))
+      throw new Exception("contentType(result) is not Some(\"application/json\"), but "+contentType(result))
+
+    val json = contentAsJson(result)
 
     JsonMatcher.matchJson(matcher, json)
 
-    mustNotContain.foreach(contentAsString(futureResult) must not contain(_))
+    mustNotContain.foreach(contentAsString(result) must not contain(_))
   }
 
 
@@ -55,12 +59,10 @@ class ApiDocControllerSpec extends Specification {
 
 
     "return main swagger menu" in {
-      inCleanEnvironment() {
-
-        val controller = new ApiDocController
+      inCleanEnvironment {
 
         checkResult(
-          controller.get(routeEntries),
+          routes.ApiDocController.get,
           J.obj(
             "paths" -> J.obj(
               JsonMatcher.___allowOtherFields
@@ -68,6 +70,12 @@ class ApiDocControllerSpec extends Specification {
             JsonMatcher.___allowOtherFields
           )
         )
+      }
+    }
+
+    "Validate swagger api docs" in {
+      inCleanEnvironment {
+        ApiDocUtil.validate(routeEntries)
       }
     }
 

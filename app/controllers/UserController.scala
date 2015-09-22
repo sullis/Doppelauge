@@ -1,4 +1,6 @@
-package no.samordnaopptak.apidoc.controllers
+package controllers
+
+/* !! This is an example controller and not included in the package !! */
 
 
 import scala.concurrent.Future
@@ -27,7 +29,6 @@ case class User(id: String, data: UserData, type_ : String){
 }
 
 object UserController extends Controller {
-  val controller = new ApiDocController
 
   /*
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
@@ -54,12 +55,12 @@ object UserController extends Controller {
       404: Any <- User not found
       400: User <- Syntax error
 
-    User: no.samordnaopptak.apidoc.controllers.User(-type_,+type)
+    User: controllers.User(-type_,+type)
       id: String
       data: UserData(optional)
       type: Enum(man, woman, cat) String(optional)
 
-    UserData: no.samordnaopptak.apidoc.controllers.UserData
+    UserData: controllers.UserData
       firstName: String
       lastName: String
   """)

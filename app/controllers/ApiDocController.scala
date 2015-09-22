@@ -1,14 +1,16 @@
-package no.samordnaopptak.apidoc.controllers
+package controllers
+
+/* !! This is an example controller and not included in the package !! */
+
 
 
 import play.api.mvc._
 
-import no.samordnaopptak.apidoc.{AnnotationHelper, SwaggerUtil, ApiDoc}
+import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil}
 import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
 import no.samordnaopptak.json.J
 
-
-class ApiDocController extends Controller {
+object ApiDocController extends Controller {
 
 /*
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
@@ -32,20 +34,10 @@ class ApiDocController extends Controller {
       Get main swagger json documentation
       You can add more detailed information here.
   """)
-  def get(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) = {
-    val apidocs = AnnotationHelper.getApiDocsFromAnnotations(routeEntries)
-    val generatedSwaggerDocs = SwaggerUtil.getMain("/", apidocs)
+  def get() = Action { request =>
+    val generatedSwaggerDocs = ApiDocUtil.getSwaggerDocs()
     val json = generatedSwaggerDocs ++ swaggerInfoObject
     Ok(json.asJsValue)
-  }
-}
-
-
-object ApiDocController extends Controller {
-  val controller = new ApiDocController
-
-  def get()  = Action { request =>
-    controller.get()
 
     // When extending:
     // 1. copy jsonstring from SwaggerSpec.scala in here
@@ -56,10 +48,5 @@ object ApiDocController extends Controller {
     // 6. comment the line below again
     // 7. done.
     //Ok(Json.parse(jsonstring))
-  }
-
-  def validate(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()) = {
-    AnnotationHelper.validate(routeEntries)
-    controller.get(routeEntries)
   }
 }

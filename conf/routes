@@ -5,15 +5,15 @@
 
 # apidoc
 
-GET     /api/v1/api-docs                        no.samordnaopptak.apidoc.controllers.ApiDocController.get()
+GET     /api/v1/api-docs                        controllers.ApiDocController.get()
 
 
 
 # user
 
-GET     /useradmin/api/v1/user                            no.samordnaopptak.apidoc.controllers.UserController.get
-GET     /user2admin/api/v1/user                           no.samordnaopptak.apidoc.controllers.UserController.get2
-POST     /user2admin/api/v1/guser                           no.samordnaopptak.apidoc.controllers.UserController.post2
+GET     /useradmin/api/v1/user                  controllers.UserController.get
+GET     /user2admin/api/v1/user                 controllers.UserController.get2
+POST     /user2admin/api/v1/guser               controllers.UserController.post2
 
 
 

@@ -44,7 +44,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 
   ```
   resolvers += "jitpack" at "https://jitpack.io"
-  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.15"
+  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.17"
   ```
 
 
@@ -56,7 +56,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
    ```
 
 
-3. Add the following line to conf/routes:
+3. Add the following lines to conf/routes:
    ```
    GET   /webjars/*file    controllers.WebJarAssets.at(file)
    GET   /api/v1/api-docs  controllers.ApiDocController.get()
@@ -71,7 +71,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
   import play.api.mvc._
 
   import no.samordnaopptak.apidoc.ApiDoc
-  import no.samordnaopptak.apidoc.{AnnotationHelper, SwaggerUtil}
+  import no.samordnaopptak.apidoc.ApiDocUtil
   import no.samordnaopptak.json.J
 
   class ApiDocController extends Controller {
@@ -91,13 +91,13 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
         Get main swagger json documentation
     """)
     def get() = Action {
-      val apidocs = AnnotationHelper.getApiDocsFromAnnotations()
-      val generatedSwaggerDocs = SwaggerUtil.getMain("/", apidocs)
+      val generatedSwaggerDocs = ApiDocUtil.getSwaggerDocs()
       val json = generatedSwaggerDocs ++ swaggerInfoObject
       Ok(json.asJsValue)
     }
   }
   ```
+  (also see app/controller/ApiDocController.scala)
 
 5. Now the api-docs should be available at the following address:
    ```
@@ -324,14 +324,14 @@ Api-doc performs several validations during runtime.
   
     Solution 1: Add ApiDoc annotation for this method.
     
-    Solution 2: Filter out this method from the list of route entries when calling the ```no.samordnaopptak.apidoc.controllers.ApiDocController.validate``` method:
+    Solution 2: Filter out this method from the list of route entries when calling the ```no.samordnaopptak.apidoc.ApiDocUtil.validate``` method:
     
     ```scala 
      val routeEntries =
        no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
         .filter(_.scalaClass != classname && _.scalaMethod != methodname)
         
-     no.samordnaopptak.apidoc.controllers.ApiDocController.validate(routeEntries)
+     no.samordnaopptak.apidoc.ApiDocUtil.validate(routeEntries)
     ```
 
 
@@ -504,10 +504,14 @@ Notes
     import play.api.test._
     import play.api.test.Helpers._
 
+    import no.samordnaopptak.apidoc.{RoutesHelper, ApiDocUtil}
 
     class ApiDocControllerSpec extends Specification {
       "Validate swagger api docs" in {
-          controllers.ApiDocController.validate()
+          running(FakeApplication()){
+            ApiDocUtil.validate()
+          }
+          true === true
       }
     }
   ```
@@ -517,13 +521,18 @@ Notes
   ```scala
     class ApiDocControllerSpec extends Specification {
       "Validate swagger api docs" in {
-          val routeEntries =
-             no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
-               .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
-          controllers.ApiDocController.validate(routeEntries)
+          running(FakeApplication()){
+            val routeEntries =
+               no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
+                 .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
+            ApiDocUtil.validate(routeEntries)
+          }
+          true === true
       }
     }
   ```
+
+  Also see test/ApiDocControllerSpec
 
 * "INCLUDE" can be used to include annotations from another method:
 
@@ -540,7 +549,7 @@ Notes
 License
 ==========
 
-Copyright 2013-2014 SUN/OPSYS at University of Oslo.
+Copyright 2013-2015 SUN/OPSYS at University of Oslo.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
