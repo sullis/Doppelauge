@@ -355,7 +355,6 @@ class SwaggerUtilSpec extends Specification {
       play.api.test.Helpers.running(FakeApplication()) {
         TestByAnnotation.TestObject(SwaggerUtil)
       }
-      true
     }
 
 

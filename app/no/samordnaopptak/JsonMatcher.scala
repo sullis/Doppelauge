@@ -6,8 +6,8 @@ import play.api.libs.json._
 
 /** 
   *  JsonMatcher is a patternmatcher for json values. Use the [[matchJson]] method to match json values.
-  * Simple example:
-  *  {{{
+  * 
+  *  @example {{{
 package test
 
 import org.specs2.mutable._
@@ -17,7 +17,7 @@ import no.samordnaopptak.json.JsonMatcher._
 
 class JsonMatcherSpec extends Specification {
   "Json matcher" should {
-    "match obj with string" in {
+    "match object with object" in {
       matchJson(
         J.obj(
           "a" -> J.obj(
@@ -36,9 +36,12 @@ class JsonMatcherSpec extends Specification {
   }
 }
   *  }}}
-
-  The matcher and json values does not have to be a [[JObject]] values (the result of calling 'J.obj'). [[matchJson]] understands a number of different types such as [[JValue]], JsValue (The play framework version of [[JValue]]), [[Map]], [[String]], [[Boolean]], etc.
-
+  * 
+  *  @note The matcher and json values do not have to be a [[JObject]] values (the result of calling 'J.obj'). [[matchJson]] understands a number of different types such as [[JValue]], JsValue (The play framework version of [[JValue]]), Map, String, Boolean, etc.
+  * 
+  * @note JsonMatcher provides several custom matchers such as [[___anyString]], [[___anyNumber]], [[RegExp]], [[Custom]], etc. All of these matchers have [[matchJson]] examples, which might be useful to look at.
+  * 
+  * @see [[https://github.com/sun-opsys/api-doc/blob/master/test/JsonMatcherSpec.scala]] for more examples
   */
 object JsonMatcher{
 
@@ -58,7 +61,8 @@ object JsonMatcher{
   private val ___ignoreOrderJsonKey = "________ignoreOrder________"
   private val ___maybeFieldPrefix = "________maybe_______"
 
-  /** Checks that the number of elements in an object or array matches. Examples:
+  /** Checks that the number of elements in an object or array matches.
+    * @example
     * {{{
       matchJson(
         Json.obj(___numElements -> 3),
@@ -81,7 +85,8 @@ object JsonMatcher{
     */
   val ___numElements = "________numFields________"
 
-  /** Matches any string. Examples:
+  /** Matches any string.
+    * @example
     * {{{
     * matchJson(
     *   J.obj("a" -> ___anyString),
@@ -95,7 +100,8 @@ object JsonMatcher{
     */
   val ___anyString  = JsString("________anyString________")
 
-  /** Matches any number. Examples:
+  /** Matches any number.
+    * @example
     * {{{
       matchJson(
         J.obj("a" -> ___anyNumber),
@@ -109,7 +115,8 @@ object JsonMatcher{
     */
   val ___anyNumber  = JsString("________anyNumber________")
 
-  /** Matches any object. Examples:
+  /** Matches any object.
+    * @example
     * {{{
       matchJson(
         J.obj("a" -> ___anyObject),
@@ -124,7 +131,8 @@ object JsonMatcher{
   val ___anyObject  = JsString("________anyObject________")
 
 
-  /** Matches any array. Examples:
+  /** Matches any array.
+    * @example
     * {{{
       matchJson(
         J.obj("a" -> ___anyArray),
@@ -139,7 +147,8 @@ object JsonMatcher{
   val ___anyArray   = JsString("________anyArray_________")
 
 
-    /** Matches any boolean. Examples:
+  /** Matches any boolean.
+    * @example
     * {{{
       matchJson(
         J.obj("a" -> ___anyBoolean),
@@ -162,7 +171,7 @@ object JsonMatcher{
 
   /** 
     * Lets you create your own custom matcher.
-    * Examples:
+    * @example
     * {{{
       matchJson(
         Custom(_ => true),
@@ -197,7 +206,7 @@ object JsonMatcher{
 
   /**
     * Creates a RegExp matcher.
-    * Examples:
+    * @example
     * {{{
       matchJson(
         J.obj("a" -> RegExp("b")),
@@ -218,14 +227,14 @@ object JsonMatcher{
   def RegExp(pattern: String) = new RegExp(pattern)
 
 
-  class Or(anyMatchers: Any*) extends JsString("Or: "+anyMatchers.map(_.toString).mkString(",")) with JValue{
-    val matchers = anyMatchers.map(J(_))
+  class Or(orMatchers: Any*) extends JsString("Or: "+orMatchers.map(_.toString).mkString(",")) with JValue{
+    val matchers = orMatchers.map(J(_))
     override def asJsValue = JsNull
   }
 
   /**
     * Creates an Or matcher.
-    * Examples:
+    * @example
     * {{{
       matchJson(
         Or("a", 50),
@@ -241,39 +250,39 @@ object JsonMatcher{
       ) should throwA[JsonMatcherException]
     * }}}
     */
-  def Or(anyMatchers: Any*) = new Or(anyMatchers :_*)
+  def Or(orMatchers: Any*) = new Or(orMatchers :_*)
 
 
-  class And(anyMatchers: Any*) extends JsString("And: "+anyMatchers.map(_.toString).mkString(",")) with JValue{
-    val matchers = anyMatchers.map(J(_))
+  class And(andMatchers: Any*) extends JsString("And: "+andMatchers.map(_.toString).mkString(",")) with JValue{
+    val matchers = andMatchers.map(J(_))
     override def asJsValue = JsNull
   }
 
   /**
     * Creates an And matcher.
-    * Examples:
-    * {{{
-      matchJson(
-        And(),
-        "a"
-      )
+    * @example
+     {{{
       matchJson(
         And(___anyNumber, 50),
         JsNumber(50)
       )
       matchJson(
-        And("a", 50),
-        50
-      ) should throwA[JsonMatcherException]
+        And(
+          ___anyNumber,
+          Custom(_.asNumber > 0),
+          Custom(_.asNumber < 100)
+        ),
+        JsNumber(50)
+      )
     * }}}
     */
-  def And(anyMatchers: Any*) = new And(anyMatchers :_*)
+  def And(andMatchers: Any*) = new And(andMatchers :_*)
 
 
-  class Maybe(anyValue: Any) extends JsString("Maybe: "+anyValue.toString) with JValue {
+  class Maybe(maybeMatcher: Any) extends JsString("Maybe: "+maybeMatcher.toString) with JValue {
     val matcher = Or(
       JsNull,
-      anyValue
+      maybeMatcher
     )
     override def asJsValue = JsNull
   }
@@ -281,7 +290,7 @@ object JsonMatcher{
 
   /**
     * Creates a Maybe matcher.
-    * Examples:
+    * @example
     * {{{
       matchJson(
         J.obj(
@@ -315,7 +324,7 @@ object JsonMatcher{
         J.obj(
           "a" -> 50
         )
-
+      )
       matchJson(
         J.obj(
           "a" -> Maybe(2)
@@ -326,10 +335,11 @@ object JsonMatcher{
       ) must throwA[JsonMatcherException]
     * }}}
     */
-  def Maybe(anyValue: Any) = new Maybe(anyValue)
+  def Maybe(maybeMatcher: Any) = new Maybe(maybeMatcher)
 
   /**
-    * Allow other values when matching arrays. Examples:
+    * Allow other values when matching arrays.
+    * @example
     * {{{
       matchJson(
         Json.arr("a", "b", ___allowOtherValues),
@@ -344,7 +354,8 @@ object JsonMatcher{
   val ___allowOtherValues: JsString = JsString(___allowOtherJsonsKey)
 
   /**
-    * Ignore order when matching arrays. Examples:
+    * Ignore order when matching arrays.
+    * @example
     * {{{
       matchJson(
         Json.arr(3,5,2, ___ignoreOrder),
@@ -359,7 +370,8 @@ object JsonMatcher{
   val ___ignoreOrder: JsString = JsString(___ignoreOrderJsonKey)
 
   /**
-    * Allow other fields when matching objects. Examples:
+    * Allow other fields when matching objects.
+    * @example
     * {{{
       matchJson(
         Json.obj("a" -> 1, "b" -> 2, ___allowOtherFields),
@@ -609,11 +621,11 @@ object JsonMatcher{
   /** Matches two json values.
     * @param matcher This json value can contain special values such as [[___anyString]] or [[___anyBoolean]]
     * 
-    * The value does not have to be a [[JValue]]. 'matchJson' understands a number of different types such as JsValue (The play framework version of [[JValue]]), [[Map]], [[String]], etc.
+    * The value does not have to be a [[JValue]]. 'matchJson' understands a number of different types such as JsValue (The play framework version of [[JValue]]), Map, String, etc.
     * 
     * @param json This is the json value we want to check against the pattern of 'matcher'
     * 
-    * The value does not have to be a [[JValue]]. 'matchJson' understands a number of different types such as JsValue (The play framework version of [[JValue]]), [[Map]], [[String]], etc.
+    * The value does not have to be a [[JValue]]. 'matchJson' understands a number of different types such as JsValue (The play framework version of [[JValue]]), Map, String, etc.
     * 
     * @param throwException If true, a JsonMatcherException exception will be thrown if matching fails.
     *

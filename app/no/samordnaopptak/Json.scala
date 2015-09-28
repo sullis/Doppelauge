@@ -7,6 +7,12 @@ class JsonMergeObjectsException(message: String) extends JsonException(message)
 class JsonIllegalConversionException(message: String) extends JsonException(message)
 class JsonParseException(message: String) extends JsonException(message)
 
+/**
+  * Similar to Play framework's "JsValue", but more convenient to use for testing and for doing simple json parsing.
+  * @note To convert a JsValue into a [[JValue]], use [[J.apply]].
+  * @note To convert a [[JValue]] into a JsValue, use [[asJsValue]].
+  * @see [[https://github.com/sun-opsys/api-doc/blob/master/test/JsonUtilSpec.scala]] for examples
+  */
 trait JValue {
 
   private var visitedKeys: Set[String] = Set()
@@ -167,7 +173,10 @@ object JNull extends JValue {
 }
 
 
-
+/**
+  * Similar to Play framework's "Json" object, but more convenient to use for testing and for doing simple json parsing.
+  * @see [[https://github.com/sun-opsys/api-doc/blob/master/test/JsonUtilSpec.scala]] for examples
+  */
 object J {
 
   private def jsValueToJValue(value: JsValue): JValue =
@@ -185,6 +194,9 @@ object J {
       case `JsNull` => JNull
     }
 
+  /**
+    Converts any of the following types into a JValue: [[JValue]], JsValue, BigDecimal, Int, Long, Float, Double, String, Boolean, Map[String,_], Seq[_], Option[_], Json.JsValueWrapper.
+    */
   def apply(a: Any): JValue =
     a match {
       case value: JValue => value

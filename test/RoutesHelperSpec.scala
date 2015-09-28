@@ -12,7 +12,6 @@ class RoutesHelperSpec extends Specification {
 
     "pass the annotation tests" in {
       TestObject(RoutesHelper)
-      true === true
     }
   }
 

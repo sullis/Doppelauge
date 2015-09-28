@@ -30,7 +30,9 @@ case class Description(shortDescription: String, longDescription: Option[String]
   )
 }
 
-
+/**
+  A ParamType can either be body, path, query, header, formData, or undefined.
+  */
 object ParamType extends Enumeration{
   type Type = Value
   val body, path, query, header, formData, undefined = Value

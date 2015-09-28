@@ -43,12 +43,10 @@ class TestByAnnotationSpec extends Specification {
 
     "test the annotation test in TestObject itself" in {
       TestObject(TestObject)
-      true === true
     }
 
     "not fail the annotation tests" in {
       TestObject(new ClassToTestWith)
-      true === true
     }
 
   }

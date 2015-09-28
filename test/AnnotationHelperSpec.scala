@@ -83,7 +83,6 @@ class AnnotationHelperSpec extends Specification {
 
     "pass the annotation tests" in { // First run the smallest unit tests.
       TestByAnnotation.TestObject(AnnotationHelper)
-      true
     }
 
     "validate that the validate method that validates if method and uri in conf/routes and autodoc matches works" in {

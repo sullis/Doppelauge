@@ -316,7 +316,6 @@ class ApiDocParserSpec extends Specification {
       play.api.test.Helpers.running(FakeApplication()) {
         TestByAnnotation.TestObject(ApiDocParser)
       }
-      true
     }
 
 
