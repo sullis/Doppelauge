@@ -236,9 +236,9 @@ object SwaggerUtil{
   """)
   private def allTags(basePath: String, apidocstrings: List[String]): Set[String] = {
     val ret = apidocstrings.map(
-      apidocstring => ApiDocParser.getJson(apidocstring)
-    ).map(jsonApiDoc =>
-      jsonApiDoc("uri").asString
+      apidocstring => ApiDocParser.getApiDocs(apidocstring)
+    ).map(
+      _.methodAndUri.uri
     ).map(
       getTag(basePath, _)
     ).toSet

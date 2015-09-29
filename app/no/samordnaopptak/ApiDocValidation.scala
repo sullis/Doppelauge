@@ -64,10 +64,25 @@ object ApiDocValidation{
     }
   }
 
+  /**
+    * @example
+    * {{{
+  package here
+
+  class Inner1{
+    case class Inner2()
+  }
+
+  ApiDocValidation.loadInnerClass("here.Inner1.Inner2")
+    * }}}
+    */
   def loadInnerClass(className: String): java.lang.Class[_] =
     loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className.split('.').toList)
 
 
+  /**
+    * Validates that the fields for a datatype matches the content of a class. Used internally
+    */
   def validateDataTypeFields(className: String, dataTypeName: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
 
     val class_ = try{
@@ -120,6 +135,9 @@ object ApiDocValidation{
       throw new MismatchFieldException(s"""While evaluating "${dataTypeName}": The ApiDoc datatype does not match the class '$className'. Mismatched fields: """+ ((fields | modifiedClassFields) -- (fields & modifiedClassFields)) + "\n(See README.md for more information)\n")
   }
 
+  /**
+    * Used internally. Called by [[ApiDocs.validate]].
+    */
   def validate(apiDocs: ApiDocs) = {
     val uriParms = apiDocs.methodAndUri.uriParms
     val parameters = apiDocs.parameters match{

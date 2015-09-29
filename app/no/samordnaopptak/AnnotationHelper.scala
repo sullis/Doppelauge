@@ -95,7 +95,7 @@ object AnnotationHelper{
     rightAnnotation.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
   }
 
-  def expandIncludes(doc: String, alreadyIncluded: scala.collection.mutable.Set[String]): String = {
+  private def expandIncludes(doc: String, alreadyIncluded: scala.collection.mutable.Set[String]): String = {
     val lines = doc.split("\n")
     lines.map { line =>
       val trimmed = line.trim
@@ -140,6 +140,9 @@ object AnnotationHelper{
     expandIncludes(annotation.doc, alreadyIncluded)
   }
 
+  /**
+    * Internal function. Use ApiDocUtil.validate instead.
+    */
   def validate(routeEntries: List[RouteEntry]): Unit = {
     val alreadyIncluded = scala.collection.mutable.Set[String]()
 
@@ -149,7 +152,11 @@ object AnnotationHelper{
         throw new MissingMethodException(s"Missing ApiDoc for ${routeEntry.scalaClass}.${routeEntry.scalaMethod} (Make sure the Class is annotated, and not the companion object) (See README.md for more information)\n")
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
-      val json = ApiDocParser.getJson(doc)
+
+      val apiDocs = ApiDocParser.getApiDocs(doc)
+      ApiDocValidation.validate(apiDocs)
+      val json = apiDocs.toJson
+
       val jsonMethod = json("method").asString
       val jsonUri = json("uri").asString
 
@@ -171,6 +178,9 @@ object AnnotationHelper{
     )
   }
 
+  /**
+    * @return List of strings with api docs text. INCLUDE is expanded.
+    */
   def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): List[String] = {
 
     val routeEntriesWithoutApiDocs = routeEntries.filter(routeEntry => hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))

@@ -134,6 +134,7 @@ case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
   )
 }
 
+
 case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], results: Option[Results]) extends ApiDocElement{
 
   def usedDataTypes: Set[String] =
@@ -153,6 +154,16 @@ case class ApiDocs(methodAndUri: MethodAndUri, description: Description, paramet
       case (Some(a), "")  => a.toJson
       case (Some(a), key) => J.obj(key -> a.toJson)
     }
+
+  /**
+    * Implementation:
+    * {{{
+  def validate() =
+    ApiDocValidation.validate(this)
+    * }}}
+    */
+  def validate() =
+    ApiDocValidation.validate(this)
 
   def toJson =
     methodAndUri.toJson ++
@@ -268,7 +279,9 @@ object ApiDocParser{
     }
   }
 
-
+  /**
+    * Internal test function. Was not able to make it private.
+    */
   @Test(code="""
     instance.testTypeInfo("Array String (header)").type_ === "String"
     instance.testTypeInfo("Array String (header)").isArray === true
@@ -528,8 +541,9 @@ object ApiDocParser{
     parseRaw(lines.tail, Raw(line, List()), List(), indentLength)
   }
           
-
-  // public because of testing.
+  /**
+    *  Private function. Public because of testing.
+    */
   def getRaw(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)
     JObject(raws.map(raw => raw.key -> JArray(raw.elements.map(JString))))
@@ -568,14 +582,5 @@ object ApiDocParser{
   def getDataTypes(apidocString: String) = {
     val elements = parseRaw(apidocString).map(_.getApidoc())
     DataTypes(elements.filter(_.isInstanceOf[DataType]).map(_.asInstanceOf[DataType]))
-  }
-
-
-  def getJson(apidoc: String): JObject = {
-    val apiDocs = getApiDocs(apidoc)
-
-    ApiDocValidation.validate(apiDocs)
-
-    apiDocs.toJson
   }
 }
