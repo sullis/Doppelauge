@@ -44,7 +44,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 
   ```
   resolvers += "jitpack" at "https://jitpack.io"
-  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.17"
+  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.18"
   ```
 
 
@@ -103,6 +103,13 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
    ```
    /webjars/api_doc/1.0/swagger-ui/dist/index.html?url=/api/v1/api-docs
    ```
+
+
+
+ScalaDoc
+========
+http://folk.uio.no/ksvalast/api_doc/
+
 
 
 Examples
