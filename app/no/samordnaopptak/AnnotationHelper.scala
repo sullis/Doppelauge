@@ -14,12 +14,12 @@ object AnnotationHelper{
      self.hasSameUri("/api/v1/acl", "/api/v1/acl2" ) =/= true
      self.hasSameUri("/api/v1/acl", "/api/v1"      ) =/= true
 
-     self.hasSameUri("/1api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>") =/= true
+     self.hasSameUri("/1api/v1/acl/{service}", "/api/v1/acl/{service}") =/= true
 
-     self.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl/$service<[^/]+>" ) === true
+     self.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl/{service}" ) === true
 
-     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/$service<[^/]+> " ) =/= true
-     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/$service<[^/]+> " ) =/= true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/{service} " ) =/= true
+     self.hasSameUri("/api/v1/acl",          "/api/v1/acl/{service} " ) =/= true
 
      self.hasSameUri("/api/v1/acl",          "/api/v1/acl"                  ) === true
      self.hasSameUri("/api/v1/acl",          "/api/v1/acl/"                 ) === true
@@ -29,28 +29,28 @@ object AnnotationHelper{
      self.hasSameUri("/api/v1/acl/{service}", "/api/v1/acl"                 ) =/= true
 
       // one parameter in the middle of the uri:
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" ) === true
-     self.hasSameUri("/api/v1/acl/{service}/hepp/", "/api/v1/acl/$service<[^/]+>/hepp/" ) === true
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp/" ) === true
-     self.hasSameUri("/api/v1/acl/{service}/hepp/", "/api/v1/acl/$service<[^/]+>/hepp" ) === true
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/{service}/hepp" ) === true
+     self.hasSameUri("/api/v1/acl/{service}/hepp/", "/api/v1/acl/{service}/hepp/" ) === true
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/{service}/hepp/" ) === true
+     self.hasSameUri("/api/v1/acl/{service}/hepp/", "/api/v1/acl/{service}/hepp" ) === true
 
-     self.hasSameUri("/api/v1/acl/{service}/hepp2", "/api/v1/acl/$service<[^/]+>/hepp" ) === false
-     self.hasSameUri("/api/v1/acl/{service2}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" ) === false
-     self.hasSameUri("/api/v1/acl2/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" ) === false
-     self.hasSameUri("/2api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp" ) === false
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp2" ) === false
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service<[^/]+>/hepp/2" ) === false
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/$service2<[^/]+>/hepp/" ) === false
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl2/$service<[^/]+>/hepp/" ) === false
-     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api2/v1/acl/$service<[^/]+>/hepp/" ) === false
+     self.hasSameUri("/api/v1/acl/{service}/hepp2", "/api/v1/acl/{service}/hepp" ) === false
+     self.hasSameUri("/api/v1/acl/{service2}/hepp", "/api/v1/acl/{service}/hepp" ) === false
+     self.hasSameUri("/api/v1/acl2/{service}/hepp", "/api/v1/acl/{service}/hepp" ) === false
+     self.hasSameUri("/2api/v1/acl/{service}/hepp", "/api/v1/acl/{service}/hepp" ) === false
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/{service}/hepp2" ) === false
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/{service}/hepp/2" ) === false
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl/{service2}/hepp/" ) === false
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api/v1/acl2/{service}/hepp/" ) === false
+     self.hasSameUri("/api/v1/acl/{service}/hepp", "/api2/v1/acl/{service}/hepp/" ) === false
 
      // two parameters in the middle of the uri:
-     self.hasSameUri("/api/v1/acl/{service}/{hepp}", "/api/v1/acl/$service<[^/]+>/$hepp<[^/]+>" ) === true
-     self.hasSameUri("/api/v1/acl/{service}/gakk/{hepp}", "/api/v1/acl/$service<[^/]+>/gakk/$hepp<[^/]+>" ) === true
+     self.hasSameUri("/api/v1/acl/{service}/{hepp}", "/api/v1/acl/{service}/{hepp}" ) === true
+     self.hasSameUri("/api/v1/acl/{service}/gakk/{hepp}", "/api/v1/acl/{service}/gakk/{hepp}" ) === true
   """)
-  private def hasSameUri(autoUri: String, confUri: String): Boolean = {
-    val autos = autoUri.split("/")
-    val confs = RoutesHelper.getAutoUriFromConfUri(confUri).split("/")
+  private def hasSameUri(jsonUri: String, confUri: String): Boolean = {
+    val autos = jsonUri.split("/")
+    val confs = confUri.split("/")
 
     autos.size == confs.size &&
     autos.zip(confs).forall(g => {
@@ -135,7 +135,7 @@ object AnnotationHelper{
     }.mkString
   }
 
-  def getMethodAnnotationDoc(className: String, methodName: String, alreadyIncluded: scala.collection.mutable.Set[String]) = {
+  private def getMethodAnnotationDoc(className: String, methodName: String, alreadyIncluded: scala.collection.mutable.Set[String]) = {
     val annotation = getMethodAnnotation(className, methodName)
     expandIncludes(annotation.doc, alreadyIncluded)
   }
@@ -167,7 +167,7 @@ object AnnotationHelper{
           "(See README.md for more information)\n"
         )
 
-      if (!hasSameUri(jsonUri, routeEntry.uri)) {
+      if (!hasSameUri(jsonUri, routeEntry.getDocUri)) {
         throw new UriMismatchException(
           s"Conflicting uri declared in the autodoc and in conf/routes for ${routeEntry.scalaClass}.${routeEntry.scalaMethod}.\n" +
           s"autodoc: $jsonUri. conf/routes: ${routeEntry.uri}\n" +

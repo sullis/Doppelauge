@@ -3,7 +3,50 @@ package no.samordnaopptak.apidoc
 import no.samordnaopptak.test.TestByAnnotation.Test
 
 
-case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scalaMethod: String)
+case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scalaMethod: String) {
+
+  @Test(code="""
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>") === "/api/v1/acl/{service}"
+    self.getDocUri2("/api/v1/acl/$service<[asdf/e/aer/4343[]1534]>") === "/api/v1/acl/{service}"
+    self.getDocUri2("/api/v1/acl/$service<>") === "/api/v1/acl/{service}"
+
+    // one parameter in the middle of the uri:
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp") === "/api/v1/acl/{service}/hepp"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp/") === "/api/v1/acl/{service}/hepp/"
+
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp") =/= "/api/v1/acl/{service}/hepp2"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp") =/= "/api/v1/acl/{service2}/hepp"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp") =/= "/api/v1/acl2/{service}/hepp"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp") =/= "/2api/v1/acl/{service}/hepp"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp2") =/= "/api/v1/acl/{service}/hepp"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/hepp/2") =/= "/api/v1/acl/{service}/hepp"
+    self.getDocUri2("/api/v1/acl/$service2<[^/]+>/hepp/") =/= "/api/v1/acl/{service}/hepp"
+    self.getDocUri2("/api/v1/acl2/$service<[^/]+>/hepp/") =/= "/api/v1/acl/{service}/hepp"
+    self.getDocUri2("/api2/v1/acl/$service<[^/]+>/hepp/") =/= "/api/v1/acl/{service}/hepp"
+
+    // two parameters in the middle of the uri:
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/$hepp<[^/]+>") === "/api/v1/acl/{service}/{hepp}"
+    self.getDocUri2("/api/v1/acl/$service<[^/]+>/gakk/$hepp<[^/]+>") === "/api/v1/acl/{service}/gakk/{hepp}"
+  """)
+  private def getDocUri2(confUri: String): String =
+    if (confUri=="")
+      ""
+    else if (confUri.startsWith("$")) {
+      val pos = confUri.indexOf("<")
+      val pos2 = confUri.indexOf(">")
+      val offset = pos2 - pos;
+      "{" + confUri.substring(1, pos) + "}" + getDocUri2(confUri.drop(pos+offset+1))
+    } else
+      confUri.take(1) + getDocUri2(confUri.drop(1))
+
+  /**
+    * Returns the type of uri used in the docs.
+    * @example {{{RouteEntry("", "/api/v1/acl/\$service<[^/]+>"", "", "").getAutoUri === "/api/v1/acl/{service}"}}}
+    */
+  def getDocUri: String =
+    getDocUri2(uri)
+}
+
 
 object RoutesHelper{
 
@@ -50,23 +93,6 @@ object RoutesHelper{
  */
     ).toList
 
-
-  @Test(code="""
-    self.getAutoUriFromConfUri("/api/v1/acl/$service<[^/]+>") === "/api/v1/acl/{service}"
-    self.getAutoUriFromConfUri("/api/v1/acl/$service<[asdf/e/aer/4343[]1534]>") === "/api/v1/acl/{service}"
-    self.getAutoUriFromConfUri("/api/v1/acl/$service<>") === "/api/v1/acl/{service}"
-  """)
-  def getAutoUriFromConfUri(confUri: String): String =
-    if (confUri=="")
-      ""
-    else if (confUri.startsWith("$")) {
-      val pos = confUri.indexOf("<")
-      val pos2 = confUri.indexOf(">")
-      val offset = pos2 - pos;
-      "{" + confUri.substring(1, pos) + "}" + getAutoUriFromConfUri(confUri.drop(pos+offset+1))
-    } else
-      confUri.take(1) + getAutoUriFromConfUri(confUri.drop(1))
-
   @Test(code="""
     self.urisMatches("/api/v1/50", "/api/v1/50") === true
     self.urisMatches("/api/v1/50", "/api/v1/{haljapino}") === true
@@ -76,18 +102,13 @@ object RoutesHelper{
     self.urisMatches("/api/v1/50?hello=5&gakk=6",  "/api/v1/{haljapino}") === true
     self.urisMatches("/api/v1/50/fields?hello=gakk", "/api/v1/{haljapino}/fields") === true
 
-    self.urisMatches("/api/v1/50", "/api/v1/50/80") === false
-    self.urisMatches("/api/v1/50", "/api/v1") === false
-    self.urisMatches("/api/v1/50", "/api/v1/") === false
-    self.urisMatches("/api/v1/50", "/api/v1/{haljapino}/{ai}") === false
-    self.urisMatches("/api/v1/50", "/api/v1/{haljapino}/a") === false
     self.urisMatches("/api/v1/", "/api/v1/{haljapino}") === false
 
     self.urisMatches("/api/v1/?hello=gakk", "/api/v1/{haljapino}") === false
   """)
-  def urisMatches(uri: String, routeUri: String): Boolean = {
+  private def urisMatches(uri: String, docUri: String): Boolean = {
     val s_uri      = uri.split('?')(0).split("/")
-    val s_routeUri = getAutoUriFromConfUri(routeUri).split("/")
+    val s_routeUri = docUri.split("/")
     s_uri.size == s_routeUri.size &&
     s_uri.zip(s_routeUri).forall(g => {
       val uri_element = g._1
@@ -96,6 +117,7 @@ object RoutesHelper{
     })
   }
 
+  /*
   def findMatchingRouteEntry(
     method: String,
     uri: String,
@@ -111,4 +133,5 @@ object RoutesHelper{
     else
       findMatchingRouteEntry(method, uri, routes.tail)
   }
+   */
 }
