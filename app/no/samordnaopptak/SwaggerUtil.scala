@@ -11,11 +11,11 @@ import no.samordnaopptak.json._
 
 object SwaggerUtil{
 
-  val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float", "Date", "DateTime")
+  private val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float", "Date", "DateTime")
 
 
   // https://github.com/swagger-api/swagger-core/wiki/Datatypes
-  def atomTypeToSwaggerType(atomType: String) = {
+  private def atomTypeToSwaggerType(atomType: String) = {
     val (type_,format) = atomType match {
       case "etc." => ("etc.","")
       case "String" => ("string","")
@@ -40,7 +40,7 @@ object SwaggerUtil{
       )
   }
 
-  val header = J.obj(
+  private val header = J.obj(
     "swagger" -> "2.0",
     //"host": "api.uber.com",
     /*
@@ -102,7 +102,7 @@ object SwaggerUtil{
   private def createTagName(tag: String) =
     tag(0).toUpper + tag.tail
 
-  private def getTypeFromField(field: Field, addDescription: Boolean = true) = {
+  private def getTypeFromField(field: ApiDocParser.Field, addDescription: Boolean = true) = {
     val isAtomType = atomTypes.contains(field.type_)
 
     val type2 =
@@ -140,12 +140,12 @@ object SwaggerUtil{
       type2 ++ description
   }
 
-  private def getResponseError(error: Error) =
+  private def getResponseError(error: ApiDocParser.Error) =
     J.obj(
       error.code.toString -> J.obj("description" -> error.message)
     )
 
-  private def getResult(result: Result) =
+  private def getResult(result: ApiDocParser.Result) =
     J.obj(
       result.code.toString -> (
         J.obj(
@@ -155,10 +155,10 @@ object SwaggerUtil{
       )
     )
 
-  private def getResults(results: Results) =
+  private def getResults(results: ApiDocParser.Results) =
     J.flattenJObjects(results.results.map(getResult))
 
-  private def getResponses(apidoc: ApiDocs): JObject = {
+  private def getResponses(apidoc: ApiDocParser.ApiDocs): JObject = {
     val errorAsJson =
       apidoc.errors match {
         case None => J.obj()
@@ -179,7 +179,7 @@ object SwaggerUtil{
     errorAsJson ++ resultAsJson
   }
 
-  def getApi(basePath: String, apidoc: ApiDocs): JObject = {
+  private def getApi(basePath: String, apidoc: ApiDocParser.ApiDocs): JObject = {
     val method = apidoc.methodAndUri.method.toLowerCase
     J.obj(
       method -> J.obj(
@@ -212,7 +212,7 @@ object SwaggerUtil{
     )
   }
 
-  private def getDefinition(dataType: DataType): JObject = {
+  private def getDefinition(dataType: ApiDocParser.DataType): JObject = {
     val fields = dataType.parameters.fields
 
     J.obj(
@@ -225,7 +225,7 @@ object SwaggerUtil{
     )
   }
 
-  private def getDefinitions(dataTypes: DataTypes): JObject =
+  private def getDefinitions(dataTypes: ApiDocParser.DataTypes): JObject =
     J.flattenJObjects(dataTypes.dataTypes.map(getDefinition(_)))
 
   @Test(code="""
@@ -246,7 +246,7 @@ object SwaggerUtil{
     ret
   }
 
-  private def validateThatAllDatatypesAreDefined(basePath: String, apiDocs: List[ApiDocs], dataTypes: DataTypes): Unit = {
+  private def validateThatAllDatatypesAreDefined(basePath: String, apiDocs: List[ApiDocParser.ApiDocs], dataTypes: ApiDocParser.DataTypes): Unit = {
     val definedTypes: Set[String] = dataTypes.names.toSet ++ atomTypes
     val usedTypes: Set[String]    = dataTypes.usedDataTypes ++ apiDocs.flatMap(_.usedDataTypes)
     val undefinedTypes            = usedTypes -- definedTypes
@@ -258,7 +258,7 @@ object SwaggerUtil{
       throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$basePath": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
   }
 
-  def getEndpoint(basePath: String, path: String, apidocs: List[ApiDocs]): JObject = {
+  private def getEndpoint(basePath: String, path: String, apidocs: List[ApiDocParser.ApiDocs]): JObject = {
     val relevantApiDocs = apidocs.filter(_.methodAndUri.uri==path)
 
     J.flattenJObjects(relevantApiDocs.map(getApi(basePath, _)))

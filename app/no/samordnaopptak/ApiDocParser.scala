@@ -11,134 +11,136 @@ import no.samordnaopptak.test.TestByAnnotation.Test
  The internal format, close to the textual representation.
  */
 
-trait ApiDocElement {
-  def toJson: JValue
-}
+object ApiDocParser{
 
-case class MethodAndUri(method: String, uri: String, uriParms: List[String]) extends ApiDocElement {
-  def toJson = J.obj(
-    "method" -> method,
-    "uri"    -> uri,
-    "uriParms" -> uriParms
-  )
-}
+  trait ApiDocElement {
+    def toJson: JValue
+  }
 
-case class Description(shortDescription: String, longDescription: Option[String]) extends ApiDocElement {
-  def toJson = J.obj(
-    "shortDescription" -> shortDescription,
-    "longDescription"  -> longDescription.getOrElse("")
-  )
-}
-
-/**
-  A ParamType can either be body, path, query, header, formData, or undefined.
-  */
-object ParamType extends Enumeration{
-  type Type = Value
-  val body, path, query, header, formData, undefined = Value
-
-  def fromString(string: String): Type =
-    string match {
-      case "body" => body
-      case "path" => path
-      case "query" => query
-      case "header" => header
-      case "formData" => formData
-      case _ => throw new Exception(s""""$string" is not a valid parameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
-    }
-
-  def toJson(paramType: Type) =
-    if (paramType==undefined)
-      JNull
-    else
-      JString(paramType.toString)
-}
-
-case class Field(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
-  val isEnum = enumArgs.size > 0
-
-  if(type_.count(_.isWhitespace) > 0)
-    throw new Exception("A type name can not contain white space: '"+ type_ +"'")
-
-  def usedDataTypes: Set[String] = Set(type_)
-
-  def toJson = J.obj(
-    name -> J.obj(
-      "type" -> type_ ,
-      comment match {
-        case None          => "noComment" -> true
-        case Some(comment) => "comment" -> comment
-      },
-      "isArray" -> isArray,
-      "isEnum" -> isEnum,
-      "enumArgs" -> enumArgs,
-      "paramType" -> ParamType.toJson(paramType),
-      "required"  -> required
-    )
-  )
-}
-
-case class Parameters(fields: List[Field]) extends ApiDocElement{
-  def fieldNames = fields.map(_.name).toSet
-
-  def usedDataTypes: Set[String] =
-    fields.flatMap(_.usedDataTypes).toSet
-
-  def toJson = J.flattenJObjects(fields.map(_.toJson))
-}
-
-case class Error(code: Int, message: String) extends ApiDocElement{
-  def toJson = J.obj(
-    "code" -> code,
-    "message" -> message
-  )
-}
-
-case class Errors(errors: List[Error]) extends ApiDocElement{
-  def toJson = JArray(errors.map(_.toJson))
-
-  println("Warning, \"ERRORS\" is deprecated. Put error results into \"RESULT\" instead")
-}
-
-case class Result(code: Int, field: Field) extends ApiDocElement{
-  assert(field.name == "result")
-
-  def usedDataTypes: Set[String] = field.usedDataTypes
-
-  def toJson = {
-    val fieldJson = field.toJson
-    J.obj(
-      code.toString -> fieldJson("result")
+  case class MethodAndUri(method: String, uri: String, uriParms: List[String]) extends ApiDocElement {
+    def toJson = J.obj(
+      "method" -> method,
+      "uri"    -> uri,
+      "uriParms" -> uriParms
     )
   }
-}
 
-case class Results(results: List[Result]) extends ApiDocElement{
-  val codes = results.map(_.code)
+  case class Description(shortDescription: String, longDescription: Option[String]) extends ApiDocElement {
+    def toJson = J.obj(
+      "shortDescription" -> shortDescription,
+      "longDescription"  -> longDescription.getOrElse("")
+    )
+  }
 
-  if (codes.distinct.size != codes.size)
-    throw new Exception("One or more ApiDoc RESULT codes defined more than once: "+codes.diff(codes.distinct).take(4) + ", Result data: "+results.map(_.toJson))
+  /**
+    A ParamType can either be body, path, query, header, formData, or undefined.
+    */
+  object ParamType extends Enumeration{
+    type Type = Value
+    val body, path, query, header, formData, undefined = Value
 
-  def usedDataTypes: Set[String] = results.flatMap(_.usedDataTypes).toSet
+    def fromString(string: String): Type =
+      string match {
+        case "body" => body
+        case "path" => path
+        case "query" => query
+        case "header" => header
+        case "formData" => formData
+        case _ => throw new Exception(s""""$string" is not a valid parameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
+      }
 
-  def toJson = J.obj(
-    "results" -> J.flattenJObjects(results.map(_.toJson))
-  )
-}
+    def toJson(paramType: Type) =
+      if (paramType==undefined)
+        JNull
+      else
+        JString(paramType.toString)
+  }
 
-case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
-  def usedDataTypes: Set[String] = parameters.usedDataTypes
+  case class Field(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
+    val isEnum = enumArgs.size > 0
 
-  def toJson = J.obj(
-    name -> parameters.toJson
-  )
-}
+    if(type_.count(_.isWhitespace) > 0)
+      throw new Exception("A type name can not contain white space: '"+ type_ +"'")
+
+    def usedDataTypes: Set[String] = Set(type_)
+
+    def toJson = J.obj(
+      name -> J.obj(
+        "type" -> type_ ,
+        comment match {
+          case None          => "noComment" -> true
+          case Some(comment) => "comment" -> comment
+        },
+        "isArray" -> isArray,
+        "isEnum" -> isEnum,
+        "enumArgs" -> enumArgs,
+        "paramType" -> ParamType.toJson(paramType),
+        "required"  -> required
+      )
+    )
+  }
+
+  case class Parameters(fields: List[Field]) extends ApiDocElement{
+    def fieldNames = fields.map(_.name).toSet
+
+    def usedDataTypes: Set[String] =
+      fields.flatMap(_.usedDataTypes).toSet
+
+    def toJson = J.flattenJObjects(fields.map(_.toJson))
+  }
+
+  case class Error(code: Int, message: String) extends ApiDocElement{
+    def toJson = J.obj(
+      "code" -> code,
+      "message" -> message
+    )
+  }
+
+  case class Errors(errors: List[Error]) extends ApiDocElement{
+    def toJson = JArray(errors.map(_.toJson))
+
+    println("Warning, \"ERRORS\" is deprecated. Put error results into \"RESULT\" instead")
+  }
+
+  case class Result(code: Int, field: Field) extends ApiDocElement{
+    assert(field.name == "result")
+
+    def usedDataTypes: Set[String] = field.usedDataTypes
+
+    def toJson = {
+      val fieldJson = field.toJson
+      J.obj(
+        code.toString -> fieldJson("result")
+      )
+    }
+  }
+
+  case class Results(results: List[Result]) extends ApiDocElement{
+    val codes = results.map(_.code)
+
+    if (codes.distinct.size != codes.size)
+      throw new Exception("One or more ApiDoc RESULT codes defined more than once: "+codes.diff(codes.distinct).take(4) + ", Result data: "+results.map(_.toJson))
+
+    def usedDataTypes: Set[String] = results.flatMap(_.usedDataTypes).toSet
+
+    def toJson = J.obj(
+      "results" -> J.flattenJObjects(results.map(_.toJson))
+    )
+  }
+
+  case class DataType(name: String, parameters: Parameters) extends ApiDocElement{
+    def usedDataTypes: Set[String] = parameters.usedDataTypes
+
+    def toJson = J.obj(
+      name -> parameters.toJson
+    )
+  }
 
 
-case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], results: Option[Results]) extends ApiDocElement{
+  case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], results: Option[Results]) extends ApiDocElement{
 
-  def usedDataTypes: Set[String] =
-    Set() ++
+    def usedDataTypes: Set[String] =
+      Set() ++
     (parameters match {
       case None => Set()
       case Some(parameters) => parameters.usedDataTypes
@@ -148,45 +150,42 @@ case class ApiDocs(methodAndUri: MethodAndUri, description: Description, paramet
       case Some(results) => results.usedDataTypes
     })
 
-  private def addMaybe(apiDoc: Option[ApiDocElement], key: String = "") =
-    (apiDoc, key) match {
-      case (None,    _)   => J.obj()
-      case (Some(a), "")  => a.toJson
-      case (Some(a), key) => J.obj(key -> a.toJson)
-    }
+    private def addMaybe(apiDoc: Option[ApiDocElement], key: String = "") =
+      (apiDoc, key) match {
+        case (None,    _)   => J.obj()
+        case (Some(a), "")  => a.toJson
+        case (Some(a), key) => J.obj(key -> a.toJson)
+      }
 
-  /**
-    * Implementation:
-    * {{{
-  def validate() =
-    ApiDocValidation.validate(this)
-    * }}}
-    */
-  def validate() =
-    ApiDocValidation.validate(this)
+    /**
+      * Implementation:
+      * {{{
+      def validate() =
+      ApiDocValidation.validate(this)
+      * }}}
+      */
+    def validate() =
+      ApiDocValidation.validate(this)
 
-  def toJson =
-    methodAndUri.toJson ++
+    def toJson =
+      methodAndUri.toJson ++
     description.toJson ++
     addMaybe(parameters, "parameters") ++
     addMaybe(errors, "errors") ++
     addMaybe(results)
-}
+  }
 
-case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
-  val names = dataTypes.map(_.name)
-  if (names.size != names.distinct.size)
-    throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
+  case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
+    val names = dataTypes.map(_.name)
+    if (names.size != names.distinct.size)
+      throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
 
-  def usedDataTypes: Set[String] =
-    dataTypes.flatMap(_.usedDataTypes).toSet
+    def usedDataTypes: Set[String] =
+      dataTypes.flatMap(_.usedDataTypes).toSet
 
-  def toJson = J.flattenJObjects(dataTypes.map(_.toJson))
-}
+    def toJson = J.flattenJObjects(dataTypes.map(_.toJson))
+  }
 
-
-
-object ApiDocParser{
 
   private def getIndentLength(line: String) =
     line.prefixLength(_==' ')
@@ -279,32 +278,36 @@ object ApiDocParser{
     }
   }
 
-  /**
-    * Internal test function. Was not able to make it private.
-    */
   @Test(code="""
-    instance.testTypeInfo("Array String (header)").type_ === "String"
-    instance.testTypeInfo("Array String (header)").isArray === true
-    instance.testTypeInfo("Array String (header)").paramType.toString === "header"
-
-    instance.testTypeInfo("Enum(a,b) String (header)").type_ === "String"
-    instance.testTypeInfo("Enum(a,b) String (header)").isEnum === true
-    instance.testTypeInfo("Enum(a,b) String (header)").paramType.toString === "header"
-
-    instance.testTypeInfo("Enum(2,65,9) Int(query)").type_ === "Int"
-    instance.testTypeInfo("Enum(2,65,9) Int(query)").optional === false
-    instance.testTypeInfo("Enum(2,65,9) Int(query,optional)").optional === true
-
-    instance.testTypeInfo("String(header)").optional === false
-    instance.testTypeInfo("String (header, optional)").optional === true
-    instance.testTypeInfo("String(optional)").optional === true
-    instance.testTypeInfo("String( optional)").optional === true
-    instance.testTypeInfo("String").optional === false
+    self.testTypeInfo() === true
   """)
-  def testTypeInfo(typetypetype: String) =
-    TypeInfo("", typetypetype)
+  private def testTypeInfo(): Boolean = {
+    def test[T](a: T, b: T): Unit =
+      if (a != b)
+        throw new Exception(s"$a != $b")
 
-  case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
+    test(TypeInfo("", "Array String (header)").type_ , "String")
+    test(TypeInfo("", "Array String (header)").isArray, true)
+    test(TypeInfo("", "Array String (header)").paramType.toString, "header")
+
+    test(TypeInfo("", "Enum(a,b) String (header)").type_ , "String")
+    test(TypeInfo("", "Enum(a,b) String (header)").isEnum, true)
+    test(TypeInfo("", "Enum(a,b) String (header)").paramType.toString, "header")
+
+    test(TypeInfo("", "Enum(2,65,9) Int(query)").type_ , "Int")
+    test(TypeInfo("", "Enum(2,65,9) Int(query)").optional, false)
+    test(TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional, true)
+
+    test(TypeInfo("", "String(header)").optional, false)
+    test(TypeInfo("", "String (header, optional)").optional, true)
+    test(TypeInfo("", "String(optional)").optional, true)
+    test(TypeInfo("", "String( optional)").optional, true)
+    test(TypeInfo("", "String").optional, false)
+
+    true
+  }
+
+  private case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
     val (enumArgs,enumSize)  = getEnumArgs(typetypetype)
     val isArray      = typetypetype.startsWith("Array")
     val isEnum       = enumArgs.size > 0
@@ -542,7 +545,7 @@ object ApiDocParser{
   }
           
   /**
-    *  Private function. Public because of testing.
+    * Private function. Public because of testing.
     */
   def getRaw(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)

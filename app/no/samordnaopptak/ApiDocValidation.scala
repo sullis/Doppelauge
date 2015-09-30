@@ -9,9 +9,24 @@ import no.samordnaopptak.json._
 
 object ApiDocValidation{
 
+  /**
+    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    */
   class MismatchPathParametersException(message: String) extends Exception(message)
+
+  /**
+    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    */
   class MismatchFieldException(message: String) extends Exception(message)
+
+  /**
+    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    */
   class AlreadyDefinedFieldException(message: String) extends Exception(message)
+
+  /**
+    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    */
   class UnknownFieldException(message: String) extends Exception(message)
 
   private def safeLoadClass(className: String): java.lang.Class[_] =
@@ -65,6 +80,7 @@ object ApiDocValidation{
   }
 
   /**
+    * Used internally. 
     * @example
     * {{{
   package here
@@ -81,7 +97,7 @@ object ApiDocValidation{
 
 
   /**
-    * Validates that the fields for a datatype matches the content of a class. Used internally
+    * Used internally. Validates that the fields for a datatype matches the content of a class.
     */
   def validateDataTypeFields(className: String, dataTypeName: String, fields: Set[String], addedFields: Set[String], removedFields: Set[String]): Unit = {
 
@@ -136,15 +152,15 @@ object ApiDocValidation{
   }
 
   /**
-    * Used internally. Called by [[ApiDocs.validate]].
+    * Used internally. Called by [[ApiDocParser.ApiDocs.validate]].
     */
-  def validate(apiDocs: ApiDocs) = {
+  def validate(apiDocs: ApiDocParser.ApiDocs) = {
     val uriParms = apiDocs.methodAndUri.uriParms
     val parameters = apiDocs.parameters match{
-      case None => Parameters(List())
+      case None => ApiDocParser.Parameters(List())
       case Some(parameters) => parameters
     }
-    val pathParms = parameters.fields.filter(_.paramType == ParamType.path)
+    val pathParms = parameters.fields.filter(_.paramType == ApiDocParser.ParamType.path)
     val pathParmKeys = pathParms.map(_.name)
 
     if (uriParms.size != pathParmKeys.size)

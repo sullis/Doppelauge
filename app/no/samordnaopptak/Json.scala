@@ -128,6 +128,9 @@ case class JObject(value: Map[String, JValue]) extends JValue{
   override def keys = value.keys.toSet
   override def hasKey(key: String) = keys.contains(key)
 
+  /**
+    * Throws exception if key clash
+    */
   override def ++(other: JValue): JObject = {
     val otherValue = other.asMap
     val result = value ++ otherValue
@@ -253,6 +256,11 @@ object J {
   def parseIt[R](jsonString: String)(command: JValue => R): R =
     command(parse(jsonString))
 
+  /**
+    * Does NOT throw exception if key clash. Might want to use {{{
+    flattenJObjects(objs.map(J(_))).asJsValue
+    * }}} instead.
+    */
   def flattenJsObjects(objs: Seq[JsObject]): JsObject =
     if (objs.isEmpty)
       Json.obj()
@@ -264,6 +272,9 @@ object J {
     flattenJsObjects(objs.toSeq)
    */
 
+  /**
+    * Throws exception if key clash
+    */
   def flattenJObjects(objs: Seq[JValue]): JObject =
     if (objs.isEmpty)
       obj()
