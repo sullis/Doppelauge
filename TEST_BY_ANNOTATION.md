@@ -15,7 +15,7 @@ Solution
 
 By putting tests directly above the method themselves, it becomes
 natural to update the tests simultaneously as the code. The tests
-also starts to serve as documentation for how the method works.
+also start to serve as documentation for how the method works.
 
 
 Example
