@@ -235,7 +235,7 @@ object J {
     }
 
   /**
-    Converts any of the following types into a JValue: [[JValue]], JsValue, BigDecimal, Int, Long, Float, Double, String, Boolean, Map[String,_], Seq[_], Option[_], Json.JsValueWrapper.
+    * Converts any of the following types into a JValue: [[JValue]], JsValue, BigDecimal, Int, Long, Float, Double, String, Boolean, Map[String,_], Seq[_], Option[_], Json.JsValueWrapper.
     */
   def apply(a: Any): JValue =
     a match {
