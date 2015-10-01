@@ -2,7 +2,7 @@
 Doppelauge
 ==========
 
-Doppelauge is a set of three libraries for the Play Framework.
+Doppelauge is a set of four libraries for the Play Framework.
 All code should be thoroughly tested.
 
 * Json library: [J](JSON.md#j)
