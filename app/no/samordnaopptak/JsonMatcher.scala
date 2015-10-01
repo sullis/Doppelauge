@@ -5,7 +5,7 @@ import play.api.libs.json._
 
 
 /** 
-  *  JsonMatcher is a patternmatcher for json values. Use the [[matchJson]] method to match json values.
+  *  Patternmatcher for json values. Use the [[matchJson]] method to match json values.
   * 
   *  @example {{{
 package test
@@ -37,7 +37,7 @@ class JsonMatcherSpec extends Specification {
 }
   *  }}}
   * 
-  *  @note The matcher and json values do not have to be a [[JObject]] values (the result of calling 'J.obj'). [[matchJson]] understands a number of different types such as [[JValue]], JsValue (The play framework version of [[JValue]]), Map, String, Boolean, etc.
+  *  @note The matcher and json values do not have to be [[JObject]] valuess (the result of calling 'J.obj'). [[matchJson]] understands a number of different types such as [[JValue]], JsValue (The play framework version of [[JValue]]), Map, String, Boolean, etc.
   * 
   * @note JsonMatcher provides several custom matchers such as [[___anyString]], [[___anyNumber]], [[RegExp]], [[Custom]], etc. All of these matchers have [[matchJson]] examples, which might be useful to look at.
   * 
@@ -170,7 +170,7 @@ object JsonMatcher{
   }
 
   /** 
-    * Lets you create your own custom matcher.
+    * Creates a custom matcher.
     * @example
     * {{{
       matchJson(

@@ -3,12 +3,11 @@ package no.samordnaopptak.apidoc
 import no.samordnaopptak.test.TestByAnnotation.Test
 import no.samordnaopptak.json._
 
-/*
- Generates swagger 2.0 data
-
- Swagger spec.: https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md
+/**
+  * Generates swagger 2.0 data
+  * 
+  * Swagger spec.: [[https://github.com/swagger-api/swagger-spec/blob/master/versions/2.0.md]]
  */
-
 object SwaggerUtil{
 
   private val atomTypes = Set("etc.", "String", "Long", "Boolean", "Integer", "Int", "Any", "Double", "Float", "Date", "DateTime")

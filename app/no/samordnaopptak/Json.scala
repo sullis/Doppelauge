@@ -17,6 +17,9 @@ trait JValue {
 
   private var visitedKeys: Set[String] = Set()
 
+  /**
+    Pretty print
+    */
   def pp() = Json.prettyPrint(this.asJsValue)
 
   override def toString =
@@ -61,6 +64,15 @@ trait JValue {
   def asStringArray = asArray.map(_.asString)
   def asBooleanArray = asArray.map(_.asBoolean)
 
+  /**
+    * @example
+    * {{{
+    val json = J.obj("a" -> 1)
+
+    json("a").asOption(_.asInt) === Some(1)
+    json("b").asOption(_.asInt) === None
+    * }}}
+    */
   def asOption[R](command: JValue => R): Option[R] =
     Some(command(this))
 
@@ -84,6 +96,24 @@ trait JValue {
       case e: java.lang.IndexOutOfBoundsException => throw new JsonException("index "+index+" not found in "+pp()+" ("+e.getMessage()+")")
     }
 
+  /**
+    * Throws exception if there are unread fields in the json object.
+    * Also throws exception if '''this''' is not a json object.
+    * 
+    * @example
+    * {{{
+    val json = J.parse("""{ "a" : 1}""")
+    json.validateRemaining()  must throwA[JsonParseException]
+    json("a")
+    json.validateRemaining()
+
+    val json2 = J.parse("""{ "b" : 1}""")
+    json2.validateRemaining(Set("b"))
+    json2.validateRemaining()  must throwA[JsonParseException]   
+    * }}}
+    * 
+    * @see [[J.parseAndValidate]]
+    */
   def validateRemaining(ignoreKeys: Set[String]): Unit = {
     val visitedKeys = this.visitedKeys ++ ignoreKeys
     val diff = asMap.keys.toSet.diff(visitedKeys)
@@ -92,6 +122,13 @@ trait JValue {
       throw new JsonParseException(s"""Unknown field(s): ${diff.mkString("\"", "\", \"", "\"")}""")
   }
 
+  /**
+    * Implementation:
+    * {{{
+  def validateRemaining(ignoreKeys: String*): Unit =
+    validateRemaining(ignoreKeys.toSet)
+    * }}}
+    */
   def validateRemaining(ignoreKeys: String*): Unit =
     validateRemaining(ignoreKeys.toSet)
 }
@@ -238,6 +275,44 @@ object J {
       case e: Throwable => throw new JsonParseException(s"""Could not parse "$jsonString": ${e.getMessage()}""")
     }
 
+  /**
+    * Combines [[parse]] and JValue.validateRemaining
+    * @example
+    * {{{
+      val jsonText = """
+          {
+            "a" : 1,
+            "b" : 2
+          }
+        """
+
+      J.parseAndValidate(jsonText){json =>
+        List(
+          json("a"),
+          json("b")
+       )
+      }
+
+      J.parseAndValidate(jsonText){json =>
+        List(
+          json("a")
+       )
+      } must throwA[JsonParseException]
+
+      J.parseAndValidate(jsonText, ignoreKeys=Set("b")){json =>
+        List(
+          json("a")
+       )
+      }
+
+      J.parseAndValidate(jsonText, allowedKeys=Set("a")){json =>
+        List(
+          json("a"),
+          json("b")
+       )
+      } must throwA[JsonParseException]
+    * }}}
+    */
   def parseAndValidate[R](jsonString: String, ignore: Set[String] = Set(), allowedKeys: Set[String] = Set())(command: JValue => R): R = {
     val json = parse(jsonString)
 
@@ -252,7 +327,22 @@ object J {
     ret
   }
 
-  // Same as parseAndValidate, except that it doesn't validate that all fields are read.
+  /**
+   * Same as [[parseAndValidate]], except that it doesn't validate that all fields are read.
+   * @example
+   * {{{
+      val jsonText = """
+          {
+            "a" : 1,
+            "b" : 2
+          }
+        """
+
+      J.parseIt(jsonText) { json =>
+        json("a")
+      } === 2
+   * }}}
+   */
   def parseIt[R](jsonString: String)(command: JValue => R): R =
     command(parse(jsonString))
 

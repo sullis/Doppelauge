@@ -41,7 +41,7 @@ case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scala
 
   /**
     * Returns the type of uri used in the docs.
-    * @example {{{RouteEntry("", "/api/v1/acl/\$service<[^/]+>"", "", "").getAutoUri === "/api/v1/acl/{service}"}}}
+    * @example {{{RouteEntry("", "/api/v1/acl/\$service<[^/]+>", "", "").getDocUri === "/api/v1/acl/{service}"}}}
     */
   def getDocUri: String =
     getDocUri2(uri)

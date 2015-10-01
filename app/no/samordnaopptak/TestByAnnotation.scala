@@ -19,7 +19,7 @@ object StringModifier{
      self.appendUnderscore("a")  === "a_"
      self.appendUnderscore("a2") === "a2_"
   """)
-  def appendUnderscore(input: String): String =
+  private def appendUnderscore(input: String): String =
     input+"_"
 }
 

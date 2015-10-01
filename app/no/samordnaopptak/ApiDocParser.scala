@@ -7,10 +7,6 @@ import no.samordnaopptak.json._
 import no.samordnaopptak.test.TestByAnnotation.Test
 
 
-/*
- The internal format, close to the textual representation.
- */
-
 object ApiDocParser{
 
   trait ApiDocElement {
