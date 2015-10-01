@@ -35,8 +35,14 @@ QUICK START
 HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 ================================================
 
+1. Unless you have already done so, add the following lines to build.sbt:
 
-1. If webjars is not a dependency in your project, add these lines to build.sbt:
+  ```
+  resolvers += "jitpack" at "https://jitpack.io"
+  libraryDependencies += "com.github.sun-opsys" % "doppelauge" % "1.0.0"
+  ```
+
+2. If webjars is not a dependency in your project, add these lines to build.sbt:
    ```
    libraryDependencies ++= Seq(
       "org.webjars" %% "webjars-play" % "2.4.0-1"
@@ -44,13 +50,13 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
    ```
 
 
-2. Add the following lines to conf/routes:
+3. Add the following lines to conf/routes:
    ```
    GET   /webjars/*file    controllers.WebJarAssets.at(file)
    GET   /api/v1/api-docs  controllers.ApiDocController.get()
    ```
    
-3. Create the controller:
+4. Create the controller:
 
    ```scala
   package controllers
@@ -87,7 +93,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
   ```
   (also see app/controller/ApiDocController.scala)
 
-4. Now the api-docs should be available at the following address:
+5. Now the api-docs should be available at the following address:
    ```
    /webjars/api_doc/1.0/swagger-ui/dist/index.html?url=/api/v1/api-docs
    ```
