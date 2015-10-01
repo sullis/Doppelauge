@@ -7,14 +7,14 @@ TestByAnnotation
 Problem
 -------
 
-Unit tests often becomes too detailed, and they often breaks too easily.
+Unit tests often become too detailed, and they often break too easily.
 
 
 Solution
 --------
 
 By putting tests directly above the method themselves, it becomes
-natural to update the tests simultaneously as the code. The tests
+natural to update the tests whenever the code is changed. The tests
 also start to serve as documentation for how the method works.
 
 

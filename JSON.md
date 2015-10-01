@@ -15,7 +15,7 @@ val json = J.obj(
 
 json("a").asInt === 1
 json("b")(0).asInt === 2
-json("b")(1).asInt === 2
+json("b")(1).asInt === 3
 
 val json2 = J.parse("[4,5,6]")
 json2(0).asInt === 4
