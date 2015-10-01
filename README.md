@@ -35,6 +35,11 @@ Add the following lines to build.sbt:
   ```
 
 
+Credits
+=======
+The name "Doppelauge" was suggested by Hans Wilmers.
+
+
 License
 ==========
 
