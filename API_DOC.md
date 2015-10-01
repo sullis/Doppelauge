@@ -16,6 +16,9 @@ This API-Doc does the following validation checks:
   * Datatypes can only be defined once
 
 
+ScalaDoc
+========
+http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.apidoc.package
 
 
 QUICK START
