@@ -10,22 +10,22 @@ import no.samordnaopptak.json._
 object ApiDocValidation{
 
   /**
-    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    * See [[https://github.com/sun-opsys/doppelauge/blob/master/README.md README ]]
     */
   class MismatchPathParametersException(message: String) extends Exception(message)
 
   /**
-    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    * See [[https://github.com/sun-opsys/doppelauge/blob/master/README.md README ]]
     */
   class MismatchFieldException(message: String) extends Exception(message)
 
   /**
-    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    * See [[https://github.com/sun-opsys/doppelauge/blob/master/README.md README ]]
     */
   class AlreadyDefinedFieldException(message: String) extends Exception(message)
 
   /**
-    * See [[https://github.com/sun-opsys/api-doc/blob/master/README.md README ]]
+    * See [[https://github.com/sun-opsys/doppelauge/blob/master/README.md README ]]
     */
   class UnknownFieldException(message: String) extends Exception(message)
 

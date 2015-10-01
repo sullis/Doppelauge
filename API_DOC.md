@@ -295,7 +295,7 @@ Defining a type with unknown number of elements:
 
 
 
-See also the example controller: https://github.com/sun-opsys/api-doc/blob/master/app/controllers/UserController.scala
+See also the example controller: https://github.com/sun-opsys/doppelauge/blob/master/app/controllers/UserController.scala
 
 
 

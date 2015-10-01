@@ -32,7 +32,7 @@ Add the following lines to build.sbt:
 
   ```
   resolvers += "jitpack" at "https://jitpack.io"
-  libraryDependencies += "com.github.sun-opsys" % "api-doc" % "0.9.18"
+  libraryDependencies += "com.github.sun-opsys" % "doppelauge" % "1.0.0"
   ```
 
 

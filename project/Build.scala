@@ -5,7 +5,7 @@ import java.io.PrintWriter
 
 object ApplicationBuild extends Build {
 
-  val appName         = "api-doc"
+  val appName         = "doppelauge"
   val appVersion      = "%s".format("git describe --tags --long --always".!!.trim)
 
   val appDependencies = Seq()
