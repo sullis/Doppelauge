@@ -35,12 +35,8 @@ QUICK START
 HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 ================================================
 
-1. Unless you have already done so, add the following lines to build.sbt:
+1. Unless you have already done so, add "doppelauge" into build.sbt as instructed in README.md
 
-  ```
-  resolvers += "jitpack" at "https://jitpack.io"
-  libraryDependencies += "com.github.sun-opsys" % "doppelauge" % "1.0.0"
-  ```
 
 2. If webjars is not a dependency in your project, add these lines to build.sbt:
    ```
@@ -95,7 +91,7 @@ HOW TO USE IN YOUR OWN PROJECT (QUICK AND DIRTY)
 
 5. Now the api-docs should be available at the following address:
    ```
-   /webjars/api_doc/1.0/swagger-ui/dist/index.html?url=/api/v1/api-docs
+   /webjars/doppelauge/1.0/swagger-ui/dist/index.html?url=/api/v1/api-docs
    ```
 
 

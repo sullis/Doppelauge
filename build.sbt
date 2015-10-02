@@ -1,4 +1,4 @@
-name := """api_doc"""
+name := """doppelauge"""
 
 version := "1.0"
 
