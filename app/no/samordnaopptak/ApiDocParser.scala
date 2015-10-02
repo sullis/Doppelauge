@@ -278,29 +278,27 @@ object ApiDocParser{
     self.testTypeInfo() === true
   """)
   private def testTypeInfo(): Boolean = {
-    def test[T](a: T, b: T): Unit =
-      if (a != b)
-        throw new Exception(s"$a != $b")
+    implicit class Hepp[T](val a: T) {
+      def ===(b: T) = if (a!=b) throw new Exception(s"$a != $b") else true
+    }
 
-    test(TypeInfo("", "Array String (header)").type_ , "String")
-    test(TypeInfo("", "Array String (header)").isArray, true)
-    test(TypeInfo("", "Array String (header)").paramType.toString, "header")
+    TypeInfo("", "Array String (header)").type_  === "String"
+    TypeInfo("", "Array String (header)").isArray === true
+    TypeInfo("", "Array String (header)").paramType.toString === "header"
 
-    test(TypeInfo("", "Enum(a,b) String (header)").type_ , "String")
-    test(TypeInfo("", "Enum(a,b) String (header)").isEnum, true)
-    test(TypeInfo("", "Enum(a,b) String (header)").paramType.toString, "header")
+    TypeInfo("", "Enum(a,b) String (header)").type_  === "String"
+    TypeInfo("", "Enum(a,b) String (header)").isEnum === true
+    TypeInfo("", "Enum(a,b) String (header)").paramType.toString === "header"
 
-    test(TypeInfo("", "Enum(2,65,9) Int(query)").type_ , "Int")
-    test(TypeInfo("", "Enum(2,65,9) Int(query)").optional, false)
-    test(TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional, true)
+    TypeInfo("", "Enum(2,65,9) Int(query)").type_  === "Int"
+    TypeInfo("", "Enum(2,65,9) Int(query)").optional === false
+    TypeInfo("", "Enum(2,65,9) Int(query,optional)").optional === true
 
-    test(TypeInfo("", "String(header)").optional, false)
-    test(TypeInfo("", "String (header, optional)").optional, true)
-    test(TypeInfo("", "String(optional)").optional, true)
-    test(TypeInfo("", "String( optional)").optional, true)
-    test(TypeInfo("", "String").optional, false)
-
-    true
+    TypeInfo("", "String(header)").optional === false
+    TypeInfo("", "String (header, optional)").optional === true
+    TypeInfo("", "String(optional)").optional === true
+    TypeInfo("", "String( optional)").optional === true
+    TypeInfo("", "String").optional === false
   }
 
   private case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
@@ -541,7 +539,7 @@ object ApiDocParser{
   }
           
   /**
-    * Private function. Public because of testing.
+    * Internal function. Public because of testing.
     */
   def getRaw(apidoc: String): JObject = {
     val raws = parseRaw(apidoc)

@@ -6,7 +6,7 @@ import no.samordnaopptak.test.TestByAnnotation.{Test, TestObject}
 
 
 class ClassToTestWith {
-  
+
   @Test(code="""
      self.test("a")  =/= "a2_"
      self.test("a")  === "a_"
@@ -35,6 +35,24 @@ class ClassToTestWith {
   }
 
   def notest() = None
+
+  @Test(code="""
+    self.testAdder() === true
+  """)
+  private def testAdder() = {
+    implicit class Hepp[T](val a: T) {
+      def ===(b: T) = if (a!=b) throw new Exception(s"$a != $b") else true
+    }
+
+    Adder(5).one === 6
+    Adder(5).two === 7
+  }
+
+  private case class Adder(value: Int){
+    def one = value+1
+    def two = value+2
+  }
+
 }
 
 
