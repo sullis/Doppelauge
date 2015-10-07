@@ -665,7 +665,7 @@ class JsonMatcherSpec extends Specification {
       }
     }
 
-    "Error message for extra fields must contain the names of missing fields" in {
+    "Error message for extra fields in object must contain the names of missing fields" in {
       try{
         matchJson(
           Json.obj(
@@ -681,6 +681,61 @@ class JsonMatcherSpec extends Specification {
       } catch {
         case e: JsonMatcherException => {
           e.getMessage().contains("added: b_extrafield1, c_extrafield2") must beTrue
+        }
+      }
+    }
+
+    "Error message for extra fields in array must contain the missing fields" in {
+      try{
+        matchJson(
+          Json.arr(
+            "field3","field4"
+          ),
+          Json.arr(
+            "field1","field2","field3","field4"
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          //println("message: "+e.getMessage())
+          e.getMessage().contains("""Expected "field3". Got "field1"""") must beTrue
+          e.getMessage().contains("""path: (0)""") must beTrue
+        }
+      }
+
+      try{
+        matchJson(
+          Json.arr(
+            "field1","field2"
+          ),
+          Json.arr(
+            "field1","field2","field3","field4"
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          //println("message: "+e.getMessage())
+          e.getMessage().contains("""First non-matching element found at position 2, with value "field3". The matcher doesn't have that many elements.""") must beTrue
+        }
+      }
+
+      try{
+        matchJson(
+          Json.arr(
+            "field1","field3"
+          ),
+          Json.arr(
+            "field1","field2","field3","field4"
+          )
+        )
+        throw new Exception("somethingswrong")
+      } catch {
+        case e: JsonMatcherException => {
+          //println("message: "+e.getMessage())
+          e.getMessage().contains("""Expected "field3". Got "field2"""") must beTrue
+          e.getMessage().contains("""path: (1)""") must beTrue
         }
       }
     }

@@ -7,7 +7,8 @@ import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation
 
-import no.samordnaopptak.apidoc.{SwaggerUtil}
+import no.samordnaopptak.apidoc.SwaggerUtil
+
 
 object SwaggerTestData{
 
