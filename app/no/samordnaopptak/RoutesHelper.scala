@@ -117,7 +117,9 @@ object RoutesHelper{
     })
   }
 
-  /*
+  /**
+    *  @return a matching route given a list of routes, a method and an uri. Ignores appending slash and so forth.
+    */
   def findMatchingRouteEntry(
     method: String,
     uri: String,
@@ -133,5 +135,4 @@ object RoutesHelper{
     else
       findMatchingRouteEntry(method, uri, routes.tail)
   }
-   */
 }
