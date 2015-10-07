@@ -35,6 +35,8 @@ Add the following lines to build.sbt:
   libraryDependencies += "com.github.sun-opsys" % "doppelauge" % "1.0.2"
   ```
 
+  More info here: https://jitpack.io/#sun-opsys/doppelauge (gradle/maven/etc.)
+
 
 Credits
 =======
