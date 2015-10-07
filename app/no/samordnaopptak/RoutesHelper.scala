@@ -118,8 +118,11 @@ object RoutesHelper{
   }
 
   /**
-    *  @return a matching route given a list of routes, a method and an uri. Ignores appending slash and so forth.
+    *  @return a matching route given a list of routes, a method and a uri. Ignores appending slash and so forth.
     */
+  @Test(code="""
+    self.findMatchingRouteEntry("PUT", "/studier/api/v1/teaching-locations/0", List(no.samordnaopptak.apidoc.RouteEntry("PUT","/studier/api/v1/teaching-locations/$id<[^/]+>","class","method"))) === no.samordnaopptak.apidoc.RouteEntry("PUT","/studier/api/v1/teaching-locations/$id<[^/]+>","class","method")
+  """)
   def findMatchingRouteEntry(
     method: String,
     uri: String,
@@ -130,7 +133,7 @@ object RoutesHelper{
 
     if(routes.isEmpty)
       throw new Exception("No matching route for "+method + " " + uri)
-    else if (method==route.restMethod && urisMatches(uri, route.uri))
+    else if (method==route.restMethod && urisMatches(uri, route.getDocUri))
       route
     else
       findMatchingRouteEntry(method, uri, routes.tail)
