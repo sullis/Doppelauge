@@ -802,7 +802,6 @@ class JsonMatcherSpec extends Specification {
       }
     }
 
-
   }
 
 }

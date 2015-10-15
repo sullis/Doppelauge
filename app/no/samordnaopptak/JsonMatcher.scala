@@ -166,7 +166,7 @@ object JsonMatcher{
 
   class Custom(val func: JValue => Boolean, val name: String = "") extends JsString("Custom: "+name) with JValue {
     override def pp() = "Custom: "+name
-    override def asJsValue = JsNull
+    override def asJsValue = this
   }
 
   /** 
@@ -201,7 +201,7 @@ object JsonMatcher{
     def check(string: String): Boolean =
       regexp.findFirstIn(string) != None
 
-    override def asJsValue = JsNull
+    override def asJsValue = this
   }
 
   /**
@@ -229,7 +229,7 @@ object JsonMatcher{
 
   class Or(orMatchers: Any*) extends JsString("Or: "+orMatchers.map(_.toString).mkString(",")) with JValue{
     val matchers = orMatchers.map(J(_))
-    override def asJsValue = JsNull
+    override def asJsValue = this
   }
 
   /**
@@ -255,7 +255,7 @@ object JsonMatcher{
 
   class And(andMatchers: Any*) extends JsString("And: "+andMatchers.map(_.toString).mkString(",")) with JValue{
     val matchers = andMatchers.map(J(_))
-    override def asJsValue = JsNull
+    override def asJsValue = this
   }
 
   /**
@@ -284,7 +284,7 @@ object JsonMatcher{
       JsNull,
       maybeMatcher
     )
-    override def asJsValue = JsNull
+    override def asJsValue = this
   }
 
 
