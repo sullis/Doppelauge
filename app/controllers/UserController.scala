@@ -86,6 +86,26 @@ object UserController extends Controller {
   }
 
   @ApiDoc(doc="""
+    GET /user2admin/api/v1/guser
+
+    DESCRIPTION
+      Get an array of gusers
+  """)
+  def get3()  = Action { request =>
+    Ok(J.arr(user.toJson).asJsValue)
+  }
+
+  @ApiDoc(doc="""
+    GET /user2admin/api/v1/auser
+
+    DESCRIPTION
+      Get an array of ausers
+  """)
+  def get4()  = Action { request =>
+    Ok(J.arr(user.toJson).asJsValue)
+  }
+
+  @ApiDoc(doc="""
     POST /user2admin/api/v1/guser
 
     DESCRIPTION

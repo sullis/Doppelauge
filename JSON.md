@@ -29,6 +29,7 @@ JsonMatcher
 
 * Patternmatcher for json values.
 * Several custom matchers.
+* When matching fails, the error messages contain description with full path.
 * ScalaDoc: [JsonMatcher](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonMatcher$)
 
 

@@ -461,7 +461,7 @@ object JsonMatcher{
       matchJsonFailed(s"${json.pp()} contains wrong number of elements. Should contain ${getWantedNumArrayElements(matcher)}.", throwException, path)
 
     else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size>cleanJson.size)      
-      matchJsonFailed(s"${json.pp()} contains less fields than ${matcher.pp()}.", throwException, path)
+      matchJsonFailed(s"${json.pp()}\n      *** contains less fields than ***\n ${matcher.pp()}.", throwException, path)
 
     else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size<cleanJson.size)
       matchOrderedJsonArrays(json, false, cleanMatcher, 0, cleanJson, throwException, path,

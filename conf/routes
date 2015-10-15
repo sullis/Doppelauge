@@ -12,7 +12,9 @@ GET     /api/v1/api-docs                        controllers.ApiDocController.get
 # user
 
 GET     /useradmin/api/v1/user                  controllers.UserController.get
+GET     /user2admin/api/v1/guser                 controllers.UserController.get3
 GET     /user2admin/api/v1/user                 controllers.UserController.get2
+GET     /user2admin/api/v1/auser                 controllers.UserController.get4
 POST     /user2admin/api/v1/guser               controllers.UserController.post2
 
 

@@ -1,11 +1,15 @@
 package no.samordnaopptak.json
 
+import scala.collection.immutable.ListMap
+
 import play.api.libs.json._
+
 
 class JsonException(val message: String) extends Exception(message)
 class JsonMergeObjectsException(message: String) extends JsonException(message)
 class JsonIllegalConversionException(message: String) extends JsonException(message)
 class JsonParseException(message: String) extends JsonException(message)
+
 
 /**
   * Similar to Play framework's "JsValue", but quicker to use for testing and parsing.
@@ -38,7 +42,7 @@ trait JValue {
   def asJsValue: JsValue
   def asJsObject: JsObject = illegalConversionError
   def asJsArray: JsArray = illegalConversionError
-  def asMap: Map[String, JValue] = illegalConversionError
+  def asMap: ListMap[String, JValue] = illegalConversionError
   def asArray: List[JValue] = illegalConversionError
   def asString: String = illegalConversionError
   def asNumber: BigDecimal = illegalConversionError
@@ -152,8 +156,8 @@ case class JBoolean(value: Boolean) extends JValue{
   override def asJsValue = JsBoolean(value)
 }
 
-case class JObject(value: Map[String, JValue]) extends JValue{
-  override def asMap: Map[String, JValue] = value
+case class JObject(value: ListMap[String, JValue]) extends JValue{
+  override def asMap: ListMap[String, JValue] = value
   override def isObject = true
   override def asJsValue = asJsObject
   override def asJsObject = JsObject(
@@ -180,7 +184,8 @@ case class JObject(value: Map[String, JValue]) extends JValue{
 }
 
 object JObject{
-  def apply(value: List[(String, JValue)]): JObject = JObject(value.toMap)
+  def apply(value: List[(String, JValue)]): JObject = JObject(ListMap(value:_*))
+  def apply(value: Map[String, JValue]): JObject = JObject(ListMap(value.toList :_*))
 }
 
 case class JArray(value: List[JValue]) extends JValue{
@@ -248,10 +253,15 @@ object J {
       case value: Double =>  JNumber(value)
       case value: String => JString(value)
       case value: Boolean => JBoolean(value)
+      case value: ListMap[_,_] => JObject(
+        value.asInstanceOf[ListMap[String,Any]].map{
+          case (k: String, v: Any) => k -> apply(v)
+        }
+      )
       case value: Map[_,_] => JObject(
         value.asInstanceOf[Map[String,Any]].map{
           case (k: String, v: Any) => k -> apply(v)
-        }
+        }.toMap
       )
       case value: Seq[_] => JArray(value.map(apply(_)).toList)
       case `None` => JNull
