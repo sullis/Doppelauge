@@ -153,9 +153,9 @@ object AnnotationHelper{
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
 
-      val apiDocs = ApiDocParser.getApiDocs(doc)
-      ApiDocValidation.validate(apiDocs)
-      val json = apiDocs.toJson
+      val apiDoc = ApiDocParser.getApiDoc(doc)
+      ApiDocValidation.validate(apiDoc)
+      val json = apiDoc.toJson
 
       val jsonMethod = json("method").asString
       val jsonUri = json("uri").asString
@@ -179,7 +179,7 @@ object AnnotationHelper{
   }
 
   /**
-    * @return List of strings with api docs text. INCLUDE is expanded.
+    * @return List of strings with api docs text. INCLUDE is expanded. The returned value is not a list of lines, but a list of multiline strings. Each multiline string contains the ApiDoc annotation of a method.
     */
   def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): List[String] = {
 

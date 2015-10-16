@@ -13,13 +13,19 @@ object ApiDocUtil{
     * 
     * Implementation:
     * {{{
-  def getSwaggerDocs(basePath: String = "/"): JObject = {
-    SwaggerUtil.getMain(basePath, AnnotationHelper.getApiDocsFromAnnotations())
+  def getSwaggerDocs(basePath: String = "/", apidocstrings: List[String] = AnnotationHelper.getApiDocsFromAnnotations()): JObject = {
+    val apiDocs = ApiDocParser.getApiDocs(apidocstrings)
+    val dataTypes = ApiDocParser.getDataTypes(apidocstrings)
+
+    SwaggerUtil.getMain(basePath, apiDocs, dataTypes)
   }
     * }}}
     */
-  def getSwaggerDocs(basePath: String = "/"): JObject = {
-    SwaggerUtil.getMain(basePath, AnnotationHelper.getApiDocsFromAnnotations())
+  def getSwaggerDocs(basePath: String = "/", apidocstrings: List[String] = AnnotationHelper.getApiDocsFromAnnotations()): JObject = {
+    val apiDocs = ApiDocParser.getApiDocs(apidocstrings)
+    val dataTypes = ApiDocParser.getDataTypes(apidocstrings)
+
+    SwaggerUtil.getMain(basePath, apiDocs, dataTypes)
   }
 
   /**

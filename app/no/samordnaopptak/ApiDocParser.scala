@@ -132,8 +132,18 @@ object ApiDocParser{
     )
   }
 
+  case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
+    val names = dataTypes.map(_.name)
+    if (names.size != names.distinct.size)
+      throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
 
-  case class ApiDocs(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], results: Option[Results]) extends ApiDocElement{
+    def usedDataTypes: Set[String] =
+      dataTypes.flatMap(_.usedDataTypes).toSet
+
+    def toJson = J.flattenJObjects(dataTypes.map(_.toJson))
+  }
+
+  case class ApiDoc(methodAndUri: MethodAndUri, description: Description, parameters: Option[Parameters], errors: Option[Errors], results: Option[Results]) extends ApiDocElement{
 
     def usedDataTypes: Set[String] =
       Set() ++
@@ -171,17 +181,19 @@ object ApiDocParser{
     addMaybe(results)
   }
 
-  case class DataTypes(dataTypes: List[DataType]) extends ApiDocElement{
-    val names = dataTypes.map(_.name)
-    if (names.size != names.distinct.size)
-      throw new Exception("One or more ApiDoc datatypes defined more than once: "+names.diff(names.distinct).take(4))
+  case class ApiDocs(apiDocs: List[ApiDoc]) extends ApiDocElement{
+    def usedDataTypes = apiDocs.flatMap(_.usedDataTypes)
 
-    def usedDataTypes: Set[String] =
-      dataTypes.flatMap(_.usedDataTypes).toSet
+    /**
+      * Implementation:
+      * {{{
+    def validate = apiDocs.foreach(_.validate())
+      * }}}
+      */
+    def validate = apiDocs.foreach(_.validate())
 
-    def toJson = J.flattenJObjects(dataTypes.map(_.toJson))
+    def toJson = JArray(apiDocs.map(_.toJson))
   }
-
 
   private def getIndentLength(line: String) =
     line.prefixLength(_==' ')
@@ -565,9 +577,9 @@ object ApiDocParser{
         case _ => maybeFindElementOfType[T](elements.tail)
       }
 
-  def getApiDocs(apidocString: String) = {
+  def getApiDoc(apidocString: String) = {
     val elements = parseRaw(apidocString).map(_.getApidoc())
-    ApiDocs(
+    ApiDoc(
       findElementOfType[MethodAndUri](elements, "method and URI", apidocString),
       findElementOfType[Description](elements, "DESCRIPTION", apidocString),
       maybeFindElementOfType[Parameters](elements),
@@ -576,8 +588,18 @@ object ApiDocParser{
     )
   }
 
-  def getDataTypes(apidocString: String) = {
-    val elements = parseRaw(apidocString).map(_.getApidoc())
+  /**
+    * Implementation:
+    * {{{
+  def getApiDocs(apidocStrings: List[String]) =
+    ApiDocs(apidocStrings.map(getApiDoc))
+    * }}}
+    */
+  def getApiDocs(apidocStrings: List[String]) =
+    ApiDocs(apidocStrings.map(getApiDoc))
+
+  def getDataTypes(apidocStrings: List[String]) = {
+    val elements = parseRaw(apidocStrings.mkString("\n")).map(_.getApidoc())
     DataTypes(elements.filter(_.isInstanceOf[DataType]).map(_.asInstanceOf[DataType]))
   }
 }

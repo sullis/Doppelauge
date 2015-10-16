@@ -157,7 +157,7 @@ object SwaggerUtil{
   private def getResults(results: ApiDocParser.Results) =
     J.flattenJObjects(results.results.map(getResult))
 
-  private def getResponses(apidoc: ApiDocParser.ApiDocs): JObject = {
+  private def getResponses(apidoc: ApiDocParser.ApiDoc): JObject = {
     val errorAsJson =
       apidoc.errors match {
         case None => J.obj()
@@ -178,7 +178,7 @@ object SwaggerUtil{
     errorAsJson ++ resultAsJson
   }
 
-  private def getApi(basePath: String, apidoc: ApiDocParser.ApiDocs): JObject = {
+  private def getApi(basePath: String, apidoc: ApiDocParser.ApiDoc): JObject = {
     val method = apidoc.methodAndUri.method.toLowerCase
     J.obj(
       method -> J.obj(
@@ -228,15 +228,13 @@ object SwaggerUtil{
     J.flattenJObjects(dataTypes.dataTypes.map(getDefinition(_)))
 
   @Test(code="""
-      self.allTags("/api/v1/", List()) === Set()
-      self.allTags("/api/v1/", test.ApiDocSamples.allUsers) === Set("users", "usernames")
-      self.allTags("/api/v1/", test.ApiDocSamples.allAcls)  === Set("acl")
-      self.allTags("/api/v1/", test.ApiDocSamples.all)      === Set("acl", "usernames", "users")
+      self.allTags("/api/v1/", test.ApiDocSamples.emptyAD)    === Set()
+      self.allTags("/api/v1/", test.ApiDocSamples.allUsersAD) === Set("users", "usernames")
+      self.allTags("/api/v1/", test.ApiDocSamples.allAclsAD)  === Set("acl")
+      self.allTags("/api/v1/", test.ApiDocSamples.allAD)      === Set("acl", "usernames", "users")
   """)
-  private def allTags(basePath: String, apidocstrings: List[String]): Set[String] = {
-    val ret = apidocstrings.map(
-      apidocstring => ApiDocParser.getApiDocs(apidocstring)
-    ).map(
+  private def allTags(basePath: String, apiDocs: ApiDocParser.ApiDocs): Set[String] = {
+    val ret = apiDocs.apiDocs.map(
       _.methodAndUri.uri
     ).map(
       getTag(basePath, _)
@@ -245,9 +243,9 @@ object SwaggerUtil{
     ret
   }
 
-  private def validateThatAllDatatypesAreDefined(basePath: String, apiDocs: List[ApiDocParser.ApiDocs], dataTypes: ApiDocParser.DataTypes): Unit = {
+  private def validateThatAllDatatypesAreDefined(basePath: String, apiDocs: ApiDocParser.ApiDocs, dataTypes: ApiDocParser.DataTypes): Unit = {
     val definedTypes: Set[String] = dataTypes.names.toSet ++ atomTypes
-    val usedTypes: Set[String]    = dataTypes.usedDataTypes ++ apiDocs.flatMap(_.usedDataTypes)
+    val usedTypes: Set[String]    = dataTypes.usedDataTypes ++ apiDocs.usedDataTypes
     val undefinedTypes            = usedTypes -- definedTypes
     /*
     println("definedTypes: "+definedTypes)
@@ -257,7 +255,7 @@ object SwaggerUtil{
       throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$basePath": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
   }
 
-  private def getEndpoint(basePath: String, path: String, apidocs: List[ApiDocParser.ApiDocs]): JObject = {
+  private def getEndpoint(basePath: String, path: String, apidocs: List[ApiDocParser.ApiDoc]): JObject = {
     val relevantApiDocs = apidocs.filter(_.methodAndUri.uri==path)
 
     J.flattenJObjects(relevantApiDocs.map(getApi(basePath, _)))
@@ -268,21 +266,17 @@ object SwaggerUtil{
       case (key, _) => key
     }
 
-  def getMain(basePath: String, apidocstrings: List[String]): JObject = {
+  def getMain(basePath: String, apiDocs: ApiDocParser.ApiDocs, dataTypes: ApiDocParser.DataTypes): JObject = {
 
     if (!basePath.endsWith("/"))
       throw new Exception("Basepath must end with slash: "+basePath)
 
-    val dataTypes = ApiDocParser.getDataTypes(apidocstrings.mkString("\n"))
-
-    val tags = allTags(basePath, apidocstrings).toList.sorted
-
-    val apiDocs = apidocstrings.map(ApiDocParser.getApiDocs)
+    val tags = allTags(basePath, apiDocs).toList.sorted
 
     validateThatAllDatatypesAreDefined(basePath, apiDocs, dataTypes)
 
     val groupedApiDocs = sortMapByKey(
-      apiDocs.groupBy(_.methodAndUri.uri)
+      apiDocs.apiDocs.groupBy(_.methodAndUri.uri)
     )
 
     val groupedApiDocsAsJsValue = (groupedApiDocs map {

@@ -303,6 +303,11 @@ object ApiDocSamples{
   val allAcls = List(doc4,doc5)
   val all = allUsers ++ allAcls
 
+  def emptyAD    = ApiDocParser.getApiDocs(List())
+  def allUsersAD = ApiDocParser.getApiDocs(allUsers)
+  def allAclsAD  = ApiDocParser.getApiDocs(allAcls)
+  def allAD      = ApiDocParser.getApiDocs(all)
+
   val allAndExtraDataType = all ++ List(docWithExtraDataType)
   val allAndMissingDataTypes = all ++ List(docWithMissingDataTypes)
 }
@@ -327,46 +332,54 @@ class ApiDocParserSpec extends Specification {
     }
 
     "Throw exception for illegal parameter type" in {
-      ApiDocParser.getApiDocs(ApiDocSamples.docWithIllegalParamType) must throwA(
+      ApiDocParser.getApiDoc(ApiDocSamples.docWithIllegalParamType) must throwA(
         new Exception(""""gakk" is not a valid parameter type. It must be either "body", "path", "query", "header", or "formData". See https://github.com/wordnik/swagger-core/wiki/Parameters""")
       )
     }
 
     "Get ClassNotFoundException for datatype with undefined corresponding scala class" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithUndefinedClass) must throwA[java.lang.ClassNotFoundException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithUndefinedClass) must throwA[java.lang.ClassNotFoundException]
       }
     }
 
     "Test getting class from models instead, if we get ClassNotFoundException" in {
       play.api.test.Helpers.running(FakeApplication()) {
         if (play.api.Play.current.configuration.getString("application.name").get == "studieadmin")
-          ApiDocParser.getApiDocs(ApiDocSamples.docWithClassFromModels)
+          ApiDocParser.getApiDoc(ApiDocSamples.docWithClassFromModels)
       }
       true
     }
 
     "Get ApiDocParser.MismatchFieldException for datatype with mismatched corresponding scala class" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithMismatchedClass) must throwA[ApiDocValidation.MismatchFieldException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithMismatchedClass) must throwA[ApiDocValidation.MismatchFieldException]
       }
     }
 
     "Get ApiDocParser.MismatchPathParametersException for datatype with mismatched path parameters" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithMismatchedPathParameters1).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithMismatchedPathParameters2).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithMismatchedPathParameters3).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithMismatchedPathParameters4).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithMismatchedPathParameters1).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithMismatchedPathParameters2).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithMismatchedPathParameters3).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithMismatchedPathParameters4).validate() must throwA[ApiDocValidation.MismatchPathParametersException]
       }
     }
 
     "Use class name with same name as datatype, if class name for datatype is undefined" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithClassWithSameName1)
-        ApiDocParser.getApiDocs(ApiDocSamples.docWithClassWithSameName2)
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithClassWithSameName1)
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithClassWithSameName2)
       }
       true
+    }
+
+    "validate that a datatype is only defined one place" in {
+      play.api.test.Helpers.running(FakeApplication()) {
+        val apidocstrings = ApiDocSamples.allAndExtraDataType
+
+        ApiDocParser.getDataTypes(apidocstrings) should throwA(new Exception("One or more ApiDoc datatypes defined more than once: List(Attributes)"))
+      }
     }
 
     "Create raw Json data from ApiDoc" in {
@@ -480,13 +493,13 @@ class ApiDocParserSpec extends Specification {
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
-          ApiDocParser.getApiDocs(ApiDocSamples.doc1).toJson
+          ApiDocParser.getApiDoc(ApiDocSamples.doc1).toJson
         }
       )
     }
 
     "Check Array result" in {
-      val json = no.samordnaopptak.apidoc.ApiDocParser.getApiDocs(ApiDocSamples.docWithArrayResult).toJson
+      val json = no.samordnaopptak.apidoc.ApiDocParser.getApiDoc(ApiDocSamples.docWithArrayResult).toJson
       //println("json: "+J.prettyPrint(a))
 
       JsonMatcher.matchJson(
@@ -513,7 +526,7 @@ class ApiDocParserSpec extends Specification {
     }
 
     "Check doc with Enum parameters and result" in {
-      val json = no.samordnaopptak.apidoc.ApiDocParser.getApiDocs(ApiDocSamples.docWithEnums).toJson
+      val json = no.samordnaopptak.apidoc.ApiDocParser.getApiDoc(ApiDocSamples.docWithEnums).toJson
       //println("json: "+J.prettyPrint(a))
 
       JsonMatcher.matchJson(
@@ -561,7 +574,7 @@ class ApiDocParserSpec extends Specification {
     }
 
     "Check datatype with Enum" in {
-      val json = no.samordnaopptak.apidoc.ApiDocParser.getDataTypes(ApiDocSamples.docWithEnums)
+      val json = no.samordnaopptak.apidoc.ApiDocParser.getDataTypes(List(ApiDocSamples.docWithEnums))
       //println("json: "+J.prettyPrint(a))
 
       JsonMatcher.matchJson(
@@ -636,7 +649,7 @@ class ApiDocParserSpec extends Specification {
           )
         ),
         play.api.test.Helpers.running(FakeApplication()) {
-          ApiDocParser.getDataTypes(ApiDocSamples.doc1).toJson
+          ApiDocParser.getDataTypes(List(ApiDocSamples.doc1)).toJson
         }
       )
     }

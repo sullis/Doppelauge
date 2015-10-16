@@ -7,7 +7,7 @@ import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation
 
-import no.samordnaopptak.apidoc.SwaggerUtil
+import no.samordnaopptak.apidoc.{ApiDocUtil, ApiDocParser, SwaggerUtil}
 
 
 object SwaggerTestData{
@@ -360,7 +360,8 @@ class SwaggerUtilSpec extends Specification {
 
 
     "Produce the main thing" in {
-      val produced = SwaggerUtil.getMain("/api/v1/", SwaggerTestData.apidocstrings)
+      val produced = ApiDocUtil.getSwaggerDocs("/api/v1/", SwaggerTestData.apidocstrings)
+
       val correct = J.parse(SwaggerTestData.jsonstring)
 
       /*
@@ -372,15 +373,13 @@ class SwaggerUtilSpec extends Specification {
       JsonMatcher.matchJson(correct, produced)
     }
 
-    "validate that a datatype is only defined one place" in {
-      play.api.test.Helpers.running(FakeApplication()) {
-        SwaggerUtil.getMain("/api/v1/", ApiDocSamples.allAndExtraDataType) should throwA(new Exception("One or more ApiDoc datatypes defined more than once: List(Attributes)"))
-      }
-    }
-
     "validate that all used datatype are defined" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        SwaggerUtil.getMain("/api/v1/", ApiDocSamples.allAndMissingDataTypes) should throwA(new Exception("""2 ApiDoc datatype(s) was/were undefined while evaluating "/api/v1/": ("StringSalabim", "StringSalami")"""))
+        val apidocstrings = ApiDocSamples.allAndMissingDataTypes
+        val apiDocs = ApiDocParser.getApiDocs(apidocstrings)
+        val dataTypes = ApiDocParser.getDataTypes(apidocstrings)
+
+        SwaggerUtil.getMain("/api/v1/", apiDocs, dataTypes) should throwA(new Exception("""2 ApiDoc datatype(s) was/were undefined while evaluating "/api/v1/": ("StringSalabim", "StringSalami")"""))
       }
     }
 

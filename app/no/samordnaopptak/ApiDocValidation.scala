@@ -154,9 +154,9 @@ object ApiDocValidation{
   /**
     * Used internally. Called by [[ApiDocParser.ApiDocs.validate]].
     */
-  def validate(apiDocs: ApiDocParser.ApiDocs) = {
-    val uriParms = apiDocs.methodAndUri.uriParms
-    val parameters = apiDocs.parameters match{
+  def validate(apiDoc: ApiDocParser.ApiDoc) = {
+    val uriParms = apiDoc.methodAndUri.uriParms
+    val parameters = apiDoc.parameters match{
       case None => ApiDocParser.Parameters(List())
       case Some(parameters) => parameters
     }
@@ -164,7 +164,7 @@ object ApiDocValidation{
     val pathParmKeys = pathParms.map(_.name)
 
     if (uriParms.size != pathParmKeys.size)
-      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: ${apiDocs.toJson}).""" + "\n(See README.md for more information)\n")
+      throw new MismatchPathParametersException(s"""Mismatch between the number of parameters in the uri, and the number of path parameters.\nuriParms: $uriParms\npathParms:$pathParmKeys\njson: ${apiDoc.toJson}).""" + "\n(See README.md for more information)\n")
 
     pathParmKeys.foreach(pathParm =>
       if (!uriParms.contains(pathParm))

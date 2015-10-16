@@ -13,7 +13,6 @@ import no.samordnaopptak.json.JsonMatcher._
 class JsonMatcherSpec extends Specification {
   "Json matcher" should {
 
-
     // empty tests
 
     "match empty obj" in {
