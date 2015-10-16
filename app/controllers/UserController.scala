@@ -133,4 +133,33 @@ object UserController extends Controller {
     Ok(user.toJson.asJsValue)
   }
 
+  /*
+  @ApiDoc(doc="""
+    POST /user2admin/api/v1/guser/{user}
+
+    DESCRIPTION
+      Create a user
+      You can add more detailed information here.
+
+    PARAMETERS
+      body: User
+
+    RESULT
+      203: User
+      404: User <- User not found
+      400: UserData <- Syntax Error
+  """)
+  def post2(id: Long)  = Action { request =>
+    val json = J(request.body.asJson.get)
+    user = User(
+      json("id").asString,
+      UserData(
+        json("data")("firstName").asString,
+        json("data")("lastName").asString
+      ),
+      json("type").asString
+    )
+    Ok(user.toJson.asJsValue)
+  }
+   */
 }

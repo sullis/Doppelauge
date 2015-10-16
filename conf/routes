@@ -17,6 +17,8 @@ GET     /user2admin/api/v1/user                 controllers.UserController.get2
 GET     /user2admin/api/v1/auser                 controllers.UserController.get4
 POST     /user2admin/api/v1/guser               controllers.UserController.post2
 
+#POST     /user2admin/api/v1/guser2/{id}               controllers.UserController.post2(id: Long)
+
 
 
 # Map static resources
