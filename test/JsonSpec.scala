@@ -8,7 +8,7 @@ import play.api.libs.{json => pjson}
 import play.api.libs.json.{Json => PJson} // i.e. Play Json
 
 
-class JsonUtilSpec extends Specification {
+class JsonSpec extends Specification {
 
   "J" should {
 
@@ -328,6 +328,56 @@ class JsonUtilSpec extends Specification {
       json.hasKey("a") === true
       json.hasKey("b") === true
       json.hasKey("c") === false
+    }
+
+    "ensure order is kept in objects" in {
+      val json1 = J.obj(
+        "a" -> 1,
+        "b" -> 2,
+        "c" -> 3
+      )
+
+      J.parse(json1.pp()).pp() === json1.pp()
+
+      val json2 = J.obj(
+        "d" -> 4,
+        "e" -> 5,
+        "f" -> 6
+      )
+
+      (json1 ++ json2).pp() === J.obj(
+        "a" -> 1,
+        "b" -> 2,
+        "c" -> 3,
+        "d" -> 4,
+        "e" -> 5,
+        "f" -> 6
+      ).pp()
+
+      (json1 ++ json2).pp() === J(
+        PJson.obj(
+          "a" -> 1,
+          "b" -> 2,
+          "c" -> 3,
+          "d" -> 4,
+          "e" -> 5,
+          "f" -> 6
+        )
+      ).pp()
+
+      (json1 ++ json2).pp() === J(
+        play.api.libs.json.JsObject(
+          Seq(
+            "a" -> PJson.toJson(1),
+            "b" -> PJson.toJson(2),
+            "c" -> PJson.toJson(3),
+            "d" -> PJson.toJson(4),
+            "e" -> PJson.toJson(5),
+            "f" -> PJson.toJson(6)
+          )
+        )
+      ).pp()
+
     }
 
     "Validate remaining fields, where all fields are defined" in {

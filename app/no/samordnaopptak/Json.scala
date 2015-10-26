@@ -43,7 +43,7 @@ trait JValue {
   def asJsObject: JsObject = illegalConversionError
   def asJsArray: JsArray = illegalConversionError
   def asMap: ListMap[String, JValue] = illegalConversionError
-  def asArray: List[JValue] = illegalConversionError
+  def asArray: Seq[JValue] = illegalConversionError
   def asString: String = illegalConversionError
   def asNumber: BigDecimal = illegalConversionError
   def asBoolean: Boolean = illegalConversionError
@@ -184,11 +184,11 @@ case class JObject(value: ListMap[String, JValue]) extends JValue{
 }
 
 object JObject{
-  def apply(value: List[(String, JValue)]): JObject = JObject(ListMap(value:_*))
-  def apply(value: Map[String, JValue]): JObject = JObject(ListMap(value.toList :_*))
+  def apply(value: Seq[(String, JValue)]): JObject = JObject(ListMap(value:_*))
+  def apply(value: Map[String, JValue]): JObject = JObject(ListMap(value.toSeq :_*))
 }
 
-case class JArray(value: List[JValue]) extends JValue{
+case class JArray(value: Seq[JValue]) extends JValue{
   override def asArray = value
   override def isArray = true
   override def asJsValue = asJsArray
@@ -231,11 +231,11 @@ object J {
       case j: JsString => JString(j.value)
       case j: JsBoolean => JBoolean(j.value)
       case j: JsObject => JObject(
-        j.value.map{
+        j.fields.map{
           case (k: String, v: JsValue) => k -> jsValueToJValue(v)
-        }.toMap
+        }
       )
-      case j: JsArray => JArray(j.value.map(jsValueToJValue(_)).toList)
+      case j: JsArray => JArray(j.value.map(jsValueToJValue(_)).toSeq)
       case `JsNull` => JNull
     }
 
@@ -263,7 +263,7 @@ object J {
           case (k: String, v: Any) => k -> apply(v)
         }.toMap
       )
-      case value: Seq[_] => JArray(value.map(apply(_)).toList)
+      case value: Seq[_] => JArray(value.map(apply(_)).toSeq)
       case `None` => JNull
       case Some(value) => apply(value)
       case _ if a==null => JNull
@@ -272,7 +272,7 @@ object J {
     }
 
   def obj(vals: (String, Any)*): JObject = {
-    apply(vals.toMap).asInstanceOf[JObject]
+    apply(ListMap(vals:_*)).asInstanceOf[JObject]
   }
 
   def arr(vals: Any*): JArray =
