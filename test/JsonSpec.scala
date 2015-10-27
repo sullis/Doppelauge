@@ -2,10 +2,12 @@ package test
 
 import org.specs2.mutable._
 
-import no.samordnaopptak.json._
-
 import play.api.libs.{json => pjson}
 import play.api.libs.json.{Json => PJson} // i.e. Play Json
+
+import no.samordnaopptak.json._
+
+import no.samordnaopptak.test.TestByAnnotation
 
 
 class JsonSpec extends Specification {
@@ -378,6 +380,55 @@ class JsonSpec extends Specification {
         )
       ).pp()
 
+    }
+
+    "picking" in {
+      val text = """
+{
+ "result" : {
+   "name": "navn",
+   "data": [
+     {
+       "language": "slovac",
+       "numb": 5
+     },
+     {
+       "language": "liber",
+       "numb": 6
+     },
+     {
+       "language": "sumi",
+       "numb": 7
+     }
+   ]
+ }
+}
+"""
+      val json = J.parse(text)
+
+      json.pick("result" -> "name").asString === "navn"
+      json.pick("result" -> "data" -> 0 -> "language").asString === "slovac"
+      json.pick("result" -> "data" -> 0 -> "numb").asNumber == 50
+
+      json.pick("result" -> "numb (recursive)").asIntArray == Seq(5,6,7)
+      json.pick("numb (recursive)").asIntArray == Seq(5,6,7)
+      json("numb (recursive)").asIntArray == Seq(5,6,7)
+
+      json.pick("result" -> "language (recursive)").asStringArray == Seq("slovac","liber","sumi")
+      json.pick("language (recursive)").asStringArray == Seq("slovac","liber","sumi")
+      json("language (recursive)").asStringArray == Seq("slovac","liber","sumi")
+
+
+      // example from the scaladoc
+      val json2 = J.obj(
+        "a" -> J.arr(5,2,J.obj("b" -> 9)),
+        "b" -> 10
+      )
+
+      json2.pick("a" -> 2 -> "b").asInt === 9
+      json2.pick("a" -> "b (recursive)").asIntArray === List(9)
+
+      true
     }
 
     "Validate remaining fields, where all fields are defined" in {

@@ -4,6 +4,8 @@ import scala.collection.immutable.ListMap
 
 import play.api.libs.json._
 
+import no.samordnaopptak.test.TestByAnnotation.Test
+
 
 class JsonException(val message: String) extends Exception(message)
 class JsonMergeObjectsException(message: String) extends JsonException(message)
@@ -27,7 +29,7 @@ trait JValue {
   def pp() = Json.prettyPrint(this.asJsValue)
 
   override def toString =
-    "JsonUtil.Json(\n"+pp()+"\n)"
+    "JValue(\n"+pp()+"\n)"
 
   def asDouble = asNumber.toDouble
   def asInt = asNumber.toInt
@@ -83,22 +85,112 @@ trait JValue {
   def getOrElse[R](command: JValue => R, orElseValue: R): R =
     command(this)
 
-  def apply(key: String) =
-    asMap.get(key) match {
-      case Some(json) => {
-        visitedKeys = visitedKeys + key
-        json
+  private def applyRecursive(key: String): Seq[JValue] =
+    if (isObject)
+      asMap.flatMap {
+        case (`key`, json) => Seq(json)
+        case (_,     json) => json.applyRecursive(key)
+      }.toSeq
+    else if (isArray)
+      asArray.flatMap(_.applyRecursive(key))
+    else
+      Seq()
+
+  /**
+    * @example
+    * {{{
+    val json = J.obj(
+      "a" -> J.arr(5,2,J.obj("b" -> 9)),
+      "b" -> 10
+    )
+
+    json("a")(2)("b").asInt === 9
+    json("b (recursive)").asIntArray === List(9,10)
+    * }}}
+    * @see [[pick]]
+    */
+  def apply(key: String): JValue =
+    if (key.endsWith("(recursive)")) {
+
+      val realKey = key.take(key.length - "(recursive)".length).trim
+      JArray(applyRecursive(realKey))
+
+    } else {
+
+      asMap.get(key) match {
+        case Some(json) => {
+          visitedKeys = visitedKeys + key
+          json
+        }
+        case None =>
+          JUndefined(key, this)
       }
-      case None =>
-        JUndefined(key, this)
+
     }
 
-  def apply(index: Int) =
+  /**
+    * @example
+    * {{{
+    val json = J.arr(2,3,4)
+
+    json(0) === 2
+    json(1) === 3
+    json(2) === 4
+    * }}}
+    * @see [[pick]]
+    */
+  def apply(index: Int): JValue =
     try{
       asArray(index)
     }catch{
       case e: java.lang.IndexOutOfBoundsException => throw new JsonException("index "+index+" not found in "+pp()+" ("+e.getMessage()+")")
     }
+
+
+  /*
+   Direct and less readable implemention of pick:
+
+  private def pick(orgPickers: Any, pickers: Any): JValue = pickers match {
+    case p: String           => apply(p)
+    case p: Int              => apply(p)
+    case (r: Any, p: Any)    => getPickArguments2(orgPickers, r).getPickArguments2(orgPickers, p)
+    case _                   => throw new IllegalArgumentException("Illegal argument when calling pick("+orgPickers+"): "+pickers+". The argument for pick must be a string, a number or a tuple")
+  }
+
+  def pick(pickers: Any): JValue = pick(pickers, pickers)
+   */
+
+
+  private def pick(pickers: Seq[Any]): JValue =
+    pickers match {
+      case Nil                 => this
+      case (p: String) :: rest => apply(p).pick(rest)
+      case (p: Int)    :: rest => apply(p).pick(rest)
+    }
+
+  private def getPickArguments(orgPickers: Any, pickers: Any): Seq[Any] = pickers match {
+    case p: String           => Seq(p)
+    case p: Int              => Seq(p)
+    case (r: Any, p: Any)    => getPickArguments(orgPickers, r) ++ Seq(p)
+    case _                   => throw new IllegalArgumentException("Illegal argument when calling pick("+orgPickers+"): "+pickers+". The argument for pick must be a string, a number or a tuple")
+  }
+
+  /**
+    * Less cluttering way to pick out data than calling apply() several times.
+    * @example
+    * {{{
+    val json = J.obj(
+      "a" -> J.arr(5,2,J.obj("b" -> 9)),
+      "b" -> 10
+    )
+
+    json.pick("a" -> 2 -> "b").asInt === 9
+    json.pick("a" -> "b (recursive)").asIntArray === List(9)
+    * }}}
+    */
+  def pick(pickers: Any): JValue =
+    pick(getPickArguments(pickers, pickers))
+  
 
   /**
     * Throws exception if there are unread fields in the json object.
