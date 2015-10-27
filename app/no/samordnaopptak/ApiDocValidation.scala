@@ -29,13 +29,28 @@ object ApiDocValidation{
     */
   class UnknownFieldException(message: String) extends Exception(message)
 
+  /**
+    * Trying to load which does not exist in path
+    */
+  class ClassNotFoundException(message: String) extends Exception(message)
+
+
   private def safeLoadClass(className: String): java.lang.Class[_] =
     try{
       play.api.Play.classloader.loadClass(className)
      } catch {
         case e: java.lang.ClassNotFoundException => null.asInstanceOf[java.lang.Class[_]]
     }
- 
+
+
+  private def loadClass(fullClassName: String, className: String): java.lang.Class[_] =
+    try{
+      play.api.Play.classloader.loadClass(className)
+    } catch {
+      case e: java.lang.ClassNotFoundException => throw new ClassNotFoundException("""The class with name """" + fullClassName + """" was not found""")
+    }
+
+
   /*
 
   null, List("lib", "ApiDoc", "MismatchFieldException") -> loadClass(
@@ -51,21 +66,20 @@ object ApiDocValidation{
   Class("lib.ApiDoc"), List("MismatchFieldException")   -> parent.getClasses.find(_.getCannonicalName()=="lib.ApiDoc.MimatchFieldException").get
 
    */
-
-  private def loadInnerClass(parent: java.lang.Class[_], className: String, elms: List[String]): java.lang.Class[_] = {
+  private def loadInnerClass(parent: java.lang.Class[_], fullClassName: String, className: String, elms: List[String]): java.lang.Class[_] = {
     //println(className+": "+"parent: "+(if (parent==null) "null" else parent.getCanonicalName())+", elms: "+elms)
 
     if (parent==null && elms.isEmpty) {
-      play.api.Play.classloader.loadClass(className)
+      loadClass(fullClassName, className)
 
     } else if (parent==null) {
       val class_ = safeLoadClass(elms(0))
       if (class_ != null)
-        loadInnerClass(class_, className, elms.tail)
+        loadInnerClass(class_, fullClassName, className, elms.tail)
       else if (elms.size==1)
-        play.api.Play.classloader.loadClass(className)
+        loadClass(fullClassName, className)
       else
-        loadInnerClass(null, className, elms(0)+"."+elms(1) :: elms.tail.tail)
+        loadInnerClass(null, fullClassName, className, elms(0)+"."+elms(1) :: elms.tail.tail)
 
     } else if (elms.isEmpty) {
       parent
@@ -73,9 +87,9 @@ object ApiDocValidation{
     } else {
       val class_ = parent.getClasses.find(_.getCanonicalName()==parent.getCanonicalName()+"."+elms(0))
       if (class_ != None)
-        loadInnerClass(class_.get, className, elms.tail)
+        loadInnerClass(class_.get, fullClassName, className, elms.tail)
       else
-        play.api.Play.classloader.loadClass(className)
+        loadClass(fullClassName, className)
     }
   }
 
@@ -93,7 +107,7 @@ object ApiDocValidation{
     * }}}
     */
   def loadInnerClass(className: String): java.lang.Class[_] =
-    loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className.split('.').toList)
+    loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className, className.split('.').toList)
 
 
   /**
@@ -104,7 +118,7 @@ object ApiDocValidation{
     val class_ = try{
       loadInnerClass(className)
     } catch {
-      case e: java.lang.ClassNotFoundException =>
+      case e: ClassNotFoundException =>
         //println("couldn't load class "+className+". Trying models instead")
         loadInnerClass("models."+className)
     }

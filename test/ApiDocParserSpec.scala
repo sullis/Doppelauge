@@ -339,7 +339,7 @@ class ApiDocParserSpec extends Specification {
 
     "Get ClassNotFoundException for datatype with undefined corresponding scala class" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        ApiDocParser.getApiDoc(ApiDocSamples.docWithUndefinedClass) must throwA[java.lang.ClassNotFoundException]
+        ApiDocParser.getApiDoc(ApiDocSamples.docWithUndefinedClass) must throwA[ApiDocValidation.ClassNotFoundException]
       }
     }
 

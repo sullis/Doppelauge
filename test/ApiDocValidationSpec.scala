@@ -14,6 +14,18 @@ class ApiDocValidationSpec extends Specification {
   }
 
   "ApiDocValidation" should {
+
+    "Get proper error message if trying to load non-existent class" in {
+      play.api.test.Helpers.running(FakeApplication()) {
+        try{
+          ApiDocValidation.loadInnerClass("test.ApiDocValidationSpec.Inner1.Inner25")
+          throw new Exception("what?")
+        } catch {
+          case e: ApiDocValidation.ClassNotFoundException => e.getMessage().contains("test.ApiDocValidationSpec.Inner1.Inner25") should beTrue
+        }
+      }
+    }
+
     "Get Class objects from inner classes" in {
       play.api.test.Helpers.running(FakeApplication()) {
         ApiDocValidation.loadInnerClass("test.ApiDocValidationSpec.Inner1.Inner2")
