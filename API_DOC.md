@@ -322,7 +322,7 @@ Api-doc performs several validations during runtime.
        no.samordnaopptak.apidoc.RoutesHelper.getRouteEntries()
         .filter(_.scalaClass != classname && _.scalaMethod != methodname)
         
-     no.samordnaopptak.apidoc.ApiDocUtil.validate(routeEntries)
+     no.samordnaopptak.apidoc.ApiDocUtil.validate(routeEntries = routeEntries)
     ```
 
 

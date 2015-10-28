@@ -75,7 +75,7 @@ class ApiDocControllerSpec extends Specification {
 
     "Validate swagger api docs" in {
       inCleanEnvironment {
-        ApiDocUtil.validate(routeEntries)
+        ApiDocUtil.validate(routeEntries = routeEntries)
       }
     }
 
