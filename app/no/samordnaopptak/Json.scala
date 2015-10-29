@@ -85,14 +85,26 @@ trait JValue {
   def getOrElse[R](command: JValue => R, orElseValue: R): R =
     command(this)
 
-  private def applyRecursive(key: String): Seq[JValue] =
+  /**
+    * @example
+    * {{{
+    val json = J.obj(
+      "a" -> J.arr(5,2,J.obj("b" -> 9)),
+      "b" -> 10
+    )
+
+    json.getRecursively("b").asIntArray === List(9,10)
+    * }}}
+    * @see [[pick]]
+    */
+  def getRecursively(key: String): Seq[JValue] =
     if (isObject)
       asMap.flatMap {
         case (`key`, json) => Seq(json)
-        case (_,     json) => json.applyRecursive(key)
+        case (_,     json) => json.getRecursively(key)
       }.toSeq
     else if (isArray)
-      asArray.flatMap(_.applyRecursive(key))
+      asArray.flatMap(_.getRecursively(key))
     else
       Seq()
 
@@ -105,27 +117,17 @@ trait JValue {
     )
 
     json("a")(2)("b").asInt === 9
-    json("b (recursive)").asIntArray === List(9,10)
     * }}}
     * @see [[pick]]
     */
   def apply(key: String): JValue =
-    if (key.endsWith("(recursive)")) {
-
-      val realKey = key.take(key.length - "(recursive)".length).trim
-      JArray(applyRecursive(realKey))
-
-    } else {
-
-      asMap.get(key) match {
-        case Some(json) => {
-          visitedKeys = visitedKeys + key
-          json
-        }
-        case None =>
-          JUndefined(key, this)
+    asMap.get(key) match {
+      case Some(json) => {
+        visitedKeys = visitedKeys + key
+        json
       }
-
+      case None =>
+        JUndefined(key, this)
     }
 
   /**
@@ -161,11 +163,15 @@ trait JValue {
    */
 
 
-  private def pick(pickers: Seq[Any]): JValue =
+  protected def pick2(pickers: Seq[Any]): JValue =
     pickers match {
       case Nil                 => this
-      case (p: String) :: rest => apply(p).pick(rest)
-      case (p: Int)    :: rest => apply(p).pick(rest)
+      case (p: String) :: rest if (p.endsWith("(recursively)")) => {        
+        val realKey = p.take(p.length - "(recursively)".length).trim
+        JArray(getRecursively(realKey)).pick2(rest)
+      }
+      case (p: String) :: rest => apply(p).pick2(rest)
+      case (p: Int)    :: rest => apply(p).pick2(rest)
     }
 
   private def getPickArguments(orgPickers: Any, pickers: Any): Seq[Any] = pickers match {
@@ -185,11 +191,11 @@ trait JValue {
     )
 
     json.pick("a" -> 2 -> "b").asInt === 9
-    json.pick("a" -> "b (recursive)").asIntArray === List(9)
+    json.pick("a" -> "b (recursively)").asIntArray === List(9)
     * }}}
     */
   def pick(pickers: Any): JValue =
-    pick(getPickArguments(pickers, pickers))
+    pick2(getPickArguments(pickers, pickers))
   
 
   /**
