@@ -14,7 +14,7 @@ class JsonParseException(message: String) extends JsonException(message)
 
 
 /**
-  * Similar to Play framework's "JsValue", but quicker to use for testing and parsing.
+  * Similar to Play Framework's "JsValue", but quicker to use for testing and parsing.
   * @note To convert a JsValue into a [[JValue]], use [[J.apply]].
   * @note To convert a [[JValue]] into a JsValue, use [[asJsValue]].
   * @see [[https://github.com/sun-opsys/doppelauge/blob/master/test/JsonUtilSpec.scala]] for examples
@@ -63,6 +63,7 @@ trait JValue {
   def size: Int = illegalConversionError
 
   def ++(other: JValue): JObject = illegalConversionError
+  def -(key: String): JObject = illegalConversionError
 
   def asLongArray = asArray.map(_.asLong)
   def asIntArray = asArray.map(_.asInt)
@@ -254,6 +255,9 @@ case class JBoolean(value: Boolean) extends JValue{
   override def asJsValue = JsBoolean(value)
 }
 
+/**
+  Similar to Play Framework's "JsObject", except that the fields order is preserved, plus that '++' does not allow field name clash.
+  */
 case class JObject(value: ListMap[String, JValue]) extends JValue{
   override def asMap: ListMap[String, JValue] = value
   override def isObject = true
@@ -279,6 +283,9 @@ case class JObject(value: ListMap[String, JValue]) extends JValue{
 
     JObject(result)
   }
+
+  override def -(key: String): JObject =
+    JObject(value - key)
 }
 
 object JObject{

@@ -281,6 +281,20 @@ class JsonSpec extends Specification {
       }
     }
 
+    "JObject.-" in {
+      val j = J.obj("hello" -> 1, "hello2" -> 2)
+
+      (j - "hello") must equalTo(J.obj("hello2" -> 2))
+
+      (j - "hello" - "hello2") must equalTo(J.obj())
+    }
+
+    "JObject.equal" in {
+      J.obj("a" -> 1, "b" -> 2) must equalTo(J.obj("a" -> 1, "b" -> 2))
+      J.obj("a" -> 1, "b" -> 2) must equalTo(J.obj("b" -> 2, "a" -> 1))
+      J.obj("a" -> 1, "b" -> 2) must not equalTo(J.obj("a" -> 1, "b" -> 3))
+    }
+
     "Ensure error messages contain the undefined field name" in {
       val json = J.obj()
       val result = json("hepp")
