@@ -368,7 +368,7 @@ object J {
           case (k: String, v: Any) => k -> apply(v)
         }.toMap
       )
-      case value: Seq[_] => JArray(value.map(apply(_)).toSeq)
+      case value: Iterable[_] => JArray(value.map(apply(_)).toSeq)
       case `None` => JNull
       case Some(value) => apply(value)
       case _ if a==null => JNull
