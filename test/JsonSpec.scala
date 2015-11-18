@@ -231,6 +231,8 @@ class JsonSpec extends Specification {
     "J from seq/set" in {
       J(Seq(1,2)).asIntArray === Seq(1,2)
       J(Set(1,2)).asIntArray.toSet === Set(1,2)
+      J(Array(1,2)).asIntArray.toSet === Seq(1,2)
+      J(Array(1,2)).asIntArray.toSet === Seq(1,2)
     }
 
     "Json.size/Json.keys/Json.++" in {
