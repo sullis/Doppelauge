@@ -32,7 +32,7 @@ Add the following lines to build.sbt:
 
   ```
   resolvers += "jitpack" at "https://jitpack.io"
-  libraryDependencies += "com.github.sun-opsys" % "doppelauge" % "1.1.3"
+  libraryDependencies += "com.github.sun-opsys" % "doppelauge" % "1.1.4"
   ```
 
   More info here: https://jitpack.io/#sun-opsys/doppelauge (gradle/maven/etc.)
