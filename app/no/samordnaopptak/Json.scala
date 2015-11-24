@@ -38,17 +38,17 @@ trait JValue {
   protected def error =
     throw new JsonException(s"""Trying to access something illegal in JValue (see backtrace). value: ${pp()}""")
 
-  protected def illegalConversionError =
-    throw new JsonIllegalConversionException(s"""Can not convert Json object to this type. value: ${pp()}""")
+  protected def illegalConversionError(t: String) =
+    throw new JsonIllegalConversionException(s"""Can not convert ${pp()} to $t""")
 
   def asJsValue: JsValue
-  def asJsObject: JsObject = illegalConversionError
-  def asJsArray: JsArray = illegalConversionError
-  def asMap: ListMap[String, JValue] = illegalConversionError
-  def asArray: Seq[JValue] = illegalConversionError
-  def asString: String = illegalConversionError
-  def asNumber: BigDecimal = illegalConversionError
-  def asBoolean: Boolean = illegalConversionError
+  def asJsObject: JsObject = illegalConversionError("object")
+  def asJsArray: JsArray = illegalConversionError("array")
+  def asMap: ListMap[String, JValue] = illegalConversionError("map")
+  def asArray: Seq[JValue] = illegalConversionError("list")
+  def asString: String = illegalConversionError("string")
+  def asNumber: BigDecimal = illegalConversionError("number")
+  def asBoolean: Boolean = illegalConversionError("boolean")
 
   def isArray: Boolean = false
   def isObject: Boolean = false
@@ -58,12 +58,12 @@ trait JValue {
   def isNull: Boolean = false
 
   def isDefined: Boolean = true
-  def hasKey(key: String): Boolean = illegalConversionError  // it might be undefined even if it has key. (i.e. when the value is null)
-  def keys: Set[String] = illegalConversionError
-  def size: Int = illegalConversionError
+  def hasKey(key: String): Boolean = illegalConversionError(s"""object with key "$key"""")  // it might be undefined even if it has key. (i.e. when the value is null)
+  def keys: Set[String] = illegalConversionError("object")
+  def size: Int = illegalConversionError("object or array")
 
-  def ++(other: JValue): JObject = illegalConversionError
-  def -(key: String): JObject = illegalConversionError
+  def ++(other: JValue): JObject = illegalConversionError("object")
+  def -(key: String): JObject = illegalConversionError("object")
 
   def asLongArray = asArray.map(_.asLong)
   def asIntArray = asArray.map(_.asInt)
