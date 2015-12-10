@@ -363,11 +363,12 @@ object J {
           case (k: String, v: Any) => k -> apply(v)
         }
       )
-      case value: Map[_,_] => JObject(
-        value.asInstanceOf[Map[String,Any]].map{
-          case (k: String, v: Any) => k -> apply(v)
-        }.toMap
+      case value: Map[_,_] => apply(ListMap(value.toList:_*))
+      /* TODO. Make this work:
+       case value: Iterable[(String,_)] => apply(
+        ListMap(value:_*)
       )
+       */
       case value: Iterable[_] => JArray(value.map(apply(_)).toSeq)
       case value: Array[_] => JArray(value.map(apply(_)).toSeq)
       case `None` => JNull

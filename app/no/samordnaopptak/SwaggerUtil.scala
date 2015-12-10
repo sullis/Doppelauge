@@ -217,9 +217,11 @@ object SwaggerUtil{
     J.obj(
       dataType.name -> J.obj(
         "required"   -> fields.filter(_.required).map(_.name),
-        "properties" -> fields.map( field =>
-          field.name -> getTypeFromField(field)
-        ).toMap
+        "properties" -> scala.collection.immutable.ListMap(
+          fields.map(
+            field => field.name -> getTypeFromField(field)
+          ):_*
+        )
       )
     )
   }

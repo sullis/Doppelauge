@@ -368,16 +368,16 @@ class JsonSpec extends Specification {
         "f" -> 6
       )
 
-      (json1 ++ json2).pp() === J.obj(
+      J.obj(
         "a" -> 1,
         "b" -> 2,
         "c" -> 3,
         "d" -> 4,
         "e" -> 5,
         "f" -> 6
-      ).pp()
+      ).pp() === (json1 ++ json2).pp()
 
-      (json1 ++ json2).pp() === J(
+      J(
         PJson.obj(
           "a" -> 1,
           "b" -> 2,
@@ -386,9 +386,9 @@ class JsonSpec extends Specification {
           "e" -> 5,
           "f" -> 6
         )
-      ).pp()
+      ).pp() === (json1 ++ json2).pp()
 
-      (json1 ++ json2).pp() === J(
+      J(
         play.api.libs.json.JsObject(
           Seq(
             "a" -> PJson.toJson(1),
@@ -399,7 +399,7 @@ class JsonSpec extends Specification {
             "f" -> PJson.toJson(6)
           )
         )
-      ).pp()
+      ).pp() === (json1 ++ json2).pp()
 
     }
 
