@@ -50,6 +50,32 @@ trait JValue {
   def asNumber: BigDecimal = illegalConversionError("number")
   def asBoolean: Boolean = illegalConversionError("boolean")
 
+  /**
+    * @note object must be an array
+    */
+  def map(converter: JValue => JValue): JValue =
+    illegalConversionError("array")
+
+  /**
+    * @note object must be an array
+    */
+  def foreach(func: JValue => Unit): Unit =
+    illegalConversionError("array")
+
+  /*
+  /**
+    * @note object must be an array
+    */
+  def filter(filterFunc: JValue => Boolean): JValue =
+    illegalConversionError("array")
+   */
+
+  /**
+    * @note object must be an array, and the function must return a JBoolean
+    */
+  def filter(filterFunc: JValue => JValue): JValue =
+    illegalConversionError("array")
+
   def isArray: Boolean = false
   def isObject: Boolean = false
   def isNumber: Boolean = false
@@ -63,7 +89,26 @@ trait JValue {
   def size: Int = illegalConversionError("object or array")
 
   def ++(other: JValue): JObject = illegalConversionError("object")
-  def -(key: String): JObject = illegalConversionError("object")
+  def -(key: String): JValue     = illegalConversionError("object")
+  def +(other: String): JValue   = illegalConversionError("string")
+  def +(other: BigDecimal): JValue   = illegalConversionError("number")
+  def -(other: BigDecimal): JValue   = illegalConversionError("number")
+  def *(other: BigDecimal): JValue   = illegalConversionError("number")
+  def /(other: BigDecimal): JValue   = illegalConversionError("number")
+  def +(other: JValue): JValue   = illegalConversionError("number or string")
+  def -(other: JValue): JValue   = illegalConversionError("number")
+  def *(other: JValue): JValue   = illegalConversionError("number")
+  def /(other: JValue): JValue   = illegalConversionError("number")
+
+  def ==(other: BigDecimal): JValue   = illegalConversionError("number")
+  def !=(other: BigDecimal): JValue   = illegalConversionError("number")
+  def >(other: BigDecimal): JValue   = illegalConversionError("number")
+  def <(other: BigDecimal): JValue   = illegalConversionError("number")
+  def >=(other: BigDecimal): JValue   = illegalConversionError("number")
+  def <=(other: BigDecimal): JValue   = illegalConversionError("number")
+
+  def &&(other: JValue): JValue   = illegalConversionError("boolean")
+  def ||(other: JValue): JValue   = illegalConversionError("boolean")
 
   def asLongArray = asArray.map(_.asLong)
   def asIntArray = asArray.map(_.asInt)
@@ -241,18 +286,74 @@ case class JNumber(value: BigDecimal) extends JValue{
   override def asNumber = value
   override def isNumber = true
   override def asJsValue = JsNumber(value)
+
+  // dynamic typing with JValue:
+
+  override def +(other: BigDecimal): JValue =
+    JNumber(value + other)
+
+  override def -(other: BigDecimal): JValue =
+    JNumber(value - other)
+
+  override def *(other: BigDecimal): JValue =
+    JNumber(value * other)
+
+  override def /(other: BigDecimal): JValue =
+    JNumber(value / other)
+
+  override def ==(other: BigDecimal): JValue =
+    JBoolean(value == other)
+
+  override def !=(other: BigDecimal): JValue =
+    JBoolean(value != other)
+
+  override def >(other: BigDecimal): JValue =
+    JBoolean(value > other)
+
+  override def <(other: BigDecimal): JValue =
+    JBoolean(value < other)
+
+  override def <=(other: BigDecimal): JValue =
+    JBoolean(value <= other)
+
+  override def >=(other: BigDecimal): JValue =
+    JBoolean(value >= other)
+
+  override def +(other: JValue): JValue =
+    JNumber(value + other.asNumber)
+
+  override def -(other: JValue): JValue =
+    JNumber(value - other.asNumber)
+
+  override def *(other: JValue): JValue =
+    JNumber(value * other.asNumber)
+
+  override def /(other: JValue): JValue =
+    JNumber(value / other.asNumber)
 }
 
 case class JString(value: String) extends JValue{
   override def asString = value
   override def isString = true
   override def asJsValue = JsString(value)
+
+  override def +(other: String): JValue =
+    JString(value + other)
+
+  override def +(other: JValue): JValue =
+    JString(value + other.asString)
 }
 
 case class JBoolean(value: Boolean) extends JValue{
   override def asBoolean = value
   override def isBoolean = true
   override def asJsValue = JsBoolean(value)
+
+  override def &&(other: JValue): JValue =
+    JBoolean(value && other.asBoolean)
+
+  override def ||(other: JValue): JValue =
+    JBoolean(value || other.asBoolean)
 }
 
 /**
@@ -284,8 +385,14 @@ case class JObject(value: ListMap[String, JValue]) extends JValue{
     JObject(result)
   }
 
+  /**
+    * Throws exception if key doesn't exist in the object
+    */
   override def -(key: String): JObject =
-    JObject(value - key)
+    if (!value.contains(key))
+      throw new JsonMergeObjectsException("JObject.-: key not found: "+key)
+    else
+      JObject(value - key)
 }
 
 object JObject{
@@ -299,6 +406,22 @@ case class JArray(value: Seq[JValue]) extends JValue{
   override def asJsValue = asJsArray
   override def asJsArray = JsArray(value.map(_.asJsValue))
   override def size = value.size
+
+  override def map(converter: JValue => JValue): JValue =
+    JArray(value.map(converter))
+
+  override def foreach(func: JValue => Unit): Unit =
+    value.foreach(func)
+
+  /*
+  override def filter(filterFunc: JValue => Boolean): JValue =
+    JArray(value.filter(filterFunc))
+   */
+  
+  override def filter(filterFunc: JValue => JValue): JValue =
+    JArray(value.filter(filterFunc(_).asBoolean))
+
+
 /*
   override def ++(other: JValue): JObject =
     JArray(value ++ other.asArray)

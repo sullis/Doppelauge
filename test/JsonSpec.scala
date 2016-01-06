@@ -190,6 +190,15 @@ class JsonSpec extends Specification {
 
       json("anobjectarray")(-1) must throwA[JsonException] // too low
       json("anobjectarray")(2) must throwA[JsonException] // too high
+
+      J.arr(2,3,4,5).map(_ + 1) === J.arr(3,4,5,6)
+      J.arr(2,3,4,5).filter(_  > 3) === J.arr(4,5)
+
+      var result = List[Int]()
+      J.arr(2,3,4,5).foreach(n =>
+        result = n.asInt::result
+      )
+      result === List(5,4,3,2)
     }
 
     "multiple types" in {
@@ -300,6 +309,45 @@ class JsonSpec extends Specification {
       J.obj("a" -> 1, "b" -> 2) must equalTo(J.obj("a" -> 1, "b" -> 2))
       J.obj("a" -> 1, "b" -> 2) must equalTo(J.obj("b" -> 2, "a" -> 1))
       J.obj("a" -> 1, "b" -> 2) must not equalTo(J.obj("a" -> 1, "b" -> 3))
+    }
+
+    "Math 1" in {
+      J(5) + J(9)    === J(14)
+      J(5) - J(10.1) === J(-5.1)
+      J(2) * J(1.5)  === J(3.0)
+      J(2) * J(1.5)  === J(3)
+      J(3) / J(2)    === J(1.5)
+
+      J(3) == J(3.0) === true
+      J(3) == J(4)   === false
+
+      J(3) != J(2)   === true
+      J(3) != J(3.0) === false
+    }
+
+    "Math 2" in {
+      J(5) + 9    === J(14)
+      J(5) - 10.1 === J(-5.1)
+      J(2) * 1.5  === J(3.0)
+      J(2) * 1.5  === J(3)
+      J(3) / 2    === J(1.5)
+    }
+
+    "Strings" in {
+      J("ab") + J("cd") === J("abcd")
+      J("ab") + "cd" === J("abcd")
+    }
+
+    "Boolean" in {
+      (J(true)  && J(true))  === J(true)
+      (J(true)  && J(false)) === J(false)
+      (J(false) && J(true))  === J(false)
+      (J(false) && J(false)) === J(false)
+
+      (J(true)  || J(true))  === J(true)
+      (J(true)  || J(false)) === J(true)
+      (J(false) || J(true))  === J(true)
+      (J(false) || J(false)) === J(false)
     }
 
     "Ensure error messages contain the undefined field name" in {
