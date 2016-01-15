@@ -17,5 +17,8 @@ scalacOptions in (Compile,doc) := Seq("-groups", "-implicits")
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 
 // Don't generate scaladoc for the "controller" and "router" packages
-scalacOptions in (Compile, doc) := List("-skip-packages", "controllers:router")
+scalacOptions in (Compile, doc) := List(
+  "-skip-packages",  "controllers:router",
+  "-doc-source-url", "http://folk.uio.no/ksvalast/redirect_doppelauge_doc.php?url=€{FILE_PATH}.scala"
+)
 
