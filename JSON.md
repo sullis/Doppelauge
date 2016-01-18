@@ -70,7 +70,7 @@ Change the content of a json value in a safe and descriptive manner.
   
 Firstly, the name is misleading. JsonChanger is not *changing* (i.e mutating) the values. It returns a new value.
 
-The main function, [JsonChanger.apply](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$apply) takes two arguments: **json_value** and **changer**.
+The main function, [JsonChanger.apply](http://folk.uio.no/ksvalast/doppelauge/index.html#no.samordnaopptak.json.JsonChanger$@apply%28json_value:Any,changer:Any,path:String,allow_mismatched_types:Boolean%29:no.samordnaopptak.json.JValue) takes two arguments: **json_value** and **changer**.
 The **changer** variable has similarities to the **matcher** variable used in [JsonMatcher](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonMather$), but while
 JsonMatcher only returns **true** or **false**, JsonChanger returns a new Json value.
    
@@ -79,14 +79,14 @@ When changing a json value with JsonChanger, it also checks that pattern against
 should make bugs appear earlier than they would have been othervice.
 (You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
    
-There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See the scala doc for examples.
+There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See [scala doc](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$) for examples.
 Custom changers can be also be created from the outside of JsonChanger by implementing the *Changer* trait.
    
 The pattern matcher in JsonChanger checks that:
 
- 1) A json value doesn't change type (unless we tell it to)
- 2) We don't add or remove fields to objects (unless we tell it to)
- 3) We don't add or remove values to arrays (unless we tell it to)
+  1. A json value doesn't change type (unless we tell it to)
+  2. We don't add or remove fields to objects (unless we tell it to)
+  3. We don't add or remove values to arrays (unless we tell it to)
 
 When matching fails, the error messages contain description with full path.
 
