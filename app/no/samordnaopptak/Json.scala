@@ -128,8 +128,9 @@ trait JValue {
   def asOption[R](command: JValue => R): Option[R] =
     Some(command(this))
 
-  def getOrElse[R](command: JValue => R, orElseValue: R): R =
-    command(this)
+  def getOrElse(orElseValue: Any): JValue =
+    this
+
 
   /**
     * @example
@@ -432,7 +433,7 @@ case class JUndefined(key: String, parent: JValue) extends JValue{
   override def pp() = "Undefined key '"+key+"' in " + parent.pp()
   override def error = throw new JsonException("""Trying to access key """"+key+"""", which is not found in """+parent)
   override def asOption[R](command: JValue => R): Option[R] = None
-  override def getOrElse[R](command: JValue => R, orElseValue: R): R = orElseValue
+  override def getOrElse(orElseValue: Any): JValue = J(orElseValue)
   override val isDefined = false
   override def asJsValue = JsNull
 }
@@ -441,7 +442,7 @@ object JNull extends JValue {
   override def asJsValue = JsNull
   override def isNull = true
   override def asOption[R](command: JValue => R): Option[R] = None
-  override def getOrElse[R](command: JValue => R, orElseValue: R): R = orElseValue
+  override def getOrElse(orElseValue: Any): JValue = J(orElseValue)
   override val isDefined = false
 }
 

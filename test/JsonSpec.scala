@@ -180,8 +180,20 @@ class JsonSpec extends Specification {
 
     "getOrElse" in {
       json("nothere").isInstanceOf[JUndefined] must beTrue
-      json("nothere").getOrElse(_.asLong, 50) === 50
-      json("adouble").getOrElse(_.asDouble, 50) === 2.3
+      json("nothere").getOrElse(50) === J(50)
+      json("adouble").getOrElse(50) === J(2.3)
+    }
+
+    "map object" in {
+
+      J(
+        json.asMap.map {
+          case ("adouble",   value: JValue) => "adouble" -> 9.88
+          case (key: String, value: JValue) => key       -> value
+        }
+      ) === json - "adouble" ++ J.obj("adouble" -> 9.88)
+
+      true
     }
 
     "array" in {
