@@ -208,7 +208,7 @@ object JsonChanger{
 
 
   /**
-    * Apply a change to a json value if the field is present in an object.
+    * Apply a change to a json value if the json value is defined.
     * 
     * @note Must be used if it is uncertain whether a field is present in an object.
     * 
@@ -233,13 +233,32 @@ object JsonChanger{
           )
         ) ===
         J.obj()
+
+        JsonChanger(
+          null,
+          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+        ) ===
+        JNull
+
+        JsonChanger(
+          90,
+          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+        ) ===
+        91
+      )
+
     }}}
     * 
     */
-  case class Maybe(changer: Any) extends JValue {
+  case class Maybe(changer: Any) extends Changer {
     val j_changer = J(changer)
-    override def pp() = "Maybe: "+j_changer.pp()
-    override def asJsValue = JsString(pp())
+    override def pp() = "Maybe("+j_changer.pp()+")"
+
+    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+      if (json.isDefined)
+        JsonChanger.apply(json, changer, path, allow_mismatched_types)
+      else
+        json
   }
 
 
@@ -547,7 +566,10 @@ object JsonChanger{
         key -> apply(value, forceNewField.changer, path+"."+key)
 
       case maybeChanger: Maybe =>
-        applyChanger(key, value, maybeChanger.j_changer)
+        if (value.isDefined)
+          applyChanger(key, value, maybeChanger.j_changer)
+        else
+          key -> value
 
       case `___removeThisField` =>
         key -> changer

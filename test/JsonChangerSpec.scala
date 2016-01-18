@@ -39,6 +39,24 @@ class JsonChangerSpec extends Specification {
       )
     }
 
+    "Maybe" in {
+      JsonMatcher.matchJson(
+        JsonChanger(
+          null,
+          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+        ),
+        JNull
+      )
+
+      JsonMatcher.matchJson(
+        JsonChanger(
+          90,
+          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+        ),
+        91
+      )
+    }
+
     "Change object" in {
 
       JsonMatcher.matchJson(
@@ -117,7 +135,21 @@ class JsonChangerSpec extends Specification {
         J.obj()
       )
 
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(
+            "aaa" -> null
+          ),
+          J.obj(
+            "aaa" -> JsonChanger.Maybe(50)
+          )
+        ),
+        J.obj(
+          "aaa" -> null
+        )
+      )
     }
+
 
     "Add fields to objects" in {
 

@@ -547,6 +547,7 @@ object J {
       case value: Boolean => JBoolean(value)
       case value: ListMap[_,_] => JObject(
         value.asInstanceOf[ListMap[String,Any]].map{
+          case (k: String, null)   => k -> JNull // don't know exactly why this is necessary, but we get error if null is not handled explicitly.
           case (k: String, v: Any) => k -> apply(v)
         }
       )
