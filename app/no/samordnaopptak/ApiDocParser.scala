@@ -175,10 +175,10 @@ object ApiDocParser{
 
     def toJson =
       methodAndUri.toJson ++
-    description.toJson ++
-    addMaybe(parameters, "parameters") ++
-    addMaybe(errors, "errors") ++
-    addMaybe(results)
+      description.toJson ++
+      addMaybe(parameters, "parameters") ++
+      addMaybe(errors, "errors") ++
+      addMaybe(results)
   }
 
   case class ApiDocs(apiDocs: List[ApiDoc]) extends ApiDocElement{

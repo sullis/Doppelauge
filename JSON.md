@@ -77,12 +77,9 @@ The **changer** variable has similarities to the **matcher** variable used in [J
 JsonMatcher only returns **true** or **false**, JsonChanger returns a new Json value.
    
 The most important similarity between JsonChanger and JsonMatcher is that they both do pattern matching.
-When changing a json value with JsonChanger, it also checks that pattern against the changer. This pattern matching
+When changing a json value with JsonChanger, it also pattern matches the **json_value** against the **changer**. This pattern matching
 should make bugs appear earlier than they would have been othervice.
 (You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
-   
-There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See [scala doc](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$) for examples.
-Custom changers can be also be created from outside JsonChanger by implementing the *Changer* trait.
    
 The pattern matcher in JsonChanger checks that:
 
@@ -92,6 +89,9 @@ The pattern matcher in JsonChanger checks that:
 
 When matching fails, the error messages contain description with full path.
 
+There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See [scala doc](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$) for examples.
+Custom changers can be also be created from outside JsonChanger by implementing the *Changer* trait.
+   
 ScalaDoc: [JsonChanger](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$)
 
 
