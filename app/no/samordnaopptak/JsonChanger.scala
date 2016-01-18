@@ -138,7 +138,7 @@ object JsonChanger{
         J.obj()
       )
     * }}}
-    * Othervice, an exception is thrown if the field doesn't exist. If you want to create a new field no matter what, [[ForceNewField]] must be used instead.
+    * Othervice, an exception is thrown if the field doesn't exist. If you want to create a new field no matter what, a combination of [[JsonChanger.Maybe]]([[___removeThisField]]) and [[NewField]] can be used instead.
     */ 
   case class ChangeThisField(newFieldNameAndChanger: (String, Any)) extends JValue {
     val newFieldName = newFieldNameAndChanger._1

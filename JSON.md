@@ -4,6 +4,8 @@ J
 
 * Similar to Play framework's 'Json' object, but quicker to use for testing and parsing.
 * Values can easily be converted between the "J" format (called 'JValue') and the play framework format (called 'JsValue').
+* J is safer than Play framework's 'Json' object since it doesn't allow key clash when creating and merging objects.
+* J guarantees to maintain object field order. Play framework's 'Json' object does not.
 * Scaladoc: [J](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.J$)
 
 

@@ -510,6 +510,8 @@ object JNull extends JValue {
 
 /**
   * Similar to Play framework's "Json" object, but quicker to use for testing and parsing.
+  * @note J is safer than Play framework's 'Json' object since it doesn't allow key clash when creating and merging objects.
+  * @note J guarantees to maintain object field order. Play framework's 'Json' object does not.
   * @see [[https://github.com/sun-opsys/doppelauge/blob/master/test/JsonUtilSpec.scala]] for examples
   */
 object J {
