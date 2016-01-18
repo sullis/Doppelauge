@@ -62,3 +62,62 @@ class JsonMatcherSpec extends Specification {
   }
 }
 ```
+
+
+JsonChanger
+===========
+Change the content of a json value in a safe and descriptive manner.
+  
+Firstly, the name is misleading. JsonChanger is not *changing* (i.e mutating) the values. It returns a new value.
+
+The main function, [JsonChanger.apply](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$apply) takes two arguments: **json_value** and **changer**.
+The **changer** variable has similarities to the **matcher** variable used in [JsonMatcher](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonMather$), but while
+JsonMatcher only returns **true** or **false**, JsonChanger returns a new Json value.
+   
+The most important similarity between JsonChanger and JsonMatcher is that they both do pattern matching.
+When changing a json value with JsonChanger, it also checks that pattern against the changer. This pattern matching
+should make bugs appear earlier than they would have been othervice.
+(You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
+   
+There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See the scala doc for examples.
+Custom changers can be also be created from the outside of JsonChanger by implementing the *Changer* trait.
+   
+The pattern matcher in JsonChanger checks that:
+
+ 1) A json value doesn't change type (unless we tell it to)
+ 2) We don't add or remove fields to objects (unless we tell it to)
+ 3) We don't add or remove values to arrays (unless we tell it to)
+
+When matching fails, the error messages contain description with full path.
+
+ScalaDoc: [JsonChanger](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$)
+
+
+```scala
+import org.specs2.mutable._
+
+import no.samordnaopptak.json.J
+import no.samordnaopptak.json.JsonMatcher._
+
+object {
+  val json = J.obj(
+    "aaa" -> 50,
+    "b" -> 1
+  )
+
+  // Change the value of "aaa" to 60 by using JsonChanger:
+  JsonChanger(
+    json,
+    J.obj(
+      "aaa" -> 60,
+      "b" -> ___identity
+    )
+  )
+
+  // Change the value of "aaa" to 60 manually:
+
+  json - "aaa" ++ J.obj(
+     "aaa" -> 60
+  )
+}
+```

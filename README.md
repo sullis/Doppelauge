@@ -2,11 +2,12 @@
 Doppelauge
 ==========
 
-Doppelauge is a set of four libraries for the Play Framework.
+Doppelauge is a set of five libraries for the Play Framework.
 All code should be thoroughly tested.
 
 * Json library: [J](JSON.md#j)
 * Json pattern matcher: [JsonMatcher](JSON.md#jsonmatcher)
+* Json value changer: [JsonChanger](JSON.md#jsonchanger)
 * Swagger 2.0 Api doc generator: [API_DOC.md](API_DOC.md)
 * Test by annotation test system: [TEST_BY_ANNOTATION.md](TEST_BY_ANNOTATION.md)
 

@@ -39,7 +39,7 @@ class JsonMatcherSpec extends Specification {
   * 
   *  @note The matcher and json values do not have to be [[JObject]] valuess (the result of calling 'J.obj'). [[matchJson]] understands a number of different types such as [[JValue]], JsValue (The play framework version of [[JValue]]), Map, String, Boolean, etc.
   * 
-  * @note JsonMatcher provides several custom matchers such as [[___anyString]], [[___anyNumber]], [[RegExp]], [[Custom]], etc. All of these matchers have [[matchJson]] examples, which might be useful to look at.
+  * @note JsonMatcher provides several custom matchers such as [[___anyString]], [[___anyNumber]], [[RegExp]], [[Custom]], etc. All of these matchers have examples.
   * 
   * @see [[https://github.com/sun-opsys/doppelauge/blob/master/test/JsonMatcherSpec.scala]] for more examples
   */
@@ -388,7 +388,7 @@ object JsonMatcher{
 
   private def matchJsonFailed(message: String, throwException: Boolean, path: String): Boolean =
     if (throwException)
-      throw new JsonMatcherException(message+"\n\npath: "+path+"\n\n *** Set JsonMatcher.verbose (or JsonMatcher.very_verbose) to true to get more details. ***\n\n", path)
+      throw new JsonMatcherException(message+"\n\npath: "+path+"\n\n *** Set JsonMatcher.verbose (or JsonMatcher.very_verbose) to true to get more details. ***\n\n ", path)
 //        throw new Exception(message+"\n\npath: "+path)
     else
       false
