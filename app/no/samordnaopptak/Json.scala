@@ -51,6 +51,53 @@ trait JValue {
   def asBoolean: Boolean = illegalConversionError("boolean")
 
   /**
+    * Less verbose way to map content of a json object
+    * 
+    * @example
+    {{{
+
+      // Example 1:
+
+      json.change {
+        case ("adouble", value: JValue) => "adouble" -> 9.87
+      }
+
+      // Is the same as:
+
+      J(
+        json.asMap.map {
+          case ("adouble",   value: JValue) => "adouble" -> 9.87
+          case (key: String, value: JValue) => key       -> value
+        }
+      )
+
+
+      // Example 2:
+
+      json.change {
+        case ("anint", _)               => J.___removeThisField
+        case ("adouble", value: JValue) => "adouble" -> 9.87
+      }
+
+     // is the same as:
+
+      J(
+        json.asMap.map {
+          case ("anint", _)                 => J.___removeThisField
+          case ("adouble",   value: JValue) => "adouble" -> 9.87
+          case (key: String, value: JValue) => key       -> value
+        }.filter(_ != J.___removeThisField)
+      )
+
+    }}}
+    * 
+    * @note There is no warning or exception thrown if trying to change a non-existing field.
+    * @see [[JsonChanger]] for a much safer way to change json values.
+    */
+  def change(converter: PartialFunction[(String, JValue), (String, Any)]): JValue =
+    illegalConversionError("object")
+
+  /**
     * @note object must be an array
     */
   def map(converter: JValue => JValue): JValue =
@@ -373,6 +420,20 @@ case class JObject(value: ListMap[String, JValue]) extends JValue{
   override def keys = value.keys.toSet
   override def hasKey(key: String) = keys.contains(key)
 
+  override def change(converter: PartialFunction[(String, JValue), (String, Any)]): JValue = {
+    J(
+      value.map(
+        converter
+          andThen {
+            case (a, b) => a -> b
+          }
+          orElse {
+            case (a, b) => a -> b
+          }
+      ).filter(_ != J.___removeThisField)
+    )
+  }
+
   /**
     * Throws exception if key clash
     */
@@ -586,6 +647,11 @@ object J {
    */
   def parseIt[R](jsonString: String)(command: JValue => R): R =
     command(parse(jsonString))
+
+  /**
+    * Used in conjunction with [[JValue.change]]
+    */
+  val ___removeThisField: (String, Any) = ("___remove_this_field___" -> "___remove_this_field___")
 
   /**
     * Does NOT throw exception if key clash. Might want to use {{{

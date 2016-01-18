@@ -323,6 +323,43 @@ class JsonSpec extends Specification {
       J.obj("a" -> 1, "b" -> 2) must not equalTo(J.obj("a" -> 1, "b" -> 3))
     }
 
+    "JObject.change" in {
+
+      json.change {
+        case ("adouble", value: JValue) => "adouble" -> 9.87
+      } ===
+      J(
+        json.asMap.map {
+          case ("adouble",   value: JValue) => "adouble" -> 9.87
+          case (key: String, value: JValue) => key       -> value
+        }
+      )
+
+      json.change {
+        case ("adouble", value: JValue) => "adouble" -> 9.87
+      } ===
+      json - "adouble" ++ J.obj("adouble" -> 9.87)
+
+
+      json.change {
+        case ("anint", _)               => J.___removeThisField
+        case ("adouble", value: JValue) => "adouble" -> 9.87
+      } ===
+      J(
+        json.asMap.map {
+          case ("anint", _)                 => J.___removeThisField
+          case ("adouble",   value: JValue) => "adouble" -> 9.87
+          case (key: String, value: JValue) => key       -> value
+        }.filter(_ != J.___removeThisField)
+      )
+
+      json.change {
+        case ("anint", _)               => J.___removeThisField
+        case ("adouble", value: JValue) => "adouble" -> 9.87
+      } ===
+      json - "anint" - "adouble" ++ J.obj("adouble" -> 9.87)
+    }
+
     "Math 1" in {
       J(5) + J(9)    === J(14)
       J(5) - J(10.1) === J(-5.1)
