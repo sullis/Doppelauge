@@ -79,7 +79,7 @@ JsonMatcher only returns **true** or **false**, JsonChanger returns a new Json v
 The most important similarity between JsonChanger and JsonMatcher is that they both do pattern matching.
 When changing a json value with JsonChanger, it also pattern matches the **json_value** against the **changer**. This pattern matching
 should make bugs appear earlier than they would have been othervice.
-(You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
+(You might argue that it would be better to first validate the **json_value** value against a schema instead, but this way you get validation for free, plus that the validation schema maintains itself automatically. Besides, it doesn't make sense to create a schema for smaller json structures used internally, for instance.)
    
 The pattern matcher in JsonChanger checks that:
 
