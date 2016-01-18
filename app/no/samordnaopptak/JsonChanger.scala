@@ -288,6 +288,63 @@ object JsonChanger{
         json
   }
 
+  /**
+    * Used in conjunction with [[AllowMismatchedTypes]]
+    */
+  object Expects extends Enumeration {
+    type Type = Value
+
+    /**
+      * Expects object
+      */
+    val Object = Value
+
+    /**
+      * Expects array
+      */
+    val Array = Value
+
+    /**
+      * Expects number
+      */
+    val Number = Value
+
+    /**
+      * Expects null
+      */
+    val Null = Value
+
+    /**
+      * Expects string
+      */
+    val String = Value
+
+    /**
+      * Expects boolean
+      */
+    val Boolean = Value
+
+    /**
+      * Expects undefined value. An undefined value is either null, or the result of trying to do e.g.
+      * {{{
+      J.obj()("hello")
+      * }}}
+      */
+    val Undefined = Value
+
+    /**
+      * Expects a defined value. Defined values are all values that are not undefined
+      * @see [[Undefined]]
+      */
+    val Defined = Value
+
+    /**
+      * Expects anything, both defined and undefined values
+      * @see [[Defined]] and [[Undefined]]
+      */
+    val Anything = Value
+  }
+
 
   /**
     *  Bypasses pattern matching
@@ -296,25 +353,41 @@ object JsonChanger{
     {{{
       JsonChanger(
         50,
-        JsonChanger.AllowMismatchedTypes("aiai")
+        JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Number, "aiai")
       ) === JString("aiai")
     }}}
     * 
-    * Implementation:
-    {{{
- case class AllowMismatchedTypes(changer: Any) extends Changer {
-    override def pp() = "AllowMismatchedTypes. changer: "+J(changer).pp()
-
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      JsonChanger.apply(json, changer, path, true)
-  }
-    }}}
+    * @param expectedType the input value must match expectedType. If the value type is unknown, [[Expects.Defined]] or [[Expects.Anything]] can be used.
+    * @see [[Expects]]
     */
-  case class AllowMismatchedTypes(changer: Any) extends Changer {
+  case class AllowMismatchedTypes(expectedType: Expects.Type, changer: Any) extends Changer {
     override def pp() = "AllowMismatchedTypes. changer: "+J(changer).pp()
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    import Expects._
+
+    private def validateValue(json: JValue, path: String): Unit = {
+
+      def maybeThrow(maybe: Boolean) =
+        if (!maybe)
+          throwChangeException("JsonChanger.AllowMismatchedTypes expected "+expectedType+", but found "+json.pp(), path)
+
+      expectedType match {
+        case Object    => maybeThrow(json.isObject)
+        case Array     => maybeThrow(json.isArray)
+        case Number    => maybeThrow(json.isNumber)
+        case Null      => maybeThrow(json.isNull)
+        case String    => maybeThrow(json.isString)
+        case Boolean   => maybeThrow(json.isBoolean)
+        case Undefined => maybeThrow(!json.isDefined)
+        case Defined   => maybeThrow(json.isDefined)
+        case Anything  => ()
+      }
+    }
+
+    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) = {
+      validateValue(json, path)
       JsonChanger.apply(json, changer, path, true)
+    }
   }
 
 

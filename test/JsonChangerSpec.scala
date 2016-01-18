@@ -643,6 +643,83 @@ class JsonChangerSpec extends Specification {
     }
 
 
+    "AllowMismatchedTypes type checking" in {
+
+      import JsonChanger.Expects
+      import JsonChanger.Expects._
+
+      def check(legalType: Expects.Type, json: Any) = {
+
+        def check2(testType: Expects.Type) = {
+
+          if (legalType != testType)
+            JsonChanger(
+              json,
+              JsonChanger.AllowMismatchedTypes(testType, "hello")
+            ) must throwA[JsonChangerException]
+          else
+            JsonChanger(
+              json,
+              JsonChanger.AllowMismatchedTypes(testType, "hello")
+            ) === J("hello")
+
+          JsonChanger(
+            json,
+            JsonChanger.AllowMismatchedTypes(Anything, "hello")
+          ) === J("hello")
+
+        }
+        
+        List(Object, Array, Number, Null, String, Boolean).foreach(check2)
+      }
+
+
+      check(Object, J.obj())
+      check(Array, J.arr())
+      check(Number, 50)
+      check(Number, 50.2)
+      check(Null, null)
+      check(String, "hello")
+      check(Boolean, true)
+
+
+      // Test Defined
+      //
+      JsonChanger(
+        50,
+        JsonChanger.AllowMismatchedTypes(Defined, "hello")
+      ) === J("hello")
+      
+      JsonChanger(
+        null,
+        JsonChanger.AllowMismatchedTypes(Defined, "hello")
+      ) must throwA[JsonChangerException]
+      
+      JsonChanger(
+        J.obj()("hello"),
+        JsonChanger.AllowMismatchedTypes(Defined, "hello")
+      ) must throwA[JsonChangerException]
+
+
+      // Test Undefined
+      //
+      JsonChanger(
+        50,
+        JsonChanger.AllowMismatchedTypes(Undefined, "hello")
+      ) must throwA[JsonChangerException]
+      
+      JsonChanger(
+        null,
+        JsonChanger.AllowMismatchedTypes(Undefined, "hello")
+      ) === J("hello")
+      
+      JsonChanger(
+        J.obj()("hello"),
+        JsonChanger.AllowMismatchedTypes(Undefined, "hello")
+      ) === J("hello")
+
+    }
+
     "Check type checking + use AllowMismatchedTypes to avoid throwing error" in {
 
       // obj vs. arr
@@ -654,7 +731,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj(),
-          JsonChanger.AllowMismatchedTypes(J.arr())
+          JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Object, J.arr())
         ),
         J.arr()
       )
@@ -668,7 +745,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(),
-          JsonChanger.AllowMismatchedTypes(J.obj())
+          JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Array, J.obj())
         ),
         J.obj()
       )
@@ -683,7 +760,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(J.arr(1)),
-          J.arr(JsonChanger.AllowMismatchedTypes(J.obj("a" -> 2)))
+          J.arr(JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Array, J.obj("a" -> 2)))
         ),
         J.arr(J.obj("a" -> 2))
       )
@@ -699,7 +776,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj("a" -> J.arr(1)),
-          J.obj("a" -> JsonChanger.AllowMismatchedTypes(J.obj("b" -> 3)))
+          J.obj("a" -> JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Array, J.obj("b" -> 3)))
         ),
         J.obj("a" -> J.obj("b" -> 3))
       )
@@ -707,12 +784,13 @@ class JsonChangerSpec extends Specification {
 
       JsonChanger(
         50,
-        JsonChanger.AllowMismatchedTypes(JsonChanger.Func(_.asInt.toString))
+        JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Number, JsonChanger.Func(_.asInt.toString))
       ) === JString("50")
 
       JsonChanger(
         50,
         JsonChanger.AllowMismatchedTypes(
+          JsonChanger.Expects.Number,
           JsonChanger.Func(_.asInt.toString)
         )
       ) === JString("50")
