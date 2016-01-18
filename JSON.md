@@ -80,7 +80,7 @@ should make bugs appear earlier than they would have been othervice.
 (You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
    
 There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See [scala doc](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$) for examples.
-Custom changers can be also be created from the outside of JsonChanger by implementing the *Changer* trait.
+Custom changers can be also be created from outside JsonChanger by implementing the *Changer* trait.
    
 The pattern matcher in JsonChanger checks that:
 
@@ -97,7 +97,8 @@ ScalaDoc: [JsonChanger](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaoppta
 import org.specs2.mutable._
 
 import no.samordnaopptak.json.J
-import no.samordnaopptak.json.JsonMatcher._
+import no.samordnaopptak.json.JsonChanger
+import no.samordnaopptak.json.JsonChanger._
 
 object {
   val json = J.obj(
