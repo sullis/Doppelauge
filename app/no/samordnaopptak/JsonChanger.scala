@@ -76,7 +76,7 @@ object JsonChanger{
 
     /**
       The transformer virtual method.
-      @param allow_mismatched_types Must be forwarded if calling [[JsonChanger.apply]], unless you want to explicitly override type mismatching to fail or succeed (see [[AllowMismatchedTypes]]).
+      @param allow_mismatched_types Must be forwarded if calling [[JsonChanger.apply]], unless you want to explicitly override type mismatching to fail or succeed (see [[TypeChange]]).
       */
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean): Any
   }
@@ -122,17 +122,15 @@ object JsonChanger{
       J.obj("bbb" -> 50)
     * }}}
     * 
-    * ChangeThisField can also be surrounded with [[Maybe]]:
+    * If it's uncertain whether the field exists in the input json value, [[Maybe]] can be applied to the changer:
     * {{{
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj(),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(
-                       JsonChanger.ChangeThisField(
-                         "bbb" -> JsonChanger___identity
-                       )
-                    )
+            "aaa" -> JsonChanger.ChangeThisField(
+                       "bbb" -> JsonChanger.Maybe(JsonChanger___identity)
+                     )
           )
         ),
         J.obj()
@@ -289,7 +287,7 @@ object JsonChanger{
   }
 
   /**
-    * Used in conjunction with [[AllowMismatchedTypes]]
+    * Used in conjunction with [[TypeChange]]
     */
   object Expects extends Enumeration {
     type Type = Value
@@ -346,6 +344,28 @@ object JsonChanger{
   }
 
 
+  private def validateType(expectedType: Expects.Type, json: JValue, path: String): Unit = {
+
+    import Expects._
+
+    def maybeThrow(maybe: Boolean) =
+      if (!maybe)
+        throwChangeException("JsonChanger.TypeChange expected "+expectedType+", but found "+json.pp(), path)
+
+    expectedType match {
+      case Object    => maybeThrow(json.isObject)
+      case Array     => maybeThrow(json.isArray)
+      case Number    => maybeThrow(json.isNumber)
+      case Null      => maybeThrow(json.isNull)
+      case String    => maybeThrow(json.isString)
+      case Boolean   => maybeThrow(json.isBoolean)
+      case Undefined => maybeThrow(!json.isDefined)
+      case Defined   => maybeThrow(json.isDefined)
+      case Anything  => ()
+    }
+  }
+
+
   /**
     *  Bypasses pattern matching
     * 
@@ -353,39 +373,18 @@ object JsonChanger{
     {{{
       JsonChanger(
         50,
-        JsonChanger.AllowMismatchedTypes(JsonChanger.Expects.Number, "aiai")
+        JsonChanger.TypeChange(JsonChanger.Expects.Number, "aiai")
       ) === JString("aiai")
     }}}
     * 
     * @param expectedType the input value must match expectedType. If the value type is unknown, [[Expects.Defined]] or [[Expects.Anything]] can be used.
     * @see [[Expects]]
     */
-  case class AllowMismatchedTypes(expectedType: Expects.Type, changer: Any) extends Changer {
-    override def pp() = "AllowMismatchedTypes. changer: "+J(changer).pp()
-
-    import Expects._
-
-    private def validateValue(json: JValue, path: String): Unit = {
-
-      def maybeThrow(maybe: Boolean) =
-        if (!maybe)
-          throwChangeException("JsonChanger.AllowMismatchedTypes expected "+expectedType+", but found "+json.pp(), path)
-
-      expectedType match {
-        case Object    => maybeThrow(json.isObject)
-        case Array     => maybeThrow(json.isArray)
-        case Number    => maybeThrow(json.isNumber)
-        case Null      => maybeThrow(json.isNull)
-        case String    => maybeThrow(json.isString)
-        case Boolean   => maybeThrow(json.isBoolean)
-        case Undefined => maybeThrow(!json.isDefined)
-        case Defined   => maybeThrow(json.isDefined)
-        case Anything  => ()
-      }
-    }
+  case class TypeChange(expectedType: Expects.Type, changer: Any) extends Changer {
+    override def pp() = "TypeChange("+expectedType+", "+J(changer).pp()+")"
 
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) = {
-      validateValue(json, path)
+      validateType(expectedType, json, path)
       JsonChanger.apply(json, changer, path, true)
     }
   }
@@ -722,7 +721,7 @@ object JsonChanger{
     //println("JsonChanger.apply. path: "+path)
 
     def throwMatchException(match_type: String) =
-      throwChangeException(s"$json is not a $match_type. You can use AllowMismatchedTypes on the changer to avoid this. value: "+json.pp()+", changer: "+changer.pp(), path)
+      throwChangeException(s"$json is not a $match_type. You can use TypeChange on the changer to avoid this. value: "+json.pp()+", changer: "+changer.pp(), path)
 
     (json, changer, allow_mismatched_types) match {
 
@@ -771,10 +770,10 @@ object JsonChanger{
 
       // ...will fail. To allow mismatched types for array or object values, we must do this instead:
 
-      apply(J.arr(50), J.arr(AllowMismatchedTypes("hello"))
+      apply(J.arr(50), J.arr(TypeChange("hello"))
     }}}
     * 
-    The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transformer]]. In [[Changer.transformer]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with an [[AllowMismatchedTypes]] changer.
+    The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transformer]]. In [[Changer.transformer]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with an [[TypeChange]] changer.
     */
   def apply(json_value: Any, changer: Any, path: String = "", allow_mismatched_types: Boolean = false): JValue =
     apply(J(json_value), J(changer), path, allow_mismatched_types)
