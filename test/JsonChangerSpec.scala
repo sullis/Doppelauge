@@ -532,13 +532,18 @@ class JsonChangerSpec extends Specification {
         )
       )
 
+    }
+
+    "Check ChangeThisField + Maybe" in {
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj(
             "aaa" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.ChangeThisField("bbb" -> JsonChanger.Func(_ + 50)))
+            "aaa" -> JsonChanger.ChangeThisField(
+              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            )
           )
         ),
         J.obj(
@@ -546,20 +551,52 @@ class JsonChangerSpec extends Specification {
         )
       )
 
-
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj(
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.ChangeThisField("bbb" -> JsonChanger.Func(_ + 50)))
+            "aaa" -> JsonChanger.ChangeThisField(
+              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            )
           )
         ),
         J.obj(
         )
       )
-    }
 
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(
+            "aaa" -> null
+          ),
+          J.obj(
+            "aaa" -> JsonChanger.ChangeThisField(
+              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            )
+          )
+        ),
+        J.obj(
+          "bbb" -> null
+        )
+      )
+
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(
+            "aaa" -> 20
+          ),
+          J.obj(
+            "aaa" -> JsonChanger.ChangeThisField(
+              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            )
+          )
+        ),
+        J.obj(
+          "bbb" -> 70
+        )
+      )
+    }
 
     "Arrays" in {
 

@@ -179,7 +179,7 @@ object JsonChanger{
 
   /**
     * Same as [[NewField]], but does not throw exception if the field already exists. The argument is also a changer and not a value.
-    * If the key doesn't exist, the value to be changed will be an instance of [[JUndefined]].
+    * If the key doesn't exist, the input value to the changer will be an instance of [[JUndefined]].
     * 
     *  @example
     {{{
@@ -407,6 +407,8 @@ object JsonChanger{
   case class Map(transformer_func: JValue => Any) extends Changer {
     override def pp() = "Map"
 
+    // Perhaps Map should do type checking on the individual fields?
+
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json.isArray)
         json.asArray.map(transformer_func)
@@ -625,6 +627,7 @@ object JsonChanger{
     )
   }
 
+  // Needs cleanup
   private def changeObject(json: JObject, changer: JObject, path: String): JValue = {
 
     val allowOtherFields = changer.asMap.get(___allowOtherFields._1) != None
@@ -665,8 +668,9 @@ object JsonChanger{
             throwChangeException("No changer for key \""+key+"\" in "+changer.pp(), path)
 
         case Some(changer) => {
-          usedChangerKeys += key
-          applyChanger(key, value, changer)
+          val res = applyChanger(key, value, changer)
+          usedChangerKeys += res._1
+          res
         }
 
       }
@@ -683,14 +687,25 @@ object JsonChanger{
       case (key: String, forceNewField: ForceNewField) => key -> apply(JUndefined(key, json), forceNewField.changer, path+"."+key, true)
     }
 
-    // Check that all changer keys are used
-    {
-      val changerKeys = changer.asMap.keys.toSet
+    // Check that all changer keys are used (if there are bugs, it's probably better to rewrite than try to fix it)
+    if(true){
+      val changerKeys = changer.asMap.map{
+        case (key: String, changeThisField: ChangeThisField) => changeThisField.newFieldName
+        case (key: String, _) => key
+      }.toSet
 
       val maybeChangerKeys = changer.asMap.filter{
         case (key: String, value: Maybe) => true
+        case (key: String, changeThisField: ChangeThisField) if changeThisField.j_changer.isInstanceOf[Maybe] => true
         case _ => false
-      }.map(_._1)
+      }.map{
+        case (key: String, changeThisField: ChangeThisField) => changeThisField.newFieldName
+        case (key: String, _) => key
+      }.toSet
+
+      //println("changerKeys: "+changerKeys)
+      //println("usedChangerKeys: "+usedChangerKeys)
+      //println("maybeChangerKeys: "+maybeChangerKeys)
 
       val unusedChangerKeys = changerKeys -- usedChangerKeys -- maybeChangerKeys -- Set(___allowOtherFields._1) -- addedFieldsInChanger.map(_._1)
 
@@ -731,7 +746,7 @@ object JsonChanger{
       case (_,           _: JNumber,     _)  => throwMatchException("number")
       case (_,           _: JString,     _)  => throwMatchException("string")
       case (_,           _: JBoolean,    _)  => throwMatchException("boolean")
-      case (_,           _: JUndefined,  _)  => throwMatchException("boolean")
+      case (_,           _: JUndefined,  _)  => throwMatchException("undefined")
 
       case (_,           _,              _)  => changer
     }
