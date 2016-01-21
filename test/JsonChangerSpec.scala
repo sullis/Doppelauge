@@ -7,6 +7,9 @@ import no.samordnaopptak.json._
 
 class JsonChangerSpec extends Specification {
 
+  import JsonChanger._
+
+
   "JsonChanger" should {
 
     "Change number" in {
@@ -43,7 +46,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           null,
-          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+          Maybe(Func.number.number(_ + 1))
         ),
         JNull
       )
@@ -51,7 +54,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           90,
-          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+          Maybe(Func.number.number(_ + 1))
         ),
         91
       )
@@ -65,7 +68,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 50
           ),
           J.obj(
-            JsonChanger.___allowOtherFields
+            ___allowOtherFields
           )
         ),
         J.obj(
@@ -97,17 +100,20 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.___removeThisField
+            "aaa" -> ___removeThisField.number
           )
         ),
         J.obj()
       )
 
+      // test wrong type
       JsonMatcher.matchJson(
         JsonChanger(
-          J.obj(),
           J.obj(
-            "aaa" -> JsonChanger.___removeThisField
+            "aaa" -> 50
+          ),
+          J.obj(
+            "aaa" -> ___removeThisField.string
           )
         ),
         J.obj()
@@ -117,7 +123,17 @@ class JsonChangerSpec extends Specification {
         JsonChanger(
           J.obj(),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.___removeThisField)
+            "aaa" -> ___removeThisField.any
+          )
+        ),
+        J.obj()
+      ) must throwA[JsonChangerException]
+
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(),
+          J.obj(
+            "aaa" -> Maybe(___removeThisField.any)
           )
         ),
         J.obj()
@@ -129,7 +145,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.___removeThisField)
+            "aaa" -> Maybe(___removeThisField.number)
           )
         ),
         J.obj()
@@ -141,7 +157,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> null
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(50)
+            "aaa" -> Maybe(50)
           )
         ),
         J.obj(
@@ -160,7 +176,7 @@ class JsonChangerSpec extends Specification {
           ),
           J.obj(
             "aaa" -> 90,
-            "bbb" ->JsonChanger.NewField(100)
+            "bbb" ->NewField(100)
           )
         ),
         J.obj(
@@ -176,7 +192,7 @@ class JsonChangerSpec extends Specification {
         ),
         J.obj(
           "aaa" -> 90,
-          "bbb" -> JsonChanger.NewField(100)
+          "bbb" -> NewField(100)
         )
       ) must throwA[JsonChangerException]
 
@@ -191,7 +207,7 @@ class JsonChangerSpec extends Specification {
           ),
           J.obj(
             "aaa" -> 90,
-            "bbb" -> JsonChanger.ForceNewField(100)
+            "bbb" -> ForceNewField(100)
           )
         ),
         J.obj(
@@ -207,7 +223,7 @@ class JsonChangerSpec extends Specification {
           ),
           J.obj(
             "aaa" -> 90,
-            "bbb" -> JsonChanger.ForceNewField(100)
+            "bbb" -> ForceNewField(100)
           )
         ),
         J.obj(
@@ -223,8 +239,8 @@ class JsonChangerSpec extends Specification {
             "aaa" -> "hello"
           ),
           J.obj(
-            "aaa" -> JsonChanger.ForceNewField(JsonChanger.Func(_.getOrElse("[undefined]"))),
-            "bbb" -> JsonChanger.ForceNewField(JsonChanger.Func(_.getOrElse("[undefined]")))
+            "aaa" -> ForceNewField(Func.maybeString.string(_.getOrElse("[undefined]"))),
+            "bbb" -> ForceNewField(Func.maybeString.string(_.getOrElse("[undefined]")))
           )
         ),
         J.obj(
@@ -240,9 +256,9 @@ class JsonChangerSpec extends Specification {
             "ccc" -> 60
           ),
           J.obj(
-            "aaa" -> JsonChanger.ForceNewField(JsonChanger.Replace(40,100)),
-            "bbb" -> JsonChanger.ForceNewField(105),
-            "ccc" -> JsonChanger.ForceNewField(JsonChanger.Replace(60,110))
+            "aaa" -> ForceNewField(Replace(40,100)),
+            "bbb" -> ForceNewField(105),
+            "ccc" -> ForceNewField(Replace(60,110))
           )
         ),
         J.obj(
@@ -259,7 +275,7 @@ class JsonChangerSpec extends Specification {
           J.arr(
           ),
           J.arr(
-            JsonChanger.InsertValue(90)
+            InsertValue(90)
           )
         ),
         J.arr(
@@ -272,8 +288,8 @@ class JsonChangerSpec extends Specification {
             2
           ),
           J.arr(
-            JsonChanger.InsertValue(90),
-            JsonChanger.___identity
+            InsertValue(90),
+            ___identity.number
           )
         ),
         J.arr(
@@ -287,8 +303,8 @@ class JsonChangerSpec extends Specification {
             2
           ),
           J.arr(
-            JsonChanger.___identity,
-            JsonChanger.InsertValue(90)
+            ___identity.number,
+            InsertValue(90)
           )
         ),
         J.arr(
@@ -303,9 +319,9 @@ class JsonChangerSpec extends Specification {
             3
           ),
           J.arr(
-            JsonChanger.___identity,
-            JsonChanger.InsertValue(90),
-            JsonChanger.___identity
+            ___identity.number,
+            InsertValue(90),
+            ___identity.number
           )
         ),
         J.arr(
@@ -320,15 +336,23 @@ class JsonChangerSpec extends Specification {
       JsonChanger(
         J.arr(),
         J.arr(
-          JsonChanger.___removeValue
+          ___removeValue.any
         )
       ) must throwA[JsonChangerException]
 
       JsonChanger(
         J.arr(2),
         J.arr(
-          JsonChanger.___removeValue,
-          JsonChanger.___removeValue
+          ___removeValue.number,
+          ___removeValue.any
+        )
+      ) must throwA[JsonChangerException]
+
+      // test wrong type
+      JsonChanger(
+        J.arr(2),
+        J.arr(
+          ___removeValue.string
         )
       ) must throwA[JsonChangerException]
 
@@ -336,7 +360,7 @@ class JsonChangerSpec extends Specification {
         JsonChanger(
           J.arr(2),
           J.arr(
-            JsonChanger.___removeValue
+            ___removeValue.number
           )
         ),
         J.arr()
@@ -349,8 +373,8 @@ class JsonChangerSpec extends Specification {
             3
           ),
           J.arr(
-            JsonChanger.___removeValue,
-            JsonChanger.___identity
+            ___removeValue.number,
+            ___identity.number
           )
         ),
         J.arr(
@@ -365,8 +389,8 @@ class JsonChangerSpec extends Specification {
             3
           ),
           J.arr(
-            JsonChanger.___identity,
-            JsonChanger.___removeValue
+            ___identity.number,
+            ___removeValue.number
           )
         ),
         J.arr(
@@ -381,8 +405,8 @@ class JsonChangerSpec extends Specification {
             3
           ),
           J.arr(
-            JsonChanger.___removeValue,
-            JsonChanger.___removeValue
+            ___removeValue.number,
+            ___removeValue.number
           )
         ),
         J.arr()
@@ -396,9 +420,9 @@ class JsonChangerSpec extends Specification {
             4
           ),
           J.arr(
-            JsonChanger.___identity,
-            JsonChanger.___removeValue,
-            JsonChanger.___identity
+            ___identity.number,
+            ___removeValue.number,
+            ___identity.number
           )
         ),
         J.arr(2,4)
@@ -416,7 +440,7 @@ class JsonChangerSpec extends Specification {
       ) must throwA[JsonChangerException]
     }
 
-    "Check JsonChanger.Func" in {
+    "Check Func" in {
 
       JsonMatcher.matchJson(
         JsonChanger(
@@ -424,7 +448,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 30
           ),
           J.obj(
-            "aaa" -> JsonChanger.Func(_ + 50)
+            "aaa" -> Func.number.number(_ + 50)
           )
         ),
         J.obj(
@@ -434,7 +458,7 @@ class JsonChangerSpec extends Specification {
     }
 
 
-    "Check JsonChanger.Replace in object" in {
+    "Check Replace in object" in {
 
       JsonMatcher.matchJson(
         JsonChanger(
@@ -443,8 +467,8 @@ class JsonChangerSpec extends Specification {
             "bbb" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.Replace(30, 100),
-            "bbb" -> JsonChanger.Replace(30, 100)
+            "aaa" -> Replace(30, 100),
+            "bbb" -> Replace(30, 100)
           )
         ),
         J.obj(
@@ -454,7 +478,7 @@ class JsonChangerSpec extends Specification {
       )
     }
 
-    "Check JsonChanger.Maybe in object" in {
+    "Check Maybe in object" in {
 
       JsonMatcher.matchJson(
         JsonChanger(
@@ -462,7 +486,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 30
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(50)
+            "aaa" -> Maybe(50)
           )
         ),
         J.obj(
@@ -476,7 +500,7 @@ class JsonChangerSpec extends Specification {
           J.obj(
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(50)
+            "aaa" -> Maybe(50)
           )
         ),
         J.obj(
@@ -485,7 +509,7 @@ class JsonChangerSpec extends Specification {
     }
 
 
-    "Check JsonChanger.Maybe(JsonChanger.Func)" in {
+    "Check Maybe(Func)" in {
 
       JsonMatcher.matchJson(
         JsonChanger(
@@ -493,7 +517,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 30
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            "aaa" -> Maybe(Func.number.number(_ + 50))
           )
         ),
         J.obj(
@@ -507,7 +531,7 @@ class JsonChangerSpec extends Specification {
           J.obj(
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            "aaa" -> Maybe(Func.number.number(_ + 50))
           )
         ),
         J.obj(
@@ -524,14 +548,15 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.ChangeThisField("bbb" -> JsonChanger.Func(_ + 50))
+            "aaa" -> ChangeThisField(
+              "bbb" -> Func.number.number(_ + 50)
+            )
           )
         ),
         J.obj(
           "bbb" -> 100
         )
       )
-
     }
 
     "Check ChangeThisField + Maybe" in {
@@ -541,8 +566,8 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.ChangeThisField(
-              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            "aaa" -> ChangeThisField(
+              "bbb" -> Maybe(Func.number.number(_ + 50))
             )
           )
         ),
@@ -556,8 +581,8 @@ class JsonChangerSpec extends Specification {
           J.obj(
           ),
           J.obj(
-            "aaa" -> JsonChanger.ChangeThisField(
-              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            "aaa" -> ChangeThisField(
+              "bbb" -> Maybe(Func.number.number(_ + 50))
             )
           )
         ),
@@ -571,8 +596,8 @@ class JsonChangerSpec extends Specification {
             "aaa" -> null
           ),
           J.obj(
-            "aaa" -> JsonChanger.ChangeThisField(
-              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            "aaa" -> ChangeThisField(
+              "bbb" -> Maybe(Func.number.number(_ + 50))
             )
           )
         ),
@@ -587,8 +612,8 @@ class JsonChangerSpec extends Specification {
             "aaa" -> 20
           ),
           J.obj(
-            "aaa" -> JsonChanger.ChangeThisField(
-              "bbb" -> JsonChanger.Maybe(JsonChanger.Func(_ + 50))
+            "aaa" -> ChangeThisField(
+              "bbb" -> Maybe(Func.number.number(_ + 50))
             )
           )
         ),
@@ -620,7 +645,7 @@ class JsonChangerSpec extends Specification {
         JsonChanger(
           J.arr(5),
           J.arr(
-            JsonChanger.___allowOtherValues
+            ___allowOtherValues
           )
         ),
         J.arr(5)
@@ -632,7 +657,7 @@ class JsonChangerSpec extends Specification {
         ),
         J.obj(
           "hello" -> J.arr(
-                       JsonChanger.___allowOtherValues,
+                       ___allowOtherValues,
                        5
                      )
         )
@@ -660,7 +685,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(2,3),
-          J.arr(3, JsonChanger.Func(_ + 5))
+          J.arr(3, Func.number.number(_ + 5))
         ),
         J.arr(3,8)
       )
@@ -672,7 +697,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(2,3),
-          J.arr(JsonChanger.Replace(3, 5), JsonChanger.Replace(3, 5))
+          J.arr(Replace(3, 5), Replace(3, 5))
         ),
         J.arr(2, 5)
       )
@@ -682,32 +707,52 @@ class JsonChangerSpec extends Specification {
 
     "TypeChange type checking" in {
 
-      import JsonChanger.Expects
-      import JsonChanger.Expects._
+      import Expects._
 
-      def check(legalType: Expects.Type, json: Any) = {
+      def check(legalType: Type, json: Any) = {
 
-        def check2(testType: Expects.Type) = {
+        def check_input_type(testType: Type) = {
 
           if (legalType != testType)
             JsonChanger(
               json,
-              JsonChanger.TypeChange(testType, "hello")
+              TypeChange(testType, String, "hello")
             ) must throwA[JsonChangerException]
           else
             JsonChanger(
               json,
-              JsonChanger.TypeChange(testType, "hello")
+              TypeChange(testType, String, "hello")
             ) === J("hello")
 
           JsonChanger(
             json,
-            JsonChanger.TypeChange(Anything, "hello")
+            TypeChange(Any, String, "hello")
           ) === J("hello")
 
         }
         
-        List(Object, Array, Number, Null, String, Boolean).foreach(check2)
+        def check_output_type(testType: Type) = {
+
+          if (legalType != testType)
+            JsonChanger(
+              "hello",
+              TypeChange(String, testType, json)
+            ) must throwA[JsonChangerException]
+          else
+            JsonChanger(
+              "hello",
+              TypeChange(String, testType, json)
+            ) === J(json)
+
+          JsonChanger(
+            "hello",
+            TypeChange(String, Any, json)
+          ) === J(json)
+
+        }
+        
+        List(Object, Array, Number, Null, String, Boolean).foreach(check_input_type)
+        List(Object, Array, Number, Null, String, Boolean).foreach(check_output_type)
       }
 
 
@@ -724,37 +769,111 @@ class JsonChangerSpec extends Specification {
       //
       JsonChanger(
         50,
-        JsonChanger.TypeChange(Defined, "hello")
+        TypeChange(Defined, String, "hello")
       ) === J("hello")
       
       JsonChanger(
         null,
-        JsonChanger.TypeChange(Defined, "hello")
+        TypeChange(Defined, String, "hello")
       ) must throwA[JsonChangerException]
       
       JsonChanger(
         J.obj()("hello"),
-        JsonChanger.TypeChange(Defined, "hello")
+        TypeChange(Defined, String, "hello")
       ) must throwA[JsonChangerException]
 
 
-      // Test Undefined
+      // Test Undefined and null
       //
       JsonChanger(
         50,
-        JsonChanger.TypeChange(Undefined, "hello")
+        TypeChange(Undefined, String, "hello")
+      ) must throwA[JsonChangerException]
+      
+      JsonChanger(
+        50,
+        TypeChange(Null, String, "hello")
       ) must throwA[JsonChangerException]
       
       JsonChanger(
         null,
-        JsonChanger.TypeChange(Undefined, "hello")
+        TypeChange(Undefined, String, "hello")
+      ) === J("hello")
+      
+      JsonChanger(
+        null,
+        TypeChange(Null, String, "hello")
       ) === J("hello")
       
       JsonChanger(
         J.obj()("hello"),
-        JsonChanger.TypeChange(Undefined, "hello")
+        TypeChange(Undefined, String, "hello")
       ) === J("hello")
 
+
+      // Test Maybe
+      //
+      def test_maybe(type_ : Type, legal: Any, illegal: Any) = {
+        JsonChanger(
+          legal,
+          TypeChange(type_, type_, legal)
+        ) === J(legal)
+
+        JsonChanger(
+          None,
+          TypeChange(type_, type_, legal)
+        ) === J(legal)
+
+        JsonChanger(
+          legal,
+          TypeChange(type_, type_, None)
+        ) === JNull
+
+        JsonChanger(
+          None,
+          TypeChange(type_, type_, None)
+        ) === JNull
+
+        JsonChanger(
+          illegal,
+          TypeChange(type_, type_, legal)
+        ) must throwA[JsonChangerException]
+
+        JsonChanger(
+          legal,
+          TypeChange(type_, type_, illegal)
+        ) must throwA[JsonChangerException]
+      }
+
+      test_maybe(MaybeObject,  J.obj(),  "hello")
+      test_maybe(MaybeArray,   J.arr(),  "hello")
+      test_maybe(MaybeString,  "hello",  50)
+      test_maybe(MaybeNumber,  50,       "hello")
+      test_maybe(MaybeBoolean, true,     "hello")
+    }
+
+
+    "Check InputOutputTypeTransformer" in {
+
+      import Expects._
+
+      TypeChange._object._object(50) === TypeChange(Object, Object, 50)
+      TypeChange.array.array(50) === TypeChange(Array, Array, 50)
+      TypeChange.string.string(50) === TypeChange(String, String, 50)
+      TypeChange.number.number(50) === TypeChange(Number, Number, 50)
+      TypeChange.boolean.boolean(50) === TypeChange(Boolean, Boolean, 50)
+
+      TypeChange._null._null(50) === TypeChange(Null, Null, 50)
+      TypeChange.defined.defined(50) === TypeChange(Defined, Defined, 50)
+      TypeChange.undefined.undefined(50) === TypeChange(Undefined, Undefined, 50)
+
+      TypeChange.maybeObject.maybeObject(50) === TypeChange(MaybeObject, MaybeObject, 50)
+      TypeChange.maybeArray.maybeArray(50) === TypeChange(MaybeArray, MaybeArray, 50)
+      TypeChange.maybeString.maybeString(50) === TypeChange(MaybeString, MaybeString, 50)
+      TypeChange.maybeNumber.maybeNumber(50) === TypeChange(MaybeNumber, MaybeNumber, 50)
+      TypeChange.maybeBoolean.maybeBoolean(50) === TypeChange(MaybeBoolean, MaybeBoolean, 50)
+
+      TypeChange.any.any(50) === TypeChange(Any, Any, 50)
     }
 
     "Check type checking + use TypeChange to avoid throwing error" in {
@@ -769,7 +888,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj(),
-          JsonChanger.TypeChange(JsonChanger.Expects.Object, J.arr())
+          TypeChange(Expects.Object, Expects.Array, J.arr())
         ),
         J.arr()
       )
@@ -784,7 +903,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(),
-          JsonChanger.TypeChange(JsonChanger.Expects.Array, J.obj())
+          TypeChange(Expects.Array, Expects.Object, J.obj())
         ),
         J.obj()
       )
@@ -799,7 +918,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(J.arr(1)),
-          J.arr(JsonChanger.TypeChange(JsonChanger.Expects.Array, J.obj("a" -> 2)))
+          J.arr(TypeChange(Expects.Array, Expects.Object, J.obj("a" -> 2)))
         ),
         J.arr(J.obj("a" -> 2))
       )
@@ -815,7 +934,7 @@ class JsonChangerSpec extends Specification {
       JsonMatcher.matchJson(
         JsonChanger(
           J.obj("a" -> J.arr(1)),
-          J.obj("a" -> JsonChanger.TypeChange(JsonChanger.Expects.Array, J.obj("b" -> 3)))
+          J.obj("a" -> TypeChange(Expects.Array, Expects.Object, J.obj("b" -> 3)))
         ),
         J.obj("a" -> J.obj("b" -> 3))
       )
@@ -823,16 +942,9 @@ class JsonChangerSpec extends Specification {
 
       JsonChanger(
         50,
-        JsonChanger.TypeChange(JsonChanger.Expects.Number, JsonChanger.Func(_.asInt.toString))
+        Func.number.string(_.asInt.toString)
       ) === JString("50")
 
-      JsonChanger(
-        50,
-        JsonChanger.TypeChange(
-          JsonChanger.Expects.Number,
-          JsonChanger.Func(_.asInt.toString)
-        )
-      ) === JString("50")
 
       // Drop TypeChange checking from here on. It seems to work.
 
@@ -872,29 +984,51 @@ class JsonChangerSpec extends Specification {
     "Map" in {
       JsonChanger(
         J.obj("a" -> 2),
-        JsonChanger.Map(_ + 2)
+        Map.number.number(_ + 2)
       ) must throwA[JsonChangerException]
 
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(2,3),
-          JsonChanger.Map(_ + 2)
+          Map.number.number(_ + 9)
         ),
-        J.arr(4,5)
+        J.arr(11,12)
       )
+
+      try{
+        JsonChanger(
+          J.arr(11),
+          Map.string.number(_ + 2)
+        )
+      } catch {
+        case e: JsonChangerException =>
+          e.getMessage().contains("""expected a value of the type "string", but found 11 instead.""") must beTrue
+      }
+
+      try{
+        JsonChanger(
+          J.arr(11),
+          Map.number.string(_ + 2)
+        )
+      } catch {
+        case e: JsonChangerException =>
+          e.getMessage().contains("""expected a value of the type "string", but found 13 instead.""") must beTrue
+      }
+
+      true
     }
 
 
     "MapChanger" in {
       JsonChanger(
         J.obj("a" -> 2),
-        JsonChanger.MapChanger(50)
+        MapChanger(50)
       ) must throwA[JsonChangerException]
 
       JsonMatcher.matchJson(
         JsonChanger(
           J.arr(2,3),
-          JsonChanger.MapChanger(JsonChanger.Replace(3,9))
+          MapChanger(Replace(3,9))
         ),
         J.arr(2,9)
       )
@@ -916,7 +1050,7 @@ class JsonChangerSpec extends Specification {
             "aaa" -> J.arr(
               200,
               J.obj(
-                "bbb" -> J.arr(2,3,JsonChanger.Map(_ + 100))
+                "bbb" -> J.arr(2,3,Map.number.number(_ + 100))
               )
             )
           )
@@ -947,7 +1081,7 @@ class JsonChangerSpec extends Specification {
           json,
           J.obj(
             "aaa" -> 60,
-            "b" -> JsonChanger.___identity
+            "b" -> ___identity.number
           )
         )
       )

@@ -38,7 +38,7 @@ class JsonChangerException(message: String, val path: String) extends Exception(
     json,
     J.obj(
       "aaa" -> 60,
-      "b" -> ___identity
+      "b" -> ___identity.number
     )
   )
 
@@ -57,17 +57,255 @@ object JsonChanger{
     throw new JsonChangerException(message+"\n\npath: "+path+"\n\n ", path)
 
 
+
+  trait Type {
+    val typeName: String
+
+    def is(json: JValue): Boolean
+
+    private def throwIt(json: JValue, path: String) =
+      throwChangeException("JsonChanger.TypeValidator expected a value of the type \""+typeName+"\", but found "+json.pp() + " instead.", path)
+
+    /**
+      * Throw exception if type is incorrect
+      */
+    def validate(json: JValue, path: String) =
+      if (!is(json))
+        throwIt(json, path)
+  }
+
+
+
   /**
-    * Super class for changers. Custom Changers can be made and used from the outside of JsonChanger.
+    * Used in conjunction with [[TypeChange]], [[Func]], and [[Map]]
+    */
+  object Expects {
+
+    class Or(validators: Type*) extends Type {
+      val typeName = validators.map(_.typeName).mkString(" or ")
+      def is(json: JValue) = validators.exists(_.is(json))
+    }
+
+    object Or {
+      def apply(validators: Type*) =
+        new Or(validators:_*)
+    }
+
+    class And(validators: Type*) extends Type {
+      val typeName = validators.map(_.typeName).mkString(" and ")
+      def is(json: JValue) = validators.forall(_.is(json))
+    }
+
+    object And {
+      def apply(validators: Type*) =
+        new And(validators:_*)
+    }
+
+    /**
+      * Expects undefined or '''type_'''
+      */
+    class Maybe(type_ : Type) extends Or(type_, Undefined)
+
+    object Maybe {
+      def apply(type_ : Type) = new Maybe(type_)
+    }
+
+
+    /**
+      * Expects object
+      */
+    object Object extends Type{
+      val typeName = "object"
+      def is(json: JValue) = json.isObject
+    }
+
+    /**
+      * Expects array
+      */
+    object Array extends Type{
+      val typeName = "array"
+      def is(json: JValue) = json.isArray
+    }
+
+    /**
+      * Expects number
+      */
+    object Number extends Type{
+      val typeName = "number"
+      def is(json: JValue) = json.isNumber
+    }
+
+    /**
+      * Expects string
+      */
+    object String extends Type{
+      val typeName = "string"
+      def is(json: JValue) = json.isString
+    }
+
+    /**
+      * Expects boolean
+      */
+    object Boolean extends Type{
+      val typeName = "boolean"
+      def is(json: JValue) = json.isBoolean
+    }
+
+
+
+    /**
+      * Expects object or undefined
+      */
+    object MaybeObject extends Maybe(Object)
+
+    /**
+      * Expects array or undefined
+      */
+    object MaybeArray extends  Maybe(Array)
+
+    /**
+      * Expects number or undefined
+      */
+    object MaybeNumber extends Maybe(Number)
+
+    /**
+      * Expects string or undefined
+      */
+    object MaybeString extends Maybe(String)
+
+    /**
+      * Expects boolean or undefined
+      */
+    object MaybeBoolean extends Maybe(Boolean)
+
+
+
+    /**
+      * Expects null
+      */
+    object Null extends Type{
+      val typeName = "null"
+      def is(json: JValue) = json.isNull
+    }
+
+    /**
+      * Expects undefined value. An undefined value is either null, or the result of trying to do e.g.
+      * {{{
+      J.obj()("hello")
+      * }}}
+      */
+    object Undefined extends Type{
+      val typeName = "undefined"
+      def is(json: JValue) = !json.isDefined
+    }
+
+    /**
+      * Expects a defined value. Defined values are all values that are not undefined
+      * @see [[Undefined]]
+      */
+    object Defined extends Type{
+      val typeName = "defined"
+      def is(json: JValue) = json.isDefined
+    }
+
+    /**
+      * Expects anything, both defined and undefined values
+      * @see [[Defined]] and [[Undefined]]
+      */
+    object Any extends Type{
+      val typeName = "any"
+      def is(json: JValue) = true
+    }
+  }
+
+
+  trait InputTypeTransformer[R] {
+    protected def createFunc(input_type: Type): R
+
+    val _object = createFunc(Expects.Object)
+    val array = createFunc(Expects.Array)
+    val string = createFunc(Expects.String)
+    val number = createFunc(Expects.Number)
+    val boolean = createFunc(Expects.Boolean)
+
+    val _null = createFunc(Expects.Null)
+    val defined = createFunc(Expects.Defined)
+    val undefined = createFunc(Expects.Undefined)
+
+    val maybeObject = createFunc(Expects.MaybeObject)
+    val maybeArray = createFunc(Expects.MaybeArray)
+    val maybeString = createFunc(Expects.MaybeString)
+    val maybeNumber = createFunc(Expects.MaybeNumber)
+    val maybeBoolean = createFunc(Expects.MaybeBoolean)
+
+    val any = createFunc(Expects.Any)
+  }
+
+
+  trait InputOutputTypeTransformer[T,R] {
+
+    protected def createFunc(input_type: Type, output_type: Type, t: T): R
+
+    protected class F(expected_input_type: Type){
+
+      // elegant, but code using it just looks confusing
+      //def apply(t: T): R = createFunc(expected_input_type, expected_input_type, t)
+
+      def _object(t: T) = createFunc(expected_input_type, Expects.Object, t)
+      def array(t: T) = createFunc(expected_input_type, Expects.Array, t)
+      def string(t: T) = createFunc(expected_input_type, Expects.String, t)
+      def number(t: T) = createFunc(expected_input_type, Expects.Number, t)
+      def boolean(t: T) = createFunc(expected_input_type, Expects.Boolean, t)
+
+      def _null(t: T) = createFunc(expected_input_type, Expects.Null, t)
+      def defined(t: T) = createFunc(expected_input_type, Expects.Defined, t)
+      def undefined(t: T) = createFunc(expected_input_type, Expects.Undefined, t)
+
+      def maybeObject(t: T) = createFunc(expected_input_type, Expects.MaybeObject, t)
+      def maybeArray(t: T) = createFunc(expected_input_type, Expects.MaybeArray, t)
+      def maybeString(t: T) = createFunc(expected_input_type, Expects.MaybeString, t)
+      def maybeNumber(t: T) = createFunc(expected_input_type, Expects.MaybeNumber, t)
+      def maybeBoolean(t: T) = createFunc(expected_input_type, Expects.MaybeBoolean, t)
+
+      def any(t: T) = createFunc(expected_input_type, Expects.Any, t)
+    }
+
+    object _object extends F(Expects.Object)
+    object array extends F(Expects.Array)
+    object string extends F(Expects.String)
+    object number extends F(Expects.Number)
+    object boolean extends F(Expects.Boolean)
+
+    object _null extends F(Expects.Null)
+    object defined extends F(Expects.Defined)
+    object undefined extends F(Expects.Undefined)
+
+    object maybeObject extends F(Expects.MaybeObject)
+    object maybeArray extends F(Expects.MaybeArray)
+    object maybeString extends F(Expects.MaybeString)
+    object maybeNumber extends F(Expects.MaybeNumber)
+    object maybeBoolean extends F(Expects.MaybeBoolean)
+
+    object any extends F(Expects.Any)
+  }
+
+  /**
+    * Interface for custom changers.
     * 
     * @example
-    * This is the actual implementation of the [[JsonChanger.Func]] changer:
+    * This is the implementation of the [[JsonChanger.Replace]] changer:
     {{{
-  case class Func(func: JValue => Any) extends Changer {
-    override def pp() = "Func"
+  case class Replace(comparison_value: Any, to_changer: Any) extends Changer {
+    val j_comparison_value = J(comparison_value)
+    val j_to_changer = J(to_changer)
+
+    override def pp() = "JsonChanger.Replace(comparison: "+j_comparison_value.pp()+", to: "+j_to_changer.pp()+")"
 
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      JsonChanger.apply(json, func(json), path, allow_mismatched_types)
+      if (json==j_comparison_value)
+        JsonChanger.apply(json, j_to_changer, path, allow_mismatched_types)
+      else
+        json
   }
     }}}
     */
@@ -81,8 +319,14 @@ object JsonChanger{
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean): Any
   }
 
+
+
   /**
-    * Apply a custom function on a json value
+    * Apply a custom function on a json value.
+    * 
+    * The ''Func'' object has helper objects to create new Func changers less verbosely.
+    * For example, instead of writing ''new Func(Expects.Number, Expects.String, func)'',
+    * i.e. a function that takes a number as input argument, and produces a string, we can write ''Func.number.string(func)''.
     * 
     * @example
     {{{
@@ -91,18 +335,92 @@ object JsonChanger{
           "aaa" -> 30
         ),
         J.obj(
-          "aaa" -> JsonChanger.Func(_ + 50)
+          "aaa" -> Func.number.string(_.toString)
         )
       ) ===
-      J.obj("aaa" -> 80)
+      J.obj("aaa" -> "30")
     }}}
     */
-  case class Func(func: JValue => Any) extends Changer {
-    override def pp() = "Func"
+  case class Func(expected_input_type: Type, expected_output_type: Type, func: JValue => Any) extends Changer {
+    override def pp() = "Func("+expected_input_type.typeName+", "+expected_output_type.typeName+", <func>)"
+
+    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) = {
+      expected_input_type.validate(json, path)
+
+      val ret = JsonChanger.apply(json, func(json), path, true)
+
+      expected_output_type.validate(ret, path)
+
+      ret
+    }
+  }
+
+  object Func extends InputOutputTypeTransformer[JValue => Any, Func] {
+    protected def createFunc(expected_input_type: Type, expected_output_type: Type, func: JValue => Any) =
+      apply(expected_input_type, expected_output_type, func)
+  }
+
+
+  /**
+    * Map a function on array
+    * 
+    * @example
+    {{{
+        JsonChanger(
+          J.arr(2,3),
+          Map.number.number(_ + 2)
+        ) ===
+        J.arr(4,5)
+    }}}
+    * 
+    * @see [[InputOutputTypeTransformer]]
+    */
+  case class Map(expected_input_type: Type, expected_output_type: Type, transformer_func: JValue => Any) extends Changer {
+    override def pp() = "Map"
+
+    val func = Func(expected_input_type, expected_output_type, transformer_func)
 
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      JsonChanger.apply(json, func(json), path, allow_mismatched_types)
+      if (json.isArray)
+        json.asArray.map(func.transformer(_, path, allow_mismatched_types))
+      else
+        throwChangeException("JsonChanger.Map expects array. Found "+json.pp(), path)
   }
+
+  object Map extends InputOutputTypeTransformer[JValue => Any, Map] {
+    protected def createFunc(expected_input_type: Type, expected_output_type: Type, func: JValue => Any) =
+      apply(expected_input_type, expected_output_type, func)
+  }
+
+
+  /**
+    * Must be used if the output type is different from the input type
+    * 
+    * @example
+    {{{
+      JsonChanger(
+        50,
+        TypeChange.number.string("aiai") // <- input type is number, output type is string
+      ) === JString("aiai")
+    }}}
+    * 
+    * @see [[InputOutputTypeTransformer]]
+    */
+  case class TypeChange(expected_input_type: Type, expected_output_type: Type, changer: Any) extends Changer {
+    override def pp() = "TypeChange("+expected_input_type.typeName+", "+expected_output_type.typeName+", "+J(changer).pp()+")"
+
+    val func = new Func(expected_input_type, expected_output_type, _ => changer)
+
+    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+      func.transformer(json, path, allow_mismatched_types)
+  }
+
+  object TypeChange extends InputOutputTypeTransformer[Any, TypeChange] {
+    protected def createFunc(expected_input_type: Type, expected_output_type: Type, changer: Any) =
+      apply(expected_input_type, expected_output_type, changer)
+  }
+
+
 
   /**
     * Change the name and content of a field
@@ -114,9 +432,8 @@ object JsonChanger{
           "aaa" -> 50
         ),
         J.obj(
-          "aaa" -> JsonChanger.ChangeThisField(
-                     "bbb" -> JsonChanger.___identity
-                   )
+          "aaa" -> ChangeThisField(
+             "bbb" -> ___identity.number)
         )
       ) ===
       J.obj("bbb" -> 50)
@@ -128,9 +445,8 @@ object JsonChanger{
         JsonChanger(
           J.obj(),
           J.obj(
-            "aaa" -> JsonChanger.ChangeThisField(
-                       "bbb" -> JsonChanger.Maybe(JsonChanger___identity)
-                     )
+            "aaa" -> ChangeThisField(
+               "bbb" -> Maybe(JsonChanger___identity.number))
           )
         ),
         J.obj()
@@ -158,7 +474,7 @@ object JsonChanger{
           ),
           J.obj(
             "aaa" -> 90,
-            "bbb" -> JsonChanger.NewField(100)
+            "bbb" -> NewField(100)
           )
         ) ===
         J.obj(
@@ -187,8 +503,8 @@ object JsonChanger{
             "aaa" -> "hello"
           ),
           J.obj(
-            "aaa" -> JsonChanger.ForceNewField(JsonChanger.Func(_.getOrElse("[undefined]"))),
-            "bbb" -> JsonChanger.ForceNewField(JsonChanger.Func(_.getOrElse("[undefined]")))
+            "aaa" -> ForceNewField(Func.maybeString.string(_.getOrElse("[undefined]"))),
+            "bbb" -> ForceNewField(Func.maybeString.string(_.getOrElse("[undefined]")))
           )
         ),
         J.obj(
@@ -201,7 +517,7 @@ object JsonChanger{
     */
   case class ForceNewField(changer: Any) extends JValue {
     override def pp() = "ForceNewField("+J(changer).pp()+")"
-    override def asJsValue = JsString(pp())
+    override def asJsValue = JsString(pp()) 
   }
 
 
@@ -217,7 +533,7 @@ object JsonChanger{
             "aaa" -> 30
           ),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(50)
+            "aaa" -> Maybe(50)
           )
         ) ===
         J.obj(
@@ -227,20 +543,20 @@ object JsonChanger{
         JsonChanger(
           J.obj(),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(50)
+            "aaa" -> Maybe(50)
           )
         ) ===
         J.obj()
 
         JsonChanger(
           null,
-          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+          Maybe(Func(_ + 1))
         ) ===
         JNull
 
         JsonChanger(
           90,
-          JsonChanger.Maybe(JsonChanger.Func(_ + 1))
+          Maybe(Func(_ + 1))
         ) ===
         91
       )
@@ -267,7 +583,7 @@ object JsonChanger{
     {{{
         JsonChanger(
           J.arr(2,3),
-          J.arr(JsonChanger.Replace(3, 5), JsonChanger.Replace(3, 5))
+          J.arr(Replace(3, 5), Replace(3, 5))
         ) ===
         J.arr(2, 5)
     }}}
@@ -286,135 +602,6 @@ object JsonChanger{
         json
   }
 
-  /**
-    * Used in conjunction with [[TypeChange]]
-    */
-  object Expects extends Enumeration {
-    type Type = Value
-
-    /**
-      * Expects object
-      */
-    val Object = Value
-
-    /**
-      * Expects array
-      */
-    val Array = Value
-
-    /**
-      * Expects number
-      */
-    val Number = Value
-
-    /**
-      * Expects null
-      */
-    val Null = Value
-
-    /**
-      * Expects string
-      */
-    val String = Value
-
-    /**
-      * Expects boolean
-      */
-    val Boolean = Value
-
-    /**
-      * Expects undefined value. An undefined value is either null, or the result of trying to do e.g.
-      * {{{
-      J.obj()("hello")
-      * }}}
-      */
-    val Undefined = Value
-
-    /**
-      * Expects a defined value. Defined values are all values that are not undefined
-      * @see [[Undefined]]
-      */
-    val Defined = Value
-
-    /**
-      * Expects anything, both defined and undefined values
-      * @see [[Defined]] and [[Undefined]]
-      */
-    val Anything = Value
-  }
-
-
-  private def validateType(expectedType: Expects.Type, json: JValue, path: String): Unit = {
-
-    import Expects._
-
-    def maybeThrow(maybe: Boolean) =
-      if (!maybe)
-        throwChangeException("JsonChanger.TypeChange expected "+expectedType+", but found "+json.pp(), path)
-
-    expectedType match {
-      case Object    => maybeThrow(json.isObject)
-      case Array     => maybeThrow(json.isArray)
-      case Number    => maybeThrow(json.isNumber)
-      case Null      => maybeThrow(json.isNull)
-      case String    => maybeThrow(json.isString)
-      case Boolean   => maybeThrow(json.isBoolean)
-      case Undefined => maybeThrow(!json.isDefined)
-      case Defined   => maybeThrow(json.isDefined)
-      case Anything  => ()
-    }
-  }
-
-
-  /**
-    *  Bypasses pattern matching
-    * 
-    * @example
-    {{{
-      JsonChanger(
-        50,
-        JsonChanger.TypeChange(JsonChanger.Expects.Number, "aiai")
-      ) === JString("aiai")
-    }}}
-    * 
-    * @param expectedType the input value must match expectedType. If the value type is unknown, [[Expects.Defined]] or [[Expects.Anything]] can be used.
-    * @see [[Expects]]
-    */
-  case class TypeChange(expectedType: Expects.Type, changer: Any) extends Changer {
-    override def pp() = "TypeChange("+expectedType+", "+J(changer).pp()+")"
-
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) = {
-      validateType(expectedType, json, path)
-      JsonChanger.apply(json, changer, path, true)
-    }
-  }
-
-
-  /**
-    * Map a function on array
-    * 
-    * @example
-    {{{
-        JsonChanger(
-          J.arr(2,3),
-          JsonChanger.Map(_ + 2)
-        ) ===
-        J.arr(4,5)
-    }}}
-    * 
-    */
-  case class Map(transformer_func: JValue => Any) extends Changer {
-    override def pp() = "Map"
-
-    // Perhaps Map should do type checking on the individual fields?
-
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      if (json.isArray)
-        json.asArray.map(transformer_func)
-      else
-        throwChangeException("JsonChanger.Map expects array. Found "+json.pp(), path)
-  }
-
 
   /**
     * Map [[JsonChanger.apply]] on array
@@ -423,7 +610,7 @@ object JsonChanger{
     {{{
         JsonChanger(
           J.arr(2,3),
-          JsonChanger.MapChanger(JsonChanger.Replace(3,9))
+          MapChanger(Replace(3,9))
         ) ===
         J.arr(2,9)
     }}}
@@ -458,7 +645,7 @@ object JsonChanger{
             "aaa" -> 50
           ),
           J.obj(
-            JsonChanger.___allowOtherFields
+            ___allowOtherFields
           )
         ) ===
         J.obj("aaa" -> 50)
@@ -476,7 +663,7 @@ object JsonChanger{
         JsonChanger(
           J.arr(5),
           J.arr(
-            JsonChanger.___allowOtherValues
+            ___allowOtherValues
           )
         ) ===
         J.arr(5)
@@ -484,6 +671,15 @@ object JsonChanger{
     * 
     */
   val ___allowOtherValues  = JsonMatcher.___allowOtherValues
+
+
+  /**
+    See [[___removeThisField]]
+    */
+  case class RemoveThisField(type_ : Type) extends JValue{
+    override def pp() = "RemoveThisField("+type_.toString+")"
+    override def asJsValue = JsString(pp())
+  }
 
   /**
     * Removes a field from an object
@@ -495,7 +691,7 @@ object JsonChanger{
             "aaa" -> 50
           ),
           J.obj(
-            "aaa" -> JsonChanger.___removeThisField
+            "aaa" -> ___removeThisField.number
           )
         ) ===
         J.obj()
@@ -507,21 +703,21 @@ object JsonChanger{
         JsonChanger(
           J.obj(),
           J.obj(
-            "aaa" -> JsonChanger.Maybe(JsonChanger.___removeThisField)
+            "aaa" -> Maybe(___removeThisField.number)
           )
         ),
         J.obj()
       )
     * }}}
     */
-  val ___removeThisField = JString("_____________removeThisField___________")
+  object ___removeThisField extends InputTypeTransformer[RemoveThisField] {
+    protected def createFunc(input_type: Type) =
+      RemoveThisField(input_type)
+  }
 
 
   /**
-    * A [[Func]] instance to return the input
-    * 
-    * Implementation:
-    {{{val ___identity = Func(a => a)}}}
+    * Identity function changers
     * 
     * @example
     {{{
@@ -530,13 +726,16 @@ object JsonChanger{
             "aaa" -> 10
           ),
           J.obj(
-            "aaa" -> JsonChanger.___identity
+            "aaa" -> ___identity.number
           )
         ) === J.obj("aaa" -> 10)
     }}}
     * 
     */
-  val ___identity = Func(a => a)
+  object ___identity extends InputTypeTransformer[Func]{
+    protected def createFunc(input_type: Type) =
+      Func(input_type, input_type, a => a)
+  }
 
 
   /**
@@ -549,9 +748,9 @@ object JsonChanger{
             3
           ),
           J.arr(
-            JsonChanger.___identity,
-            JsonChanger.InsertValue(90),
-            JsonChanger.___identity
+            ___identity.number,
+            InsertValue(90),
+            ___identity.number
           )
         ) ===
         J.arr(
@@ -568,6 +767,13 @@ object JsonChanger{
     override def asJsValue = JsString(pp())
   }
 
+  /**
+    See [[___removeValue]]
+    */
+  case class RemoveValue(type_ : Type) extends JValue{
+    override def pp() = "RemoveValue("+type_.toString+")"
+    override def asJsValue = JsString(pp())
+  }
 
   /**
     * Remove value from array
@@ -579,8 +785,8 @@ object JsonChanger{
             3
           ),
           J.arr(
-            JsonChanger.___removeValue,
-            JsonChanger.___identity
+            ___removeValue.number,
+            ___identity.number
           )
         ) ===
         J.arr(
@@ -589,7 +795,10 @@ object JsonChanger{
     }}}
     * @note see also [[InsertValue]]
     */
-  val ___removeValue = JString("___________________removeValue________________")
+  object ___removeValue extends InputTypeTransformer[RemoveValue] {
+    protected def createFunc(input_type: Type) =
+      RemoveValue(input_type)
+  }
 
 
   private def changeArray(json: JArray, changer: JArray, path: String): JValue = {
@@ -603,7 +812,7 @@ object JsonChanger{
         insert.j_value :: change(n+1, jsons, rest)
 
       case (Nil, _) =>
-        throwChangeException("Too many changers in array: "+J(changers).pp(), path)
+        throwChangeException("Too many changers in array: "+J(changers).pp(), path + "[" + n + "]")
 
       case (_, Nil) =>
         throwChangeException("Missing changer for "+jsons.head.pp(), path + "[" + n + "]")
@@ -614,8 +823,10 @@ object JsonChanger{
       case (_, `allowOthers` :: rest) =>
         throwChangeException("Can not have values after ___allowOtherValues in an array: "+json.pp(), path)
 
-      case (j::js, `___removeValue` :: rest) =>
+      case (j::js, (removeValue: RemoveValue) :: rest) => {
+        removeValue.type_.validate(j, path + "[" + n + "]")
         change(n, js, rest)
+      }
 
       case (j::js, c::cs) =>
         apply(j, c, path + "[" + n + "]") :: change(1+n, js, cs)
@@ -646,8 +857,10 @@ object JsonChanger{
         else
           key -> value
 
-      case `___removeThisField` =>
-        key -> changer
+      case removeThisField: RemoveThisField => {
+        removeThisField.type_.validate(value, path+"."+key)
+        key -> removeThisField
+      }
 
       case changer: JValue =>
         key -> apply(value, changer, path+"."+key)
@@ -674,7 +887,7 @@ object JsonChanger{
 
       }
     }.filter(field =>
-      field._2 != ___removeThisField
+      !field._2.isInstanceOf[RemoveThisField]
     )
 
     val addedFieldsInChanger = changer.asMap.filter {
@@ -709,7 +922,7 @@ object JsonChanger{
       val unusedChangerKeys = changerKeys -- usedChangerKeys -- maybeChangerKeys -- Set(___allowOtherFields._1) -- addedFieldsInChanger.map(_._1)
 
       if ( unusedChangerKeys.size > 0)
-        throwChangeException("Unknown keys in changer: "+unusedChangerKeys.mkString, path)
+        throwChangeException("Unknown keys in changer: "+unusedChangerKeys.mkString(", "), path)
     }
 
     J(ret) ++ J(addedFieldsInChanger)
@@ -756,21 +969,23 @@ object JsonChanger{
     * Main function.
     * @param json_value the value to change
     * @param changer the pattern to change against
-    * @param path Included at the start of the '''path''' value in [[JsonChangerException]]
+    * @param path Prepended to '''path''' value in [[JsonChangerException]] (if thrown).
     * @param allow_mismatched_types Allow mismatched types. Example:
     {{{
      
       // This example:
 
-      apply(50, "hello", allow_mismatched_types = true)
+      JsonChanger(50, "hello", allow_mismatched_types = true)
 
       // ...works. However, this example:
 
-      apply(J.arr(50), J.arr("hello"), allow_mismatched_types = true)
+      JsonChanger(J.arr(50), J.arr("hello"), allow_mismatched_types = true)
 
-      // ...will fail. To allow mismatched types for array or object values, we must do this instead:
+      // ...will fail independent of the value of 'allow_mismatched_types'.
+      //
+      // To allow mismatched types for array or object values, we must do this instead:
 
-      apply(J.arr(50), J.arr(TypeChange("hello"))
+      JsonChanger(J.arr(50), J.arr(TypeChange.number.string("hello"))
     }}}
     * 
     The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transformer]]. In [[Changer.transformer]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with an [[TypeChange]] changer.
