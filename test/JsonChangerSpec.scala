@@ -1000,6 +1000,7 @@ class JsonChangerSpec extends Specification {
           J.arr(11),
           Map.string.number(_ + 2)
         )
+        throw new Exception("what?")
       } catch {
         case e: JsonChangerException =>
           e.getMessage().contains("""expected a value of the type "string", but found 11 instead.""") must beTrue
@@ -1010,6 +1011,7 @@ class JsonChangerSpec extends Specification {
           J.arr(11),
           Map.number.string(_ + 2)
         )
+        throw new Exception("what?")
       } catch {
         case e: JsonChangerException =>
           e.getMessage().contains("""expected a value of the type "string", but found 13 instead.""") must beTrue

@@ -320,6 +320,15 @@ object JsonChanger{
   }
 
 
+  private def validate_input_output_types(expected_input_type: Type, expected_output_type: Type, input: JValue, path: String)(get_output: => Any): JValue = {
+    expected_input_type.validate(input, path)
+
+    val output = J(get_output)
+
+    expected_output_type.validate(output, path)
+
+    output
+  }
 
   /**
     * Apply a custom function on a json value.
@@ -344,15 +353,10 @@ object JsonChanger{
   case class Func(expected_input_type: Type, expected_output_type: Type, func: JValue => Any) extends Changer {
     override def pp() = "Func("+expected_input_type.typeName+", "+expected_output_type.typeName+", <func>)"
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) = {
-      expected_input_type.validate(json, path)
-
-      val ret = JsonChanger.apply(json, func(json), path, true)
-
-      expected_output_type.validate(ret, path)
-
-      ret
-    }
+    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+      validate_input_output_types(expected_input_type, expected_output_type, json, path){
+        JsonChanger.apply(json, func(json), path, true)
+      }
   }
 
   object Func extends InputOutputTypeTransformer[JValue => Any, Func] {
@@ -378,11 +382,13 @@ object JsonChanger{
   case class Map(expected_input_type: Type, expected_output_type: Type, transformer_func: JValue => Any) extends Changer {
     override def pp() = "Map"
 
-    val func = Func(expected_input_type, expected_output_type, transformer_func)
-
     def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json.isArray)
-        json.asArray.map(func.transformer(_, path, allow_mismatched_types))
+        json.asArray.map{ value =>
+          validate_input_output_types(expected_input_type, expected_output_type, value, path){
+            transformer_func(value)
+          }
+        }
       else
         throwChangeException("JsonChanger.Map expects array. Found "+json.pp(), path)
   }
@@ -839,6 +845,10 @@ object JsonChanger{
 
   // Needs cleanup
   private def changeObject(json: JObject, changer: JObject, path: String): JValue = {
+
+    //println("changeObject. path: "+path)
+    //println("changeObject. json: "+json.pp())
+    //println("changeObject. changer: "+changer.pp())
 
     val allowOtherFields = changer.asMap.get(___allowOtherFields._1) != None
 
