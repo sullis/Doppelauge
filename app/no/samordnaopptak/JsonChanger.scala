@@ -293,21 +293,19 @@ object JsonChanger{
     * Interface for custom changers.
     * 
     * @example
-    * This is the implementation of the [[JsonChanger.Replace]] changer:
-    {{{
-  case class Replace(comparison_value: Any, to_changer: Any) extends Changer {
-    val j_comparison_value = J(comparison_value)
-    val j_to_changer = J(to_changer)
-
-    override def pp() = "JsonChanger.Replace(comparison: "+j_comparison_value.pp()+", to: "+j_to_changer.pp()+")"
+    * This is the implementation of the [[JsonChanger.Maybe]] changer:
+    * {{{
+  case class Maybe(changer: Any) extends Changer {
+    val j_changer = J(changer)
+    override def pp() = "Maybe("+j_changer.pp()+")"
 
     def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      if (json==j_comparison_value)
-        JsonChanger.apply(json, j_to_changer, path, allow_mismatched_types)
+      if (json.isDefined)
+        JsonChanger.apply(json, changer, path, allow_mismatched_types)
       else
         json
   }
-    }}}
+    * }}}
     */
   trait Changer extends JValue {
     override def asJsValue = JsString(pp())

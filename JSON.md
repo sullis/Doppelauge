@@ -113,7 +113,7 @@ object {
     json,
     J.obj(
       "aaa" -> 60,
-      "b" -> ___identity
+      "b" -> ___identity.number
     )
   )
 
