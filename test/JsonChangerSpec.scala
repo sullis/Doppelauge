@@ -476,6 +476,55 @@ class JsonChangerSpec extends Specification {
           "bbb" -> 50
         )
       )
+
+    }
+
+    "Check Or" in {
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(
+            "aaa" -> 30,
+            "bbb" -> 50,
+            "ccc" -> 70
+          ),
+          J.obj(
+            "aaa" -> Or(
+              Replace(30, 100),
+              Replace(50, 120)
+            ),
+            "bbb" -> Or(
+              Replace(30, 100),
+              Replace(50, 120)
+            ),
+            "ccc" -> Or(
+              Replace(30, 100),
+              Replace(50, 120),
+              140
+            )
+          )
+        ),
+        J.obj(
+          "aaa" -> 100,
+          "bbb" -> 120,
+          "ccc" -> 140
+        )
+      )
+
+      JsonMatcher.matchJson(
+        JsonChanger(
+          50,
+          Or()
+        ),
+        50
+      ) must throwA[JsonChangerException]
+
+      JsonMatcher.matchJson(
+        JsonChanger(
+          50,
+          Or(Replace(1,2))
+        ),
+        50
+      ) must throwA[JsonChangerException]
     }
 
     "Check Maybe in object" in {

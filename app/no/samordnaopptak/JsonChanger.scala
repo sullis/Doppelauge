@@ -301,7 +301,7 @@ object JsonChanger{
 
     override def pp() = "JsonChanger.Replace(comparison: "+j_comparison_value.pp()+", to: "+j_to_changer.pp()+")"
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json==j_comparison_value)
         JsonChanger.apply(json, j_to_changer, path, allow_mismatched_types)
       else
@@ -313,12 +313,114 @@ object JsonChanger{
     override def asJsValue = JsString(pp())
 
     /**
-      The transformer virtual method.
+      The transform virtual method.
       @param allow_mismatched_types Must be forwarded if calling [[JsonChanger.apply]], unless you want to explicitly override type mismatching to fail or succeed (see [[TypeChange]]).
       */
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean): Any
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean): Any
   }
 
+
+  trait MaybeChanger extends Changer {
+    def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean): Option[Any]
+
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean): Any = {
+      maybeTransform(json, path, allow_mismatched_types) match {
+        case None => json
+        case Some(value) => value
+      }
+    }
+  }
+
+  /**
+    * Replaces the input with a specified output if the input has a specified value.
+    * 
+    * @example
+    {{{
+        JsonChanger(
+          J.arr(2,3),
+          J.arr(Replace(3, 5), Replace(3, 5))
+        ) ===
+        J.arr(2, 5)
+    }}}
+    * 
+    */
+  case class Replace(comparison_value: Any, to_changer: Any) extends MaybeChanger {
+    val j_comparison_value = J(comparison_value)
+    val j_to_changer = J(to_changer)
+
+    override def pp() = "JsonChanger.Replace2(comparison: "+j_comparison_value.pp()+", to: "+j_to_changer.pp()+")"
+
+    def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean) =
+      if (json==j_comparison_value)
+        Some(JsonChanger.apply(json, j_to_changer, path, allow_mismatched_types))
+      else
+        None
+  }
+
+  /**
+    * Trying several [[MaybeChanger]]s [[MaybeChanger.maybeTransform]] methods, and returns the result of the first one not returning None.
+    * 
+    * An exception is thrown if neither of the changers return a value.
+    * 
+    * @example
+    * {{{
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(
+            "aaa" -> 30,
+            "bbb" -> 50,
+            "ccc" -> 70
+          ),
+          J.obj(
+            "aaa" -> Or(
+              Replace(30, 100),
+              Replace(50, 120)
+            ),
+            "bbb" -> Or(
+              Replace(30, 100),
+              Replace(50, 120)
+            ),
+            "ccc" -> Or(
+              Replace(30, 100),
+              Replace(50, 120),
+              140
+            )
+          )
+        ),
+        J.obj(
+          "aaa" -> 100,
+          "bbb" -> 120,
+          "ccc" -> 140
+        )
+      )
+    * }}}
+    * 
+    */
+  case class Or(changers: Any*) extends MaybeChanger {
+    val j_changers = J(changers)
+
+    override def pp() = "JsonChanger.Or(changers: "+j_changers.pp()
+
+    def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean) = {
+
+      def inner(changers: List[JValue]): Option[Any] = changers match {
+        case `Nil` =>
+          throwChangeException("JsonChanger.Or: No changer applied for "+json.pp(), path)
+
+        case ((maybeChanger: MaybeChanger) :: rest) =>
+          maybeChanger.maybeTransform(json, path, allow_mismatched_types) match {
+            case None => inner(rest)
+            case value => value
+          }
+
+        case ((changer: JValue) :: _) =>
+          Some(JsonChanger.apply(json, changer, path, allow_mismatched_types))
+      }
+
+      inner(j_changers.asArray.toList)
+    }
+
+  }
 
   private def validate_input_output_types(expected_input_type: Type, expected_output_type: Type, input: JValue, path: String)(get_output: => Any): JValue = {
     expected_input_type.validate(input, path)
@@ -353,7 +455,7 @@ object JsonChanger{
   case class Func(expected_input_type: Type, expected_output_type: Type, func: JValue => Any) extends Changer {
     override def pp() = "Func("+expected_input_type.typeName+", "+expected_output_type.typeName+", <func>)"
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       validate_input_output_types(expected_input_type, expected_output_type, json, path){
         JsonChanger.apply(json, func(json), path, true)
       }
@@ -379,14 +481,14 @@ object JsonChanger{
     * 
     * @see [[InputOutputTypeTransformer]]
     */
-  case class Map(expected_input_type: Type, expected_output_type: Type, transformer_func: JValue => Any) extends Changer {
+  case class Map(expected_input_type: Type, expected_output_type: Type, transform_func: JValue => Any) extends Changer {
     override def pp() = "Map"
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json.isArray)
         json.asArray.map{ value =>
           validate_input_output_types(expected_input_type, expected_output_type, value, path){
-            transformer_func(value)
+            transform_func(value)
           }
         }
       else
@@ -417,8 +519,8 @@ object JsonChanger{
 
     val func = new Func(expected_input_type, expected_output_type, _ => changer)
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      func.transformer(json, path, allow_mismatched_types)
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
+      func.transform(json, path, allow_mismatched_types)
   }
 
   object TypeChange extends InputOutputTypeTransformer[Any, TypeChange] {
@@ -574,36 +676,9 @@ object JsonChanger{
     val j_changer = J(changer)
     override def pp() = "Maybe("+j_changer.pp()+")"
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json.isDefined)
         JsonChanger.apply(json, changer, path, allow_mismatched_types)
-      else
-        json
-  }
-
-
-  /**
-    * Replaces the input with a specified output if the input has a specified value.
-    * 
-    * @example
-    {{{
-        JsonChanger(
-          J.arr(2,3),
-          J.arr(Replace(3, 5), Replace(3, 5))
-        ) ===
-        J.arr(2, 5)
-    }}}
-    * 
-    */
-  case class Replace(comparison_value: Any, to_changer: Any) extends Changer {
-    val j_comparison_value = J(comparison_value)
-    val j_to_changer = J(to_changer)
-
-    override def pp() = "JsonChanger.Replace(comparison: "+j_comparison_value.pp()+", to: "+j_to_changer.pp()+")"
-
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      if (json==j_comparison_value)
-        JsonChanger.apply(json, j_to_changer, path, allow_mismatched_types)
       else
         json
   }
@@ -632,7 +707,7 @@ object JsonChanger{
       else
         JsonChanger.apply(jsons.head, j_changer, path + "[" + n + "]", false) :: change(1+n, jsons.tail, path)
 
-    def transformer(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json.isArray)
         J(change(0, json.asArray.toList, path))
       else
@@ -948,7 +1023,7 @@ object JsonChanger{
 
     (json, changer, allow_mismatched_types) match {
 
-      case (_,           c: Changer,   _)    => J(c.transformer(json, path, allow_mismatched_types))
+      case (_,           c: Changer,   _)    => J(c.transform(json, path, allow_mismatched_types))
 
       case (j: JObject,  c: JObject,   _)    => changeObject(j, c, path)
       case (j: JArray,   c: JArray,    _)    => changeArray(j, c, path)
@@ -998,7 +1073,7 @@ object JsonChanger{
       JsonChanger(J.arr(50), J.arr(TypeChange.number.string("hello"))
     }}}
     * 
-    The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transformer]]. In [[Changer.transformer]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with an [[TypeChange]] changer.
+    The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transform]]. In [[Changer.transform]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with an [[TypeChange]] changer.
     */
   def apply(json_value: Any, changer: Any, path: String = "", allow_mismatched_types: Boolean = false): JValue =
     apply(J(json_value), J(changer), path, allow_mismatched_types)
