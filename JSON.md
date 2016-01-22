@@ -2,10 +2,12 @@
 J
 ===
 
-* Similar to Play framework's 'Json' object, but quicker to use for testing and parsing.
-* Values can easily be converted between the "J" format (called 'JValue') and the play framework format (called 'JsValue').
-* J is safer than Play framework's 'Json' object since it doesn't allow key clash when creating and merging objects.
-* J guarantees to maintain object field order. Play framework's 'Json' object does not.
+* Similar to Play Framework's 'Json' object, but quicker to use for testing and parsing.
+* Values can easily be converted between the "J" format (called 'JValue') and the play Framework format (called 'JsValue').
+* J is safer than Play Framework's 'Json' object since it doesn't allow key clash when creating and merging objects.
+* J guarantees to maintain object field order. Play Framework's 'JsObject' type does not.
+* JValue is made for dynamic typing. Converting between back and forth between json and native types is not
+  always the simplest and safest option. (```J(5) + J(9) === J(14)```). See also [JsonMatcher](JSON.md#jsonmatcher) and [JsonChanger](JSON.md#jsonchanger).
 * Scaladoc: [J](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.J$)
 
 
@@ -79,7 +81,8 @@ JsonMatcher only returns **true** or **false**, JsonChanger returns a new Json v
 The most important similarity between JsonChanger and JsonMatcher is that they both do pattern matching.
 When changing a json value with JsonChanger, it also pattern matches the **json_value** against the **changer**. This pattern matching
 should make bugs appear earlier than they would have been othervice.
-(You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
+(You might argue that it would be better to first validate the json against a schema, but this way you get validation for free,
+plus that the validation schema maintains itself automatically.)
    
 The pattern matcher in JsonChanger checks that:
 
@@ -90,10 +93,11 @@ The pattern matcher in JsonChanger checks that:
 When matching fails, the error messages contain description with full path.
 
 There are several custom changers such as *___identity*, *Replace*, *Func*, *Map*, *MapChanger*, etc. See [scala doc](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$) for examples.
-Custom changers can be also be created from outside JsonChanger by implementing the *Changer* trait.
-   
+Custom changers can be also be created from the outside by implementing the *Changer* trait.
+
 ScalaDoc: [JsonChanger](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonChanger$)
 
+Example:
 
 ```scala
 import org.specs2.mutable._
@@ -134,3 +138,5 @@ object {
   )
 }
 ```
+
+In the above example, not only is the JsonChanger code simpler to read, but the code is also safer.
