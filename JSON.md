@@ -79,7 +79,7 @@ JsonMatcher only returns **true** or **false**, JsonChanger returns a new Json v
 The most important similarity between JsonChanger and JsonMatcher is that they both do pattern matching.
 When changing a json value with JsonChanger, it also pattern matches the **json_value** against the **changer**. This pattern matching
 should make bugs appear earlier than they would have been othervice.
-(You might argue that it would be better to first validate the **json_value** value against a schema instead, but this way you get validation for free, plus that the validation schema maintains itself automatically. In addition, it doesn't make sense to create schemas for smaller json structures used internally.)
+(You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
    
 The pattern matcher in JsonChanger checks that:
 
@@ -104,23 +104,33 @@ import no.samordnaopptak.json.JsonChanger._
 
 object {
   val json = J.obj(
-    "aaa" -> 50,
-    "b" -> 1
+    "aaa" -> J.obj(
+      "a1" -> 60,
+      "a2" -> 70
+    ),
+    "bbb" -> 80
   )
 
-  // Change the value of "aaa" to 60 by using JsonChanger:
+  // Add 5 to the value of "aaa.a1" by using JsonChanger:
   JsonChanger(
     json,
     J.obj(
-      "aaa" -> 60,
-      "b" -> ___identity.number
+      "aaa" -> J.obj(
+         "a1" -> JsonChanger.Func.number.number(_ + 5),
+         "a2" -> ___identity.number
+      ),
+      "bbb" -> ___identity.number
     )
   )
 
-  // Change the value of "aaa" to 60 manually:
+  // Add 5 to the value of "aaa.a1" manually:
 
   json - "aaa" ++ J.obj(
-     "aaa" -> 60
+    "aaa" -> (
+      json("aaa") - "a1" ++ J.obj(
+        "a1" -> (json("aaa")("a1") + 5)
+      )
+    )
   )
 }
 ```

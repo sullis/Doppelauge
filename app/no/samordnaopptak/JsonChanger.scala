@@ -29,23 +29,33 @@ class JsonChangerException(message: String, val path: String) extends Exception(
   * @example
   {{{
   val json = J.obj(
-    "aaa" -> 50,
-    "b" -> 1
+    "aaa" -> J.obj(
+      "a1" -> 60,
+      "a2" -> 70
+    ),
+    "bbb" -> 80
   )
 
-  // Change the value of "aaa" to 60 by using JsonChanger:
+  // Add 5 to the value of "aaa.a1" by using JsonChanger:
   JsonChanger(
     json,
     J.obj(
-      "aaa" -> 60,
-      "b" -> ___identity.number
+      "aaa" -> J.obj(
+         "a1" -> JsonChanger.Func.number.number(_ + 5),
+         "a2" -> ___identity.number
+      ),
+      "bbb" -> ___identity.number
     )
   )
 
-  // Change the value of "aaa" to 60 manually:
+  // Add 5 to the value of "aaa.a1" manually:
 
   json - "aaa" ++ J.obj(
-     "aaa" -> 60
+    "aaa" -> (
+      json("aaa") - "a1" ++ J.obj(
+        "a1" -> (json("aaa")("a1") + 5)
+      )
+    )
   )
   }}}
   * 

@@ -198,6 +198,89 @@ class JsonChangerSpec extends Specification {
 
     }
 
+    "Change content of inner objects and arrays" in {
+      JsonMatcher.matchJson(
+        JsonChanger(
+          J.obj(
+            "aaa" -> J.obj(
+              "bbb" -> J.arr(
+                J.obj(
+                  "ccc" -> 5
+                ),
+                2
+              )
+            )
+          ),
+          J.obj(
+            "aaa" -> J.obj(
+              "bbb" -> J.arr(
+                J.obj(
+                  "ccc" -> JsonChanger.Func.number.number(_ + 2)
+                ),
+                JsonChanger.Func.number.number(_ + 3)
+              )
+            )
+          )
+        ),
+        J.obj(
+          "aaa" -> J.obj(
+            "bbb" -> J.arr(
+              J.obj(
+                "ccc" -> 7
+              ),
+              5
+            )
+          )
+        )
+      )
+    }
+
+    "The main example" in {
+      val json = J.obj(
+        "aaa" -> J.obj(
+          "a1" -> 60,
+          "a2" -> 70
+        ),
+        "bbb" -> 80
+      )
+
+      val correct = J.obj(
+        "aaa" -> J.obj(
+          "a1" -> 65,
+          "a2" -> 70
+        ),
+        "bbb" -> 80
+      )
+
+      // Add 5 to the value of "aaa.a1" by using JsonChanger:
+      JsonMatcher.matchJson(
+        JsonChanger(
+          json,
+          J.obj(
+            "aaa" -> J.obj(
+              "a1" -> JsonChanger.Func.number.number(_ + 5),
+              "a2" -> ___identity.number
+            ),
+            "bbb" -> ___identity.number
+          )
+        ),
+        correct
+      )
+
+      // Add 5 to the value of "aaa.a1" manually:
+
+      JsonMatcher.matchJson(
+        json - "aaa" ++ J.obj(
+          "aaa" -> (
+            json("aaa") - "a1" ++ J.obj(
+              "a1" -> (json("aaa")("a1") + 5)
+            )
+          )
+        ),
+        correct
+      )
+    }
+
     "ForceNewField (Same as NewField, except that the field might already exist)" in {
       JsonMatcher.matchJson(
         JsonChanger(
