@@ -562,6 +562,24 @@ class JsonChangerSpec extends Specification {
 
     }
 
+    "Check patternmatcher Replace" in {
+      JsonMatcher.matchJson(
+        JsonChanger(
+          30,
+          Replace(JsonMatcher.___anyNumber, 120)
+        ),
+        J(120)
+      )
+
+      JsonMatcher.matchJson(
+        JsonChanger(
+          30,
+          Replace(JsonMatcher.___anyString, 120)
+        ),
+        J(30)
+      )
+    }
+
     "Check Or" in {
       JsonMatcher.matchJson(
         JsonChanger(

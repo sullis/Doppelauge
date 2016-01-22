@@ -340,7 +340,7 @@ object JsonChanger{
   }
 
   /**
-    * Replaces the input with a specified output if the input has a specified value.
+    * Replaces the input with a specified output if the input matches.
     * 
     * @example
     {{{
@@ -349,18 +349,27 @@ object JsonChanger{
           J.arr(Replace(3, 5), Replace(3, 5))
         ) ===
         J.arr(2, 5)
+
+        JsonMatcher.matchJson(
+          JsonChanger(
+            30,
+            Replace(JsonMatcher.___anyNumber, 120)
+          ),
+          J(120)
+        )
     }}}
     * 
+    * @see [[JsonMatcher]]
     */
-  case class Replace(comparison_value: Any, to_changer: Any) extends MaybeChanger {
-    val j_comparison_value = J(comparison_value)
-    val j_to_changer = J(to_changer)
+  case class Replace(matcher: Any, changer: Any) extends MaybeChanger {
+    val j_matcher = J(matcher)
+    val j_changer = J(changer)
 
-    override def pp() = "JsonChanger.Replace2(comparison: "+j_comparison_value.pp()+", to: "+j_to_changer.pp()+")"
+    override def pp() = "JsonChanger.Replace(matcher: "+j_matcher.pp()+", changer: "+j_changer.pp()+")"
 
     def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      if (json==j_comparison_value)
-        Some(JsonChanger.apply(json, j_to_changer, path, allow_mismatched_types))
+      if (JsonMatcher.matchJson(j_matcher, json, throwException=false))
+        Some(JsonChanger.apply(json, j_changer, path, allow_mismatched_types))
       else
         None
   }
