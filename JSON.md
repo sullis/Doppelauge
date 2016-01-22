@@ -129,7 +129,6 @@ object {
   )
 
   // Add 5 to the value of "aaa.a1" manually:
-
   json - "aaa" ++ J.obj(
     "aaa" -> (
       json("aaa") - "a1" ++ J.obj(
@@ -140,4 +139,5 @@ object {
 }
 ```
 
-In the above example, not only is the JsonChanger code simpler to read, but the code is also safer.
+In the above example, not only is the JsonChanger code simpler to read, but the code is also safer,
+and you get error messages with full path if the json value has incompatible data.

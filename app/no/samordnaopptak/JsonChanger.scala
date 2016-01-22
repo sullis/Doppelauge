@@ -675,31 +675,29 @@ object JsonChanger{
 
         JsonChanger(
           null,
-          Maybe(Func(_ + 1))
+          Maybe(Func.number.number(_ + 1))
         ) ===
         JNull
 
         JsonChanger(
           90,
-          Maybe(Func(_ + 1))
+          Maybe(Func.number.number(_ + 1))
         ) ===
         91
       )
-
     }}}
     * 
     */
-  case class Maybe(changer: Any) extends Changer {
+  case class Maybe(changer: Any) extends MaybeChanger {
     val j_changer = J(changer)
     override def pp() = "Maybe("+j_changer.pp()+")"
 
-    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
+    def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean): Option[Any] =
       if (json.isDefined)
-        JsonChanger.apply(json, changer, path, allow_mismatched_types)
+        Some(JsonChanger.apply(json, changer, path, allow_mismatched_types))
       else
-        json
+        None
   }
-
 
   /**
     * Map [[JsonChanger.apply]] on array
