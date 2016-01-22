@@ -303,19 +303,20 @@ object JsonChanger{
     * Interface for custom changers.
     * 
     * @example
-    * This is the implementation of the [[JsonChanger.Maybe]] changer:
     * {{{
-  case class Maybe(changer: Any) extends Changer {
-    val j_changer = J(changer)
-    override def pp() = "Maybe("+j_changer.pp()+")"
+      object Add1 extends Changer {
+        override def pp() = "Add1"
 
-    def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
-      if (json.isDefined)
-        JsonChanger.apply(json, changer, path, allow_mismatched_types)
-      else
-        json
-  }
+        def transform(json: JValue, path: String, allow_mismatched_types: Boolean) = {
+          Expects.Number.validate(json, path)
+          JsonChanger.apply(json, json + 1, path, true)
+        }
+      }
+
+      JsonChanger(50, Add1) === J(51)
     * }}}
+    * 
+    @see [[MaybeChanger]]
     */
   trait Changer extends JValue {
     override def asJsValue = JsString(pp())
@@ -328,6 +329,26 @@ object JsonChanger{
   }
 
 
+  /**
+    * Interface for custom changers.
+    * 
+    * @example
+    * This is the implementation of the [[JsonChanger.Maybe]] changer:
+    * {{{
+  case class Maybe(changer: Any) extends MaybeChanger {
+    val j_changer = J(changer)
+    override def pp() = "Maybe("+j_changer.pp()+")"
+
+    def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean): Option[Any] =
+      if (json.isDefined)
+        Some(JsonChanger.apply(json, changer, path, allow_mismatched_types))
+      else
+        None
+  }
+    * }}}
+    * 
+    * @see [[Changer]]
+    */
   trait MaybeChanger extends Changer {
     def maybeTransform(json: JValue, path: String, allow_mismatched_types: Boolean): Option[Any]
 

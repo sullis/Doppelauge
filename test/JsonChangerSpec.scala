@@ -60,6 +60,20 @@ class JsonChangerSpec extends Specification {
       )
     }
 
+    "Check the custom changer example" in {
+      object Add1 extends Changer {
+        override def pp() = "Add1"
+
+        def transform(json: JValue, path: String, allow_mismatched_types: Boolean) = {
+          Expects.Number.validate(json, path)
+          JsonChanger.apply(json, json + 1, path, true)
+        }
+      }
+
+      JsonChanger(50, Add1) === J(51)
+      JsonChanger("hello", Add1) must throwA[JsonChangerException]
+    }
+
     "Change object" in {
 
       JsonMatcher.matchJson(
