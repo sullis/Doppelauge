@@ -7,8 +7,8 @@ J
 * J is safer than Play Framework's 'Json' object since it doesn't allow key clash when creating and merging objects.
 * J guarantees to maintain object field order. Play Framework's 'JsObject' type does not.
 * J keeps track of the fields which are read out of a json object, and can validate automatically that it contained what you expected.
-* JValue has some support dynamic typing. Converting between back and forth between json and native types is not
-  always the simplest option. (for instance ```J(5) + 9 === J(14)```). See also [JsonMatcher](JSON.md#jsonmatcher) and [JsonChanger](JSON.md#jsonchanger).
+* JValue has some support dynamic typing. It's not always the simplest option to convert back and forth between json and native types
+  (for instance ```J(5) + 9 === J(14)```). See also [JsonMatcher](JSON.md#jsonmatcher) and [JsonChanger](JSON.md#jsonchanger).
 * Scaladoc: [J](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.J$)
 
 
