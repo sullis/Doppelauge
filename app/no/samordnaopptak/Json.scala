@@ -566,8 +566,22 @@ object J {
       case _ => throw new Exception(s"""Unable to convert "$a" to JValue. Class: ${a.getClass}""")
     }
 
+  private def validateUniqueKeys(keys: List[String], json: JValue): Unit = keys match {
+    case `Nil`               => ()
+    case _ :: `Nil`          => ()
+    case a :: b :: _ if a==b => throw new JsonException("The key \"" + a + "\" is defined twice in " + json.pp())
+    case _ :: rest           => validateUniqueKeys(rest, json)
+  }
+
   def obj(vals: (String, Any)*): JObject = {
-    apply(ListMap(vals:_*)).asInstanceOf[JObject]
+    val ret = apply(ListMap(vals:_*)).asInstanceOf[JObject]
+
+    if (ret.size != vals.size) {
+      validateUniqueKeys(vals.map(_._1).sorted.toList, ret)
+      throw new Exception("Error: The input to J.obj() has a different size than the output of J.obj(), but there are apparently no duplicate keys in the input. Input: "+vals+", output: "+ret.pp())
+    }
+
+    ret
   }
 
   def arr(vals: Any*): JArray =

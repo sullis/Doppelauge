@@ -1109,7 +1109,7 @@ object JsonChanger{
       JsonChanger(J.arr(50), J.arr(TypeChange.number.string("hello"))
     }}}
     * 
-    The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transform]]. In [[Changer.transform]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with an [[TypeChange]] changer.
+    The '''allow_mismatched_types''' parameter is exposed here since it must be handled manually in [[Changer.transform]]. In [[Changer.transform]], you sometimes want to call [[JsonChanger.apply]] and then '''allow_mismatched_types''' must be forwarded to avoid the changer to fail if the current [[Changer]] instance (i.e. '''this''') was surrounded with a [[TypeChange]] changer.
     */
   def apply(json_value: Any, changer: Any, path: String = "", allow_mismatched_types: Boolean = false): JValue =
     apply(J(json_value), J(changer), path, allow_mismatched_types)

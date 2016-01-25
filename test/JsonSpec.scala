@@ -52,6 +52,19 @@ class JsonSpec extends Specification {
         "a" -> PJson.obj("c" -> "d")
       )
 
+      try{
+        J.obj(
+          "a" -> 1,
+          "b" -> 2,
+          "a" -> 3
+        )
+        throw new Exception("hmmm")
+      } catch {
+        case e: JsonException => {
+          e.getMessage().contains("""The key "a" is defined twice""")
+        }
+      }
+
       true
     }
 
