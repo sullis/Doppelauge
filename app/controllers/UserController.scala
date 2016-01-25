@@ -106,7 +106,7 @@ object UserController extends Controller {
   }
 
   @ApiDoc(doc="""
-    POST /user2admin/api/v1/guser
+    POST /user2admin/api/v1/guser/{id_user}
 
     DESCRIPTION
       Create a user
@@ -114,16 +114,17 @@ object UserController extends Controller {
 
     PARAMETERS
       body: User
+      id_user: Long
 
     RESULT
       203: User
       404: User <- User not found
       400: UserData <- Syntax Error
   """)
-  def post2()  = Action { request =>
+  def post2(id_user: Long)  = Action { request =>
     val json = J(request.body.asJson.get)
     user = User(
-      json("id").asString,
+      id_user.toString,
       UserData(
         json("data")("firstName").asString,
         json("data")("lastName").asString
@@ -133,9 +134,9 @@ object UserController extends Controller {
     Ok(user.toJson.asJsValue)
   }
 
-  /*
+/*
   @ApiDoc(doc="""
-    POST /user2admin/api/v1/guser/{user}
+    POST /user2admin/api/v1/huser/{id_user}
 
     DESCRIPTION
       Create a user
@@ -143,16 +144,17 @@ object UserController extends Controller {
 
     PARAMETERS
       body: User
+      id_user: Long
 
     RESULT
       203: User
       404: User <- User not found
       400: UserData <- Syntax Error
   """)
-  def post2(id: Long)  = Action { request =>
+  def post3(id_user: Long)  = Action { request =>
     val json = J(request.body.asJson.get)
     user = User(
-      json("id").asString,
+      id_user.toString,
       UserData(
         json("data")("firstName").asString,
         json("data")("lastName").asString
@@ -161,5 +163,5 @@ object UserController extends Controller {
     )
     Ok(user.toJson.asJsValue)
   }
-   */
+ */
 }

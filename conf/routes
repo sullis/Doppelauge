@@ -11,13 +11,16 @@ GET     /api/v1/api-docs                        controllers.ApiDocController.get
 
 # user
 
+
 GET     /useradmin/api/v1/user                  controllers.UserController.get
 GET     /user2admin/api/v1/guser                 controllers.UserController.get3
 GET     /user2admin/api/v1/user                 controllers.UserController.get2
 GET     /user2admin/api/v1/auser                 controllers.UserController.get4
-POST     /user2admin/api/v1/guser               controllers.UserController.post2
+POST     /user2admin/api/v1/guser/:id_user          controllers.UserController.post2(id_user: Long)
 
-#POST     /user2admin/api/v1/guser2/{id}               controllers.UserController.post2(id: Long)
+# Testing that appropriate exception is thrown if writing "{id_user}" instead of ":id_user":
+#POST     /user2admin/api/v1/huser/{id_user}         controllers.UserController.post3(id_user: Long)
+
 
 
 

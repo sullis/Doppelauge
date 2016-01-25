@@ -36,6 +36,8 @@ case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scala
       val pos2 = confUri.indexOf(">")
       val offset = pos2 - pos;
       "{" + confUri.substring(1, pos) + "}" + getDocUri2(confUri.drop(pos+offset+1))
+    } else if (confUri.startsWith("{")) {
+      throw new Exception("""The URI in the play framework conf file can not contain a "{". Maybe you meant to use colon (":") instead?. Method: """"+restMethod+"""", Uri: """"+uri+'"')
     } else
       confUri.take(1) + getDocUri2(confUri.drop(1))
 
