@@ -141,3 +141,10 @@ object {
 
 In the above example, not only is the JsonChanger code simpler to read, but the code is also safer,
 and you get error messages with full path if the json value has incompatible data.
+
+
+JsonDiff
+========
+Simple Json Diff algorithm. Can be used to display the difference between two json values. An example function
+for creating an HTML table is included.
+* ScalaDoc: [JsonDiff](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonDiff$)

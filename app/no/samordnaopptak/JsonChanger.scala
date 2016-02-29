@@ -967,7 +967,7 @@ object JsonChanger{
       case changeThisField: ChangeThisField =>
         applyChanger(changeThisField.newFieldName, value, changeThisField.j_changer)
 
-      case newFieldChanger: NewField => throwChangeException("""NewField can not be used on existing field. Must use "ForceNewField" instead.""", path+"."+key)
+      case newFieldChanger: NewField => throwChangeException("""NewField can not be used on existing field. If it's uncertain whether the field already exists, "ForceNewField" can be used instead.""", path+"."+key)
 
       case forceNewField: ForceNewField =>
         key -> apply(value, forceNewField.changer, path+"."+key)
