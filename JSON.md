@@ -146,5 +146,5 @@ and you get error messages with full path if the json value has incompatible dat
 JsonDiff
 ========
 Simple Json Diff algorithm. Can be used to display the difference between two json values. An example function
-for creating an HTML table is included.
+for creating HTML table is included.
 * ScalaDoc: [JsonDiff](http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.json.JsonDiff$)
