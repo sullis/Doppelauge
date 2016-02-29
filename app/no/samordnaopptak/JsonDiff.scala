@@ -1,5 +1,7 @@
 package no.samordnaopptak.json
 
+import scala.annotation.tailrec
+
 
 /**
   * Very simple Json Diff algorithm.
@@ -109,7 +111,7 @@ object JsonDiff {
       else
         list.head :: remove_element(key, list.tail)
 
-    def loop(aa: List[(String, JValue)], bb: List[(String, JValue)], result: List[(String, JValue)]): List[(String, JValue)] = (aa, bb) match {
+    @tailrec def loop(aa: List[(String, JValue)], bb: List[(String, JValue)], result: List[(String, JValue)]): List[(String, JValue)] = (aa, bb) match {
       case (`Nil`, _) =>
         result.reverse ++
         bb.map {
@@ -124,26 +126,36 @@ object JsonDiff {
 
       case ((key_a, value_a) :: rest_a, (key_b, value_b) :: rest_b) =>
 
+        // Scala couldn't make 'loop' tail recursive when it was called through this helper function.
+        /*
         def runDiff(new_value_b: JValue, new_rest_b: List[(String, JValue)]) =
           apply(value_a, new_value_b) match {
             case `JNoDiff`     => loop(rest_a, new_rest_b, result)
             case diff: JValue  => loop(rest_a, new_rest_b, (key_a -> diff) :: result)
           }
+         */
 
-        if (key_a == key_b)
-          runDiff(
-            value_b,
-            rest_b
-          )
+        if (key_a == key_b) {
 
-        else if(keys_b.contains(key_a))
-          runDiff(
-            json_b(key_a),
-            remove_element(key_a, bb)
-          )
+          val diff = apply(value_a, value_b)
+          if (diff == JNoDiff)
+            loop(rest_a, rest_b, result)
+          else
+            loop(rest_a, rest_b, (key_a -> diff) :: result)
 
-        else
+        } else if(keys_b.contains(key_a)) {
+
+          val diff = apply(value_a, json_b(key_a) )
+          val new_rest_b = remove_element(key_a, bb)
+
+          if (diff == JNoDiff)
+            loop(rest_a, new_rest_b, result)
+          else
+            loop(rest_a, new_rest_b, (key_a -> diff) :: result)
+
+        } else
           loop(rest_a, bb, (key_a -> JObjectRemoved(value_a)) :: result)
+
     }
 
     val loop_result = loop(json_a.asMap.toList, json_b.asMap.toList, Nil)
@@ -210,7 +222,7 @@ object JsonDiff {
         else
           (move.pos_after to move.pos_before)
 
-      def find_moves(diffs: List[Diff], result: List[Move] = List()): List[Move] = diffs match {
+      @tailrec def find_moves(diffs: List[Diff], result: List[Move] = List()): List[Move] = diffs match {
         case `Nil`                => result.reverse
         case ( (d: Move) :: rest) => find_moves(rest, d::result)
         case _           :: rest  => find_moves(rest, result)
@@ -235,7 +247,7 @@ object JsonDiff {
         overlapping_moves.exists(overlapping_move => !moves_are_skewed(overlapping_move, move))
       }
 
-      def mark(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
+      @tailrec def mark(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
         case `Nil`                                                                  => result.reverse
         case ( (m: Move) :: rest) if is_not_skewed_with_another_overlapping_move(m) => mark(rest, m.copy(maybe_be_removed=false) :: result)
         case ( d         :: rest)                                                   => mark(rest, d                              :: result)
@@ -244,13 +256,13 @@ object JsonDiff {
       mark(diffs)
     }
 
-    def remove_unnecessary_moves(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
+    @tailrec def remove_unnecessary_moves(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
       case `Nil`                                            => result.reverse
       case (m: Move) :: rest if (m.pos_before==m.pos_after) => remove_unnecessary_moves(rest, result)
       case d         :: rest                                => remove_unnecessary_moves(rest, d::result)
     }
 
-    def convert_as_much_as_possible_to_Changes(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
+    @tailrec def convert_as_much_as_possible_to_Changes(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
       case `Nil`                                           => result.reverse
       case a                       :: `Nil`                => (a::result).reverse
       case (a: Remove) :: (b: Add) :: aa if (a.pos==b.pos) => convert_as_much_as_possible_to_Changes(aa, Change(a.value, b.value, a.pos) :: result)
@@ -268,7 +280,7 @@ object JsonDiff {
       case d         :: rest                                        => no_move_inbetween(rest, pos1, pos2)
     }
 
-    def adjust_before_pos(diffs: List[Diff], result: List[Diff] = List(), skew: Int = 0, dontconvertpos: Int = -1): List[Diff] = diffs match {
+    @tailrec def adjust_before_pos(diffs: List[Diff], result: List[Diff] = List(), skew: Int = 0, dontconvertpos: Int = -1): List[Diff] = diffs match {
       case `Nil`                                     => result.reverse
       case (m: Move)   :: rest if m.maybe_be_removed => adjust_before_pos(rest, m.copy(pos_before = m.pos_after )        :: result, (m.pos_after - m.pos_before))
       case (m: Move)   :: rest                       => adjust_before_pos(rest, m.copy(pos_before = m.pos_before + skew) :: result, skew)
@@ -276,21 +288,21 @@ object JsonDiff {
       case d           :: rest                       => adjust_before_pos(rest, d                                        :: result, skew)
     }
 
-    def perhaps_find_and_remove_an_Add(value: JValue, diffs: List[Diff], result: List[Diff]): Option[(Add,List[Diff])] =
+    @tailrec def perhaps_find_and_remove_an_Add(value: JValue, diffs: List[Diff], result: List[Diff]): Option[(Add,List[Diff])] =
       diffs match {
         case `Nil`                               => None
         case (a: Add) :: aa   if a.value==value  => Some(a, result.reverse ++ aa)
         case a        :: aa                      => perhaps_find_and_remove_an_Add(value, aa, a::result)
       }
 
-    def perhaps_find_and_remove_a_Remove(value: JValue, diffs: List[Diff], result: List[Diff]): Option[(Remove,List[Diff])] =
+    @tailrec def perhaps_find_and_remove_a_Remove(value: JValue, diffs: List[Diff], result: List[Diff]): Option[(Remove,List[Diff])] =
       diffs match {
         case `Nil`                                  => None
         case (a: Remove) :: aa   if a.value==value  => Some(a, result.reverse ++ aa)
         case a           :: aa                      => perhaps_find_and_remove_a_Remove(value, aa, a::result)
       }
 
-    def convert_as_much_as_possible_to_Moves(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
+    @tailrec def convert_as_much_as_possible_to_Moves(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
       case `Nil` => result.reverse
 
       case (remove: Remove) :: aa =>
@@ -308,7 +320,7 @@ object JsonDiff {
       case _ => throw new Exception("internal error. something is wrong")
     }
 
-    def find_Adds_and_Removes(pos: Int, aa: List[JValue], bb: List[JValue], result: List[Diff] = List()): List[Diff] = (aa, bb) match {
+    @tailrec def find_Adds_and_Removes(pos: Int, aa: List[JValue], bb: List[JValue], result: List[Diff] = List()): List[Diff] = (aa, bb) match {
       case   (  `Nil`,   `Nil`  )          =>   result.reverse
       case   (  `Nil`,   b::bb  )          =>   find_Adds_and_Removes(pos+1, Nil, bb,                  Add(b, pos)         :: result)
       case   (  a::aa,   `Nil`  )          =>   find_Adds_and_Removes(pos+1, aa,  Nil,                 Remove(a, pos, pos) :: result)
