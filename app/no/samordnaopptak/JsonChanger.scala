@@ -309,7 +309,7 @@ object JsonChanger{
 
         def transform(json: JValue, path: String, allow_mismatched_types: Boolean) = {
           Expects.Number.validate(json, path)
-          JsonChanger.apply(json, json + 1, path, true)
+          JsonChanger.apply(json, json + 1, path, allow_mismatched_types)
         }
       }
 
