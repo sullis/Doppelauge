@@ -20,7 +20,7 @@ class JsonChangerException(message: String, val path: String) extends Exception(
   * (You might argue that it would be better to first validate the json against a schema, but this way you get validation for free, plus that the validation schema maintains itself automatically.)
   * 
   * There are several custom changers such as [[___identity]], [[Replace]], [[Func]], [[Map]], [[MapChanger]], etc. See documentation below for examples.
-  * Custom changers can be also be created from the outside of JsonChanger by implementing the [[Changer]] trait.
+  * Custom changers can also be created from the outside by implementing the [[Changer]] trait.
   * 
   * The pattern matcher in JsonChanger checks that: a) a json value doesn't change type (unless we tell it to),
   * b) we don't add or remove fields to objects (unless we tell it to), c) we don't add or remove values to arrays (unless we tell it to).
