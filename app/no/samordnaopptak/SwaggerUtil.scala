@@ -102,14 +102,14 @@ object SwaggerUtil{
     tag(0).toUpper + tag.tail
 
   private def getTypeFromField(field: ApiDocParser.Field, addDescription: Boolean = true) = {
-    val isAtomType = atomTypes.contains(field.type_)
+    val isAtomType = atomTypes.contains(field.fieldType)
 
     val type2 =
       if (isAtomType)
-        atomTypeToSwaggerType(field.type_)
+        atomTypeToSwaggerType(field.fieldType)
       else
         J.obj(
-          "$ref" -> ("#/definitions/" + field.type_)
+          "$ref" -> ("#/definitions/" + field.fieldType)
         )
 
     val description =

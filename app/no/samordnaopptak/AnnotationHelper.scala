@@ -53,11 +53,7 @@ object AnnotationHelper{
     val confs = confUri.split("/")
 
     autos.size == confs.size &&
-    autos.zip(confs).forall(g => {
-      val auto = g._1
-      val conf = g._2
-      auto == conf
-    })
+    autos.zip(confs).forall { case (auto, conf) => auto == conf }
   }
 
   class MissingMethodException(val message: String) extends Exception(message)
