@@ -1,0 +1,168 @@
+<!DOCTYPE html >
+<html>
+        <head>
+          <title>TestByAnnotation - no.samordnaopptak.test.TestByAnnotation</title>
+          <meta name="description" content="TestByAnnotation - no.samordnaopptak.test.TestByAnnotation" />
+          <meta name="keywords" content="TestByAnnotation no.samordnaopptak.test.TestByAnnotation" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript" src="../../../../lib/jquery.js" id="jquery-js"></script>
+      <script type="text/javascript" src="../../../../lib/jquery-ui.js"></script>
+      <script type="text/javascript" src="../../../../lib/template.js"></script>
+      <script type="text/javascript" src="../../../../lib/tools.tooltip.js"></script>
+      
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../index.html';
+            var hash = 'no.samordnaopptak.test.TestByAnnotation.package';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="value">
+      <div id="definition">
+        <img src="../../../../lib/package_big.png" />
+        <p id="owner"><a href="../../../package.html" class="extype" name="no">no</a>.<a href="../../package.html" class="extype" name="no.samordnaopptak">samordnaopptak</a>.<a href="../package.html" class="extype" name="no.samordnaopptak.test">test</a></p>
+        <h1>TestByAnnotation</h1><span class="permalink">
+      <a href="../../../../index.html#no.samordnaopptak.test.TestByAnnotation.package" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" />
+      </a>
+    </span>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">package</span>
+      </span>
+      <span class="symbol">
+        <span class="name">TestByAnnotation</span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        
+        
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        
+
+        <div id="types" class="types members">
+              <h3>Type Members</h3>
+              <ol><li name="no.samordnaopptak.test.TestByAnnotation.Test" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="TestextendsAnnotationwithAnnotationwithClassfileAnnotation"></a>
+      <a id="Test:Test"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <a href="Test.html"><span class="name">Test</span></a><span class="result"> extends <span class="extype" name="scala.annotation.Annotation">Annotation</span> with <span class="extype" name="java.lang.annotation.Annotation">Annotation</span> with <span class="extype" name="scala.annotation.ClassfileAnnotation">ClassfileAnnotation</span></span>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#no.samordnaopptak.test.TestByAnnotation.package@TestextendsAnnotationwithAnnotationwithClassfileAnnotation" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" />
+      </a>
+    </span>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Value Members</h3>
+              <ol><li name="no.samordnaopptak.test.TestByAnnotation.TestObject" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="TestObject"></a>
+      <a id="TestObject:TestObject"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">object</span>
+      </span>
+      <span class="symbol">
+        <a href="TestObject$.html"><span class="name">TestObject</span></a>
+      </span>
+      </h4><span class="permalink">
+      <a href="../../../../index.html#no.samordnaopptak.test.TestByAnnotation.package@TestObject" title="Permalink" target="_top">
+        <img src="../../../../lib/permalink.png" />
+      </a>
+    </span>
+      <p class="shortcomment cmt">Do unit testing by annotation.</p><div class="fullcomment"><div class="comment cmt"><p>Do unit testing by annotation. These annotations also function as documentation.
+</p></div><dl class="attributes block"> <div class="block">Example:
+               <ol><li class="cmt"><p></p><pre><span class="cmt">// Production code:</span>
+
+<span class="kw">import</span> no.samordnaopptak.TestByAnnotation.Test
+
+<span class="kw">object</span> StringModifier{
+  @Test(code=<span class="lit">""</span><span class="lit">"
+     self.appendUnderscore("</span>a<span class="lit">")  =/= "</span>a<span class="lit">"
+     self.appendUnderscore("</span>a<span class="lit">")  === "</span>a_<span class="lit">"
+     self.appendUnderscore("</span>a2<span class="lit">") === "</span>a2_<span class="lit">"
+  "</span><span class="lit">""</span>)
+  <span class="kw">private</span> <span class="kw">def</span> appendUnderscore(input: <span class="std">String</span>): <span class="std">String</span> =
+    input+<span class="lit">"_"</span>
+}
+
+
+<span class="cmt">// Test code:</span>
+
+<span class="kw">import</span> org.specs2.mutable._
+<span class="kw">import</span> no.samordnaopptak.TestByAnnotation
+
+<span class="kw">class</span> TestByAnnotationSpec <span class="kw">extends</span> Specification {
+  <span class="lit">"TestByAnnotation"</span> should {
+    <span class="lit">"Test by annotation the 'StringModifier' object"</span> in {
+       TestByAnnotation.TestObject(StringModifier)
+    }
+  }
+}</pre></li></ol>
+            </div><dt>See also</dt><dd><span class="cmt"><p>Almost all source files in <a href="https://github.com/sun-opsys/doppelauge/tree/master/app/no/samordnaopptak" target="_blank">https://github.com/sun-opsys/doppelauge/tree/master/app/no/samordnaopptak</a> uses TestByAnnotation for unit tests
+</p></span></dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+
+
+    </body>
+      </html>
