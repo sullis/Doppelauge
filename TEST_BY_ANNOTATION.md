@@ -80,4 +80,5 @@ object Math{
 
 Scala-doc
 ---------
-http://folk.uio.no/ksvalast/doppelauge/#no.samordnaopptak.test.TestByAnnotation.TestObject$
+http://sun-opsys.github.io/Doppelauge/#no.samordnaopptak.test.TestByAnnotation.TestObject$
+

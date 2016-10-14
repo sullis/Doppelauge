@@ -16,7 +16,7 @@ All code should be thoroughly tested.
 
 ScalaDoc
 ========
-http://folk.uio.no/ksvalast/doppelauge/
+http://sun-opsys.github.io/Doppelauge/
 
 
 
