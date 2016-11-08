@@ -2,12 +2,14 @@ package no.samordnaopptak.apidoc
 
 import scala.reflect.ClassTag
 
+import com.google.inject.Inject
+
 import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation.Test
 
 
-object ApiDocParser{
+object ApiDocParser {
 
   trait ApiDocElement {
     def toJson: JValue
@@ -29,7 +31,7 @@ object ApiDocParser{
   }
 
   /**
-    A ParamType can either be body, path, query, header, formData, or undefined.
+    * A ParamType can either be body, path, query, header, formData, or undefined.
     */
   object ParamType extends Enumeration{
     type Type = Value
@@ -53,7 +55,7 @@ object ApiDocParser{
   }
 
   case class Field(name: String, type_ : String, paramType: ParamType.Type, isArray: Boolean, enumArgs: List[String], required: Boolean, comment: Option[String]) extends ApiDocElement {
-    val isEnum = enumArgs.size > 0
+    val isEnum = enumArgs.nonEmpty
 
     if(type_.count(_.isWhitespace) > 0)
       throw new Exception("A type name can not contain white space: '"+ type_ +"'")
@@ -65,7 +67,7 @@ object ApiDocParser{
         "type" -> type_ ,
         comment match {
           case None          => "noComment" -> true
-          case Some(comment) => "comment" -> comment
+          case Some(commented) => "comment" -> commented
         },
         "isArray" -> isArray,
         "isEnum" -> isEnum,
@@ -149,18 +151,18 @@ object ApiDocParser{
       Set() ++
     (parameters match {
       case None => Set()
-      case Some(parameters) => parameters.usedDataTypes
+      case Some(parameter) => parameter.usedDataTypes
     }) ++
     (results match {
       case None => Set()
-      case Some(results) => results.usedDataTypes
+      case Some(result) => result.usedDataTypes
     })
 
     private def addMaybe(apiDoc: Option[ApiDocElement], key: String = "") =
       (apiDoc, key) match {
         case (None,    _)   => J.obj()
         case (Some(a), "")  => a.toJson
-        case (Some(a), key) => J.obj(key -> a.toJson)
+        case (Some(a), jsonKey) => J.obj(jsonKey -> a.toJson)
       }
 
     /**
@@ -170,8 +172,8 @@ object ApiDocParser{
       ApiDocValidation.validate(this)
       * }}}
       */
-    def validate() =
-      ApiDocValidation.validate(this)
+    def validate(apiDocValidation: ApiDocValidation) =
+      apiDocValidation.validate(this)
 
     def toJson =
       methodAndUri.toJson ++
@@ -190,7 +192,8 @@ object ApiDocParser{
     def validate = apiDocs.foreach(_.validate())
       * }}}
       */
-    def validate = apiDocs.foreach(_.validate())
+    def validate(apiDocValidation: ApiDocValidation) =
+      apiDocs.foreach(_.validate(apiDocValidation))
 
     def toJson = JArray(apiDocs.map(_.toJson))
   }
@@ -316,7 +319,7 @@ object ApiDocParser{
   private case class TypeInfo(val parmName: String, val typetypetype: String){                             // typetypetype = "Array String (header)"
     val (enumArgs,enumSize)  = getEnumArgs(typetypetype)
     val isArray      = typetypetype.startsWith("Array")
-    val isEnum       = enumArgs.size > 0
+    val isEnum       = enumArgs.nonEmpty
     val typetype     = if (isArray) typetypetype.drop(6).trim else if (isEnum) typetypetype.drop(enumSize).trim else typetypetype                     // typetype = "String (header)"
 
     val leftParPos   = typetype.indexOf('(')
@@ -361,7 +364,7 @@ object ApiDocParser{
       Raw(key, elements ++ List(element))
 
 
-    private def getParameters(): Parameters =
+    private def getParameters: Parameters =
       Parameters(
         elements.map(element => {
           if (element=="...")
@@ -397,7 +400,7 @@ object ApiDocParser{
       )
 
 
-    private def getResults(): Results =
+    private def getResults: Results =
       Results(
         elements.map(element => {
           val splitted1 = element.trim.split(":")
@@ -434,8 +437,8 @@ object ApiDocParser{
 
      User -> {...}
      */
-    private def parseDataType(line: String): DataType = {
-      val parameters = getParameters()
+    private def parseDataType(apiDocValidation: ApiDocValidation, line: String): DataType = {
+      val parameters = getParameters
       val fieldNames = parameters.fieldNames
 
       val (dataTypeName, signature) = if (line.endsWith(":")) {
@@ -459,7 +462,7 @@ object ApiDocParser{
 
       if (signature != "!") {
         val (className, addedFields, removedFields) = parseScalaTypeSignature(signature)
-        ApiDocValidation.validateDataTypeFields(className, dataTypeName, fieldNames, addedFields, removedFields)
+        apiDocValidation.validateDataTypeFields(className, dataTypeName, fieldNames, addedFields, removedFields)
       }
 
       DataType(dataTypeName, parameters)
@@ -473,10 +476,10 @@ object ApiDocParser{
       else
         line
 
-    def getApidoc(): ApiDocElement = {
+    def getApidoc(apiDocValidation: ApiDocValidation): ApiDocElement = {
       if (key.startsWith("GET ") || key.startsWith("POST ") || key.startsWith("PUT ") || key.startsWith("DELETE ") || key.startsWith("PATCH ") || key.startsWith("OPTIONS ")) {
 
-        if (!elements.isEmpty)
+        if (elements.nonEmpty)
           throw new Exception(s"""Elements for "$key" are not empty: $elements""")
 
         val pos = key.indexOf(' ')
@@ -496,7 +499,7 @@ object ApiDocParser{
         )
 
       else if (key=="PARAMETERS")
-        getParameters()
+        getParameters
 
       else if (key=="ERRORS")
         Errors(elements.map(element =>
@@ -507,10 +510,10 @@ object ApiDocParser{
         ))
 
       else if (key=="RESULT") {
-        getResults()
+        getResults
 
       } else if (key.contains(":"))
-        parseDataType(key)
+        parseDataType(apiDocValidation, key)
 
       else
         throw new Exception(s"""Unknown key: "$key"""")
@@ -577,8 +580,8 @@ object ApiDocParser{
         case _ => maybeFindElementOfType[T](elements.tail)
       }
 
-  def getApiDoc(apidocString: String) = {
-    val elements = parseRaw(apidocString).map(_.getApidoc())
+  def getApiDoc(apiDocValidation: ApiDocValidation, apidocString: String) = {
+    val elements = parseRaw(apidocString).map(_.getApidoc(apiDocValidation))
     ApiDoc(
       findElementOfType[MethodAndUri](elements, "method and URI", apidocString),
       findElementOfType[Description](elements, "DESCRIPTION", apidocString),
@@ -595,11 +598,11 @@ object ApiDocParser{
     ApiDocs(apidocStrings.map(getApiDoc))
     * }}}
     */
-  def getApiDocs(apidocStrings: List[String]) =
-    ApiDocs(apidocStrings.map(getApiDoc))
+  def getApiDocs(apiDocValidation: ApiDocValidation, apidocStrings: List[String]) =
+    ApiDocs(apidocStrings.map(string => getApiDoc(apiDocValidation, string)))
 
-  def getDataTypes(apidocStrings: List[String]) = {
-    val elements = parseRaw(apidocStrings.mkString("\n")).map(_.getApidoc())
+  def getDataTypes(apiDocValidation: ApiDocValidation, apidocStrings: List[String]) = {
+    val elements = parseRaw(apidocStrings.mkString("\n")).map(_.getApidoc(apiDocValidation))
     DataTypes(elements.filter(_.isInstanceOf[DataType]).map(_.asInstanceOf[DataType]))
   }
 }

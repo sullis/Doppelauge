@@ -4,6 +4,8 @@ import play.api.Play.current
 
 import org.specs2.mutable._
 
+import com.google.inject.Inject
+
 import controllers.routes
 
 import play.api.test._
@@ -15,7 +17,7 @@ import no.samordnaopptak.apidoc.{RoutesHelper, ApiDocUtil}
 
 
 
-class ApiDocControllerSpec extends Specification {
+class ApiDocControllerSpec @Inject()(apiDocUtil: ApiDocUtil)  extends Specification {
 
   def inCleanEnvironment(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
@@ -75,7 +77,7 @@ class ApiDocControllerSpec extends Specification {
 
     "Validate swagger api docs" in {
       inCleanEnvironment {
-        ApiDocUtil.validate(routeEntries = routeEntries)
+        apiDocUtil.validate(routeEntries = routeEntries)
       }
     }
 

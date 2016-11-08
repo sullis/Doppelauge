@@ -12,7 +12,18 @@ libraryDependencies += specs2 % Test
 
 //libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
 
-scalacOptions in (Compile,doc) := Seq("-groups", "-implicits")
+scalacOptions in (Compile,doc) := Seq(
+  "-deprecation",
+  "-encoding", "UTF-8",
+  "-groups",
+  "-implicits",
+  "-feature",
+  "-Xlint",
+  "-Xfatal-warnings",
+  "-Ywarn-unused-import",
+  "-Ywarn-numeric-widen",
+  "-Ywarn-dead-code"
+)
 
 resolvers += "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases"
 

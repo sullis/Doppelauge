@@ -28,7 +28,7 @@ case class User(id: String, data: UserData, type_ : String){
   )
 }
 
-object UserController extends Controller {
+class UserController extends Controller {
 
   /*
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")

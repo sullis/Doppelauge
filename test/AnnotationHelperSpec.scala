@@ -5,8 +5,9 @@ import org.specs2.mutable._
 import play.api.test._
 import play.api.test.Helpers._
 
-import no.samordnaopptak.apidoc.{AnnotationHelper}
-import no.samordnaopptak.apidoc.{ApiDoc, SwaggerUtil, RoutesHelper, RouteEntry}
+import com.google.inject.Inject
+
+import no.samordnaopptak.apidoc._
 import no.samordnaopptak.test.TestByAnnotation
 
 
@@ -63,7 +64,7 @@ object AnnotationHelperData{
 }
 
 
-class AnnotationHelperSpec extends Specification {
+class annotationHelperSpec @Inject()(annotationHelper: AnnotationHelper) extends Specification {
 
   import AnnotationHelperData._
 
@@ -82,49 +83,49 @@ class AnnotationHelperSpec extends Specification {
   "AnnotationHelper" should {
 
     "pass the annotation tests" in { // First run the smallest unit tests.
-      TestByAnnotation.TestObject(AnnotationHelper)
+      TestByAnnotation.TestObject(annotationHelper)
     }
 
     "validate that the validate method that validates if method and uri in conf/routes and autodoc matches works" in {
       inCleanEnvironment() {
 
-        AnnotationHelper.validate(routeEntries)
+        annotationHelper.validate(routeEntries)
 
         {
-          val validRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.AnnotationHelperData", "errorDoc")
-          AnnotationHelper.validate(validRouteEntry::routeEntries)
+          val validRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.annotationHelperData", "errorDoc")
+          annotationHelper.validate(validRouteEntry::routeEntries)
         }
 
         {
-          val errorRouteEntry = RouteEntry("GET", "/api/v1/flapp", "test.AnnotationHelperData", "errorDoc")
-          AnnotationHelper.validate(errorRouteEntry::routeEntries) should throwA[AnnotationHelper.UriMismatchException]
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/flapp", "test.annotationHelperData", "errorDoc")
+          annotationHelper.validate(errorRouteEntry::routeEntries) should throwA[annotationHelper.UriMismatchException]
         }
 
         {
-          val errorRouteEntry = RouteEntry("PUT", "/api/v1/users/$id<[^/]+>", "test.AnnotationHelperData", "errorDoc")
-          AnnotationHelper.validate(errorRouteEntry::routeEntries) should throwA[AnnotationHelper.MethodMismatchException]
+          val errorRouteEntry = RouteEntry("PUT", "/api/v1/users/$id<[^/]+>", "test.annotationHelperData", "errorDoc")
+          annotationHelper.validate(errorRouteEntry::routeEntries) should throwA[annotationHelper.MethodMismatchException]
         }
 
         {
-          val errorRouteEntry = RouteEntry("GET", "/api/v1/users", "test.AnnotationHelperData", "errorDoc")
-          AnnotationHelper.validate(errorRouteEntry::routeEntries) should throwA[AnnotationHelper.UriMismatchException]
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/users", "test.annotationHelperData", "errorDoc")
+          annotationHelper.validate(errorRouteEntry::routeEntries) should throwA[annotationHelper.UriMismatchException]
         }
 
         {
-          val errorRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.AnnotationHelperData", "errorDoc2")
-          AnnotationHelper.validate(errorRouteEntry::routeEntries) should throwA[AnnotationHelper.UriMismatchException]
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/users/$id<[^/]+>", "test.annotationHelperData", "errorDoc2")
+          annotationHelper.validate(errorRouteEntry::routeEntries) should throwA[annotationHelper.UriMismatchException]
         }
 
         // The function  misses error doc
         {
-          val errorRouteEntry = RouteEntry("GET", "/api/v1/somewhere", "test.AnnotationHelperData", "errorDoc3")
-          AnnotationHelper.validate(errorRouteEntry::routeEntries) should throwA[AnnotationHelper.MissingMethodException]
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/somewhere", "test.annotationHelperData", "errorDoc3")
+          annotationHelper.validate(errorRouteEntry::routeEntries) should throwA[annotationHelper.MissingMethodException]
         }
 
         // The function itself is missing
         {
-          val errorRouteEntry = RouteEntry("GET", "/api/v1/somewhere", "test.AnnotationHelperData", "errorDoc3NotHere")
-          AnnotationHelper.validate(errorRouteEntry::routeEntries) should throwA[AnnotationHelper.MissingMethodException]
+          val errorRouteEntry = RouteEntry("GET", "/api/v1/somewhere", "test.annotationHelperData", "errorDoc3NotHere")
+          annotationHelper.validate(errorRouteEntry::routeEntries) should throwA[annotationHelper.MissingMethodException]
         }
 
       }
@@ -132,7 +133,7 @@ class AnnotationHelperSpec extends Specification {
 
     "validate all route entries" in {
       inCleanEnvironment() {
-        AnnotationHelper.validate(routeEntries)
+        annotationHelper.validate(routeEntries)
       }
     }
 

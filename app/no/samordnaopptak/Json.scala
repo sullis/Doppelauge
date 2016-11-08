@@ -557,8 +557,8 @@ object J {
         ListMap(value:_*)
       )
        */
-      case value: Iterable[_] => JArray(value.map(apply(_)).toSeq)
-      case value: Array[_] => JArray(value.map(apply(_)).toSeq)
+      case value: Iterable[_] => JArray(value.map(apply).toSeq)
+      case value: Array[_] => JArray(value.map(apply).toSeq)
       case `None` => JNull
       case Some(value) => apply(value)
       case _ if a==null => JNull
@@ -591,7 +591,7 @@ object J {
     try{
       jsValueToJValue(play.api.libs.json.Json.parse(jsonString))
     }catch{
-      case e: Throwable => throw new JsonParseException(s"""Could not parse "$jsonString": ${e.getMessage()}""")
+      case e: Throwable => throw new JsonParseException(s"""Could not parse "$jsonString": ${e.getMessage}""")
     }
 
   /**
@@ -668,7 +668,7 @@ object J {
   /**
     * Used in conjunction with [[JValue.change]]
     */
-  val ___removeThisField: (String, Any) = ("___remove_this_field___" -> "___remove_this_field___")
+  val ___removeThisField: (String, Any) = "___remove_this_field___" -> "___remove_this_field___"
 
   /**
     * Does NOT throw exception if key clash. Might want to use {{{

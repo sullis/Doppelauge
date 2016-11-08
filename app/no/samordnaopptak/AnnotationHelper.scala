@@ -2,10 +2,19 @@ package no.samordnaopptak.apidoc
 
 import play.api.Play.current
 
+import com.google.inject.Inject
+
 import no.samordnaopptak.test.TestByAnnotation.Test
 
 
-object AnnotationHelper{
+class AnnotationHelper @Inject() (
+  environment: play.api.Environment,
+  apiDocValidation: ApiDocValidation
+
+) {
+
+  val apiDocValidator = apiDocValidation
+
   @Test(code="""
      self.hasSameUri("/api/v1/acl", "/api/v1/acl")   === true
      self.hasSameUri("/1api/v1/acl", "/api/v1/acl")  =/= true
@@ -66,29 +75,29 @@ object AnnotationHelper{
 
 
   private def hasAnnotation(method: java.lang.reflect.Method) = {
-    val annotations = method.getAnnotations()
+    val annotations = method.getAnnotations
     annotations.exists(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc])
   }
 
 
   def hasMethodAnnotation(className: String, methodName: String) = {
-    val class_ = play.api.Play.classloader.loadClass(className)
+    val class_ = environment.classLoader.loadClass(className)
 
-    class_.getDeclaredMethods().exists(
-      method => method.getName()==methodName && hasAnnotation(method)
+    class_.getDeclaredMethods.exists(
+      method => method.getName==methodName && hasAnnotation(method)
     )
   }
 
   def getMethodAnnotation(className: String, methodName: String) = {
-    val class_ = play.api.Play.classloader.loadClass(className)
+    val class_ = environment.classLoader.loadClass(className)
 
     val method =
-      class_.getDeclaredMethods().find(
-        method => (method.getName()==methodName && hasAnnotation(method))
+      class_.getDeclaredMethods.find(
+        method => method.getName == methodName && hasAnnotation(method)
       ).get
 
     val rightAnnotation =
-      method.getAnnotations().find(
+      method.getAnnotations.find(
         _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
       ).get
 
@@ -102,7 +111,7 @@ object AnnotationHelper{
 
       if (trimmed.startsWith("INCLUDE ")) {
 
-        val pathAndMethod = trimmed.drop("INCLUDE ".size).trim
+        val pathAndMethod = trimmed.drop("INCLUDE ".length).trim
 
         if (alreadyIncluded.contains(pathAndMethod)) {
 
@@ -153,8 +162,8 @@ object AnnotationHelper{
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
 
-      val apiDoc = ApiDocParser.getApiDoc(doc)
-      ApiDocValidation.validate(apiDoc)
+      val apiDoc = ApiDocParser.getApiDoc(apiDocValidation, doc)
+      apiDocValidation.validate(apiDoc)
       val json = apiDoc.toJson
 
       val jsonMethod = json("method").asString

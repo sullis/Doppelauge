@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import com.typesafe.config._
+import play.sbt.PlayScala
 import java.io.PrintWriter
 
 object ApplicationBuild extends Build {
@@ -10,7 +11,7 @@ object ApplicationBuild extends Build {
 
   val appDependencies = Seq()
 
-  val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
+  val main = Project(appName, file(".")).enablePlugins(PlayScala).settings(
     version := appVersion,
     libraryDependencies ++= appDependencies,
 
@@ -18,6 +19,8 @@ object ApplicationBuild extends Build {
     organization := "no.samordnaopptak",
 
     publishMavenStyle := true,
+
+//    routesGenerator := InjectedRoutesGenerator,
 
 /*    
 
