@@ -9,7 +9,9 @@ import no.samordnaopptak.apidoc.ApiDocValidation
 
 
 
-class ApiDocValidationSpec @Inject()(apiDocValidation: ApiDocValidation) extends Specification {
+class ApiDocValidationSpec extends Specification with InjectHelper {
+
+  lazy val apiDocValidation = inject[ApiDocValidation]
 
   class Inner1{
     case class Inner2()

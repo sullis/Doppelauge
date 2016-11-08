@@ -34,7 +34,7 @@ case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scala
     else if (confUri.startsWith("$")) {
       val pos = confUri.indexOf("<")
       val pos2 = confUri.indexOf(">")
-      val offset = pos2 - pos;
+      val offset = pos2 - pos
       "{" + confUri.substring(1, pos) + "}" + getDocUri2(confUri.drop(pos+offset+1))
     } else if (confUri.startsWith("{")) {
       throw new Exception("""The URI in the play framework conf file can not contain a "{". Maybe you meant to use colon (":") instead?. Method: """"+restMethod+"""", Uri: """"+uri+'"')
@@ -57,7 +57,7 @@ object RoutesHelper{
   // code in this method copied from the swagger play2 module.
   private def getRestClassName(annoDocField3: String) = {
     val m1 = annoDocField3.lastIndexOf("(") match {
-      case i: Int if (i > 0) => annoDocField3.substring(0, i)
+      case i: Int if i > 0 => annoDocField3.substring(0, i)
       case _ => annoDocField3
     }
     m1.substring(0, m1.lastIndexOf(".")).replace("@", "")

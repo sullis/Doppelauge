@@ -26,7 +26,6 @@ class ApiDocUtil @Inject() (
     * }}}
     */
   def getSwaggerDocs(basePath: String = "/", apidocstrings: List[String] = annotationHelper.getApiDocsFromAnnotations()): JObject = {
-
     val apiDocs = ApiDocParser.getApiDocs(
       annotationHelper.apiDocValidator,
       apidocstrings

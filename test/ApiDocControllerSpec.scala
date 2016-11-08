@@ -17,7 +17,9 @@ import no.samordnaopptak.apidoc.{RoutesHelper, ApiDocUtil}
 
 
 
-class ApiDocControllerSpec @Inject()(apiDocUtil: ApiDocUtil)  extends Specification {
+class ApiDocControllerSpec  extends Specification with InjectHelper {
+
+  lazy val apiDocUtil = inject[ApiDocUtil]
 
   def inCleanEnvironment(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
@@ -42,7 +44,7 @@ class ApiDocControllerSpec @Inject()(apiDocUtil: ApiDocUtil)  extends Specificat
 
     val result = route(request).get
 
-    if (contentType(result) != Some("application/json"))
+    if (!contentType(result).contains("application/json"))
       throw new Exception("contentType(result) is not Some(\"application/json\"), but "+contentType(result))
 
     val json = contentAsJson(result)
@@ -64,7 +66,7 @@ class ApiDocControllerSpec @Inject()(apiDocUtil: ApiDocUtil)  extends Specificat
       inCleanEnvironment {
 
         checkResult(
-          routes.ApiDocController.get,
+          routes.ApiDocController.get(),
           J.obj(
             "paths" -> J.obj(
               JsonMatcher.___allowOtherFields

@@ -1,13 +1,16 @@
 package test
 
 import org.specs2.mutable._
+import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test._
+
+import com.google.inject.Inject
 
 import no.samordnaopptak.json._
 
 import no.samordnaopptak.test.TestByAnnotation
 
-import no.samordnaopptak.apidoc.{ApiDocUtil, ApiDocParser, SwaggerUtil}
+import no.samordnaopptak.apidoc.{ApiDocValidation, ApiDocUtil, ApiDocParser, SwaggerUtil}
 
 
 object SwaggerTestData{
@@ -347,20 +350,24 @@ object SwaggerTestData{
 
 }
 
+class SwaggerUtilSpec extends Specification with InjectHelper {
 
-class SwaggerUtilSpec extends Specification {
+  lazy val apiDocValidation = inject[ApiDocValidation]
+  lazy val apiDocUtil = inject[ApiDocUtil]
+
+  val apiDocSamples = ApiDocSamples(apiDocValidation)
 
   "Swagger" should {
 
     "pass the annotation tests" in { // First run the smallest unit tests.
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         TestByAnnotation.TestObject(SwaggerUtil)
       }
     }
 
 
     "Produce the main thing" in {
-      val produced = ApiDocUtil.getSwaggerDocs("/api/v1/", SwaggerTestData.apidocstrings)
+      val produced = apiDocUtil.getSwaggerDocs("/api/v1/", SwaggerTestData.apidocstrings)
 
       val correct = J.parse(SwaggerTestData.jsonstring)
 
@@ -375,9 +382,9 @@ class SwaggerUtilSpec extends Specification {
 
     "validate that all used datatype are defined" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        val apidocstrings = ApiDocSamples.allAndMissingDataTypes
-        val apiDocs = ApiDocParser.getApiDocs(apidocstrings)
-        val dataTypes = ApiDocParser.getDataTypes(apidocstrings)
+        val apidocstrings = apiDocSamples.allAndMissingDataTypes
+        val apiDocs = ApiDocParser.getApiDocs(apiDocValidation, apidocstrings)
+        val dataTypes = ApiDocParser.getDataTypes(apiDocValidation, apidocstrings)
 
         SwaggerUtil.getMain("/api/v1/", apiDocs, dataTypes) should throwA(new Exception("""2 ApiDoc datatype(s) was/were undefined while evaluating "/api/v1/": ("StringSalabim", "StringSalami")"""))
       }

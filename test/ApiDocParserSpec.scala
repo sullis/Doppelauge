@@ -316,8 +316,10 @@ case class ApiDocSamples(
   val allAndMissingDataTypes = all ++ List(docWithMissingDataTypes)
 }
 
+class ApiDocParserSpec extends Specification with InjectHelper {
 
-class ApiDocParserSpec @Inject()(apiDocValidation: ApiDocValidation) extends Specification {
+  lazy val apiDocValidation = inject[ApiDocValidation]
+  lazy val configuration = inject[play.api.Configuration]
 
   val apiDocSamples = ApiDocSamples(apiDocValidation)
 
@@ -351,7 +353,10 @@ class ApiDocParserSpec @Inject()(apiDocValidation: ApiDocValidation) extends Spe
 
     "Test getting class from models instead, if we get ClassNotFoundException" in {
       play.api.test.Helpers.running(FakeApplication()) {
-        if (play.api.Play.current.configuration.getString("application.name").get == "studieadmin")
+
+//        if(configuration.getString())
+
+        if (configuration.getString("application.name").get == "studieadmin")
           ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithClassFromModels)
       }
       true

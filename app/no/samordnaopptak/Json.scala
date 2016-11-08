@@ -239,7 +239,8 @@ trait JValue {
     try{
       asArray(index)
     }catch{
-      case e: java.lang.IndexOutOfBoundsException => throw new JsonException("index "+index+" not found in "+pp()+" ("+e.getMessage()+")")
+      case e: java.lang.IndexOutOfBoundsException =>
+        throw new JsonException("index "+index+" not found in "+pp()+" ("+e.getMessage+")")
     }
 
 
@@ -259,11 +260,13 @@ trait JValue {
 
   protected def pick2(pickers: Seq[Any]): JValue =
     pickers match {
+
       case Nil                 => this
-      case (p: String) :: rest if (p.endsWith("(recursively)")) => {        
+
+      case (p: String) :: rest if p.endsWith("(recursively)") =>
         val realKey = p.take(p.length - "(recursively)".length).trim
         JArray(getRecursively(realKey)).pick2(rest)
-      }
+
       case (p: String) :: rest => apply(p).pick2(rest)
       case (p: Int)    :: rest => apply(p).pick2(rest)
     }
@@ -314,7 +317,7 @@ trait JValue {
     val visitedKeys = this.visitedKeys ++ ignoreKeys
     val diff = asMap.keys.toSet.diff(visitedKeys)
 
-    if (!diff.isEmpty)
+    if (diff.nonEmpty)
       throw new JsonParseException(s"""Unknown field(s): ${diff.mkString("\"", "\", \"", "\"")}""")
   }
 
@@ -527,7 +530,7 @@ object J {
           case (k: String, v: JsValue) => k -> jsValueToJValue(v)
         }
       )
-      case j: JsArray => JArray(j.value.map(jsValueToJValue(_)).toSeq)
+      case j: JsArray => JArray(j.value.map(jsValueToJValue).toSeq)
       case `JsNull` => JNull
     }
 

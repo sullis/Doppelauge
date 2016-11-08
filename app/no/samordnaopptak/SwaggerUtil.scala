@@ -146,11 +146,9 @@ object SwaggerUtil{
 
   private def getResult(result: ApiDocParser.Result) =
     J.obj(
-      result.code.toString -> (
-        J.obj(
-          "description" -> result.field.comment.getOrElse(""),
-          "schema" -> getTypeFromField(result.field, addDescription=false)
-        )
+      result.code.toString -> J.obj(
+        "description" -> result.field.comment.getOrElse(""),
+        "schema" -> getTypeFromField(result.field, addDescription = false)
       )
     )
 
@@ -227,13 +225,13 @@ object SwaggerUtil{
   }
 
   private def getDefinitions(dataTypes: ApiDocParser.DataTypes): JObject =
-    J.flattenJObjects(dataTypes.dataTypes.map(getDefinition(_)))
+    J.flattenJObjects(dataTypes.dataTypes.map(getDefinition))
 
   @Test(code="""
-      self.allTags("/api/v1/", test.ApiDocSamples.emptyAD)    === Set()
-      self.allTags("/api/v1/", test.ApiDocSamples.allUsersAD) === Set("users", "usernames")
-      self.allTags("/api/v1/", test.ApiDocSamples.allAclsAD)  === Set("acl")
-      self.allTags("/api/v1/", test.ApiDocSamples.allAD)      === Set("acl", "usernames", "users")
+    self.allTags("/api/v1/", test.ApiDocSamples((new play.api.inject.guice.GuiceApplicationBuilder).injector().instanceOf[no.samordnaopptak.apidoc.ApiDocValidation]).emptyAD)    === Set()
+    self.allTags("/api/v1/", test.ApiDocSamples((new play.api.inject.guice.GuiceApplicationBuilder).injector().instanceOf[no.samordnaopptak.apidoc.ApiDocValidation]).allUsersAD) === Set("users", "usernames")
+    self.allTags("/api/v1/", test.ApiDocSamples((new play.api.inject.guice.GuiceApplicationBuilder).injector().instanceOf[no.samordnaopptak.apidoc.ApiDocValidation]).allAclsAD)  === Set("acl")
+    self.allTags("/api/v1/", test.ApiDocSamples((new play.api.inject.guice.GuiceApplicationBuilder).injector().instanceOf[no.samordnaopptak.apidoc.ApiDocValidation]).allAD)      === Set("acl", "usernames", "users")
   """)
   private def allTags(basePath: String, apiDocs: ApiDocParser.ApiDocs): Set[String] = {
     val ret = apiDocs.apiDocs.map(
@@ -253,7 +251,7 @@ object SwaggerUtil{
     println("definedTypes: "+definedTypes)
     println("usedTypes: "+usedTypes)
      */
-    if (undefinedTypes.size>0)
+    if (undefinedTypes.nonEmpty)
       throw new Exception(s"""${undefinedTypes.size} ApiDoc datatype(s) was/were undefined while evaluating "$basePath": """+undefinedTypes.toList.sorted.map(s => s""""$s"""").toString.drop(4))
   }
 
