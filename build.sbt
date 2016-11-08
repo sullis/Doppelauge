@@ -2,7 +2,7 @@ name := """doppelauge"""
 
 version := "1.0"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.8"
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
