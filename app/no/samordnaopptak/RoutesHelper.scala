@@ -1,5 +1,11 @@
 package no.samordnaopptak.apidoc
 
+import play.api.routing.{SimpleRouter, Router}
+import play.routing.Router.RouteDocumentation
+
+import com.google.inject.Inject
+import play.api.inject.RoutesProvider
+
 import no.samordnaopptak.test.TestByAnnotation.Test
 
 
@@ -43,6 +49,7 @@ case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scala
 
   /**
     * Returns the type of uri used in the docs.
+ *
     * @example {{{RouteEntry("", "/api/v1/acl/\$service<[^/]+>", "", "").getDocUri === "/api/v1/acl/{service}"}}}
     */
   def getDocUri: String =
@@ -50,9 +57,12 @@ case class RouteEntry(restMethod: String, uri: String, scalaClass: String, scala
 }
 
 
-object RoutesHelper{
+class RoutesHelper @Inject()(
+  environment: play.api.Environment,
+  router: RoutesProvider
+){
 
-  import play.api.Play.current
+//  import play.api.Play.current
 
   // code in this method copied from the swagger play2 module.
   private def getRestClassName(annoDocField3: String) = {
@@ -79,9 +89,8 @@ object RoutesHelper{
       annoDocField3.drop(last+1)
     }
 
-
   def getRouteEntries(): List[RouteEntry] =
-    play.api.Play.routes.documentation.map(doc =>
+    router.get.documentation.map(doc =>
       RouteEntry(doc._1, doc._2, getRestClassName(doc._3), getRestMethodName(doc._3))
     ).map(routeEntry =>
       //println("routeEntry: "+routeEntry)

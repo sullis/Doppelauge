@@ -9,8 +9,8 @@ import no.samordnaopptak.test.TestByAnnotation.Test
 
 class AnnotationHelper @Inject() (
   environment: play.api.Environment,
-  apiDocValidation: ApiDocValidation
-
+  apiDocValidation: ApiDocValidation,
+  routesHelper: RoutesHelper
 ) {
 
   val apiDocValidator = apiDocValidation
@@ -190,7 +190,7 @@ class AnnotationHelper @Inject() (
   /**
     * @return List of strings with api docs text. INCLUDE is expanded. The returned value is not a list of lines, but a list of multiline strings. Each multiline string contains the ApiDoc annotation of a method.
     */
-  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): List[String] = {
+  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = routesHelper.getRouteEntries()): List[String] = {
 
     val routeEntriesWithoutApiDocs = routeEntries.filter(routeEntry => hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
     validate(routeEntriesWithoutApiDocs)

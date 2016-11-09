@@ -9,7 +9,8 @@ import no.samordnaopptak.json._
   * High level interface to ApiDoc
   */
 class ApiDocUtil @Inject() (
-  annotationHelper: AnnotationHelper
+  annotationHelper: AnnotationHelper,
+  routesHelper: RoutesHelper
 ) {
 
   /**
@@ -44,7 +45,7 @@ class ApiDocUtil @Inject() (
     *
     * @see [[https://github.com/sun-opsys/Doppelauge/blob/master/API_DOC.md#fixing-runtime-exceptions API_DOC.md ]] for instructions on how to handle runtime exceptions.
     */
-  def validate(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): Unit = {
+  def validate(routeEntries: List[RouteEntry] = routesHelper.getRouteEntries()): Unit = {
     annotationHelper.validate(routeEntries)
     getSwaggerDocs("/")
   }

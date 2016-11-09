@@ -68,8 +68,7 @@ class AnnotationHelperSpec extends Specification with InjectHelper {
   import AnnotationHelperData._
 
   lazy val annotationHelper = inject[AnnotationHelper]
-
-
+  lazy val routesHelper = inject[RoutesHelper]
 
   def inCleanEnvironment()(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
@@ -79,9 +78,8 @@ class AnnotationHelperSpec extends Specification with InjectHelper {
   }
 
   def routeEntries =
-    RoutesHelper.getRouteEntries()
+    routesHelper.getRouteEntries()
       .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
-
 
   "AnnotationHelper" should {
 

@@ -20,6 +20,7 @@ import no.samordnaopptak.apidoc.{RoutesHelper, ApiDocUtil}
 class ApiDocControllerSpec  extends Specification with InjectHelper {
 
   lazy val apiDocUtil = inject[ApiDocUtil]
+  lazy val routesHelper = inject[RoutesHelper]
 
   def inCleanEnvironment(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
@@ -58,7 +59,7 @@ class ApiDocControllerSpec  extends Specification with InjectHelper {
   "ApiDoc controller" should {
 
     def routeEntries =
-      RoutesHelper.getRouteEntries()
+      routesHelper.getRouteEntries()
         .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
 
 
