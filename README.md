@@ -18,7 +18,11 @@ ScalaDoc
 ========
 http://sun-opsys.github.io/Doppelauge/
 
+Play 2.5.x
+=====================
+Branch upgrading-deps has support for 2.5.x, but you need to inject the base classes used in ApiDoc using the same constructs as given in the specs, i.e. InjectHelper trait.
 
+This branch is only tested with static routers. Dependency injected Controllers are not tested, and probably will not work . Look at the source code and the methods marked @deprecated. There are also functions using the injected Environment. You need to use these expose them publically. PRs are welcome.
 
 Play 2.3 vs. Play 2.4
 =====================
