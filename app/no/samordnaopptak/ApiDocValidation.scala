@@ -39,17 +39,32 @@ class ApiDocValidation @Inject() (
   class ClassNotFoundException(message: String) extends Exception(message)
 
 
-  private def safeLoadClass(className: String): java.lang.Class[_] =
+  //play.api.Play.classloader.loadClass(className)
+
+  private def safeLoadClassThroughDependencyInjection(className: String): java.lang.Class[_] =
     try{
       environment.classLoader.loadClass(className)
+    } catch {
+      case e: java.lang.ClassNotFoundException => null.asInstanceOf[java.lang.Class[_]]
+    }
+
+  private def safeLoadClass(className: String): java.lang.Class[_] =
+    try{
+      play.api.Play.classloader.loadClass(className)
      } catch {
         case e: java.lang.ClassNotFoundException => null.asInstanceOf[java.lang.Class[_]]
     }
 
+  private def loadClassThroughDependencyInjection(fullClassName: String, className: String): java.lang.Class[_] =
+    try{
+      environment.classLoader.loadClass(className)
+    } catch {
+      case e: java.lang.ClassNotFoundException => throw new ClassNotFoundException("""The class with name """" + fullClassName + """" was not found""")
+    }
 
   private def loadClass(fullClassName: String, className: String): java.lang.Class[_] =
     try{
-      environment.classLoader.loadClass(className)
+      play.api.Play.classloader.loadClass(className)
     } catch {
       case e: java.lang.ClassNotFoundException => throw new ClassNotFoundException("""The class with name """" + fullClassName + """" was not found""")
     }
@@ -111,6 +126,7 @@ class ApiDocValidation @Inject() (
   ApiDocValidation.loadInnerClass("here.Inner1.Inner2")
     * }}}
     */
+  @deprecated("Only to support Play 2.4.x and static router, in the future use (To Be Implemented ...)")
   def loadInnerClass(className: String): java.lang.Class[_] =
     loadInnerClass(null.asInstanceOf[java.lang.Class[_]], className, className, className.split('.').toList)
 

@@ -546,11 +546,19 @@ object ApiDocParser {
     }
 
   private def parseRaw(apidoc: String): List[Raw] = {
-    val lines = apidoc.split("\n").filter(line => line.trim.length>0).toList // All non-empty lines.
-    val indentLength = getIndentLength(lines.head)
-    val line = lines.head.trim
+    val lines =
+      apidoc.split("\n")
+        .filter(line => line.trim.length>0)
+        .toList // All non-empty lines.
 
-    parseRaw(lines.tail, Raw(line, List()), List(), indentLength)
+    if(lines.nonEmpty) {
+      val indentLength = getIndentLength(lines.head)
+      val line = lines.head.trim
+      parseRaw(lines.tail, Raw(line, List()), List(), indentLength)
+    }
+    else
+      List.empty[Raw]
+
   }
           
   /**

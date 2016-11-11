@@ -1,6 +1,8 @@
 package no.samordnaopptak.apidoc
 
+import play.Routes
 import play.api.routing.{SimpleRouter, Router}
+import play.core.routing.Route
 import play.routing.Router.RouteDocumentation
 
 import com.google.inject.Inject
@@ -89,12 +91,20 @@ class RoutesHelper @Inject()(
       annoDocField3.drop(last+1)
     }
 
-  def getRouteEntries(): List[RouteEntry] =
-    router.get.documentation.map(doc =>
+  private def getDocumentation(routeDocumentation: Seq[(String, String, String)]): List[RouteEntry] = {
+    routeDocumentation.map { doc =>
       RouteEntry(doc._1, doc._2, getRestClassName(doc._3), getRestMethodName(doc._3))
-    ).map(routeEntry =>
-      //println("routeEntry: "+routeEntry)
-      routeEntry
+    }.toList
+  }
+
+  def getRoutes(): List[RouteEntry] =
+    getDocumentation(router.get.documentation)
+
+//    router.get.documentation.map(doc =>
+//      RouteEntry(doc._1, doc._2, getRestClassName(doc._3), getRestMethodName(doc._3))
+//    ).map(routeEntry =>
+//      //println("routeEntry: "+routeEntry)
+//      routeEntry
 /*
     ).filter(routeEntry =>
       routeEntry.scalaClass != "controllers.Assets" &&
@@ -102,7 +112,14 @@ class RoutesHelper @Inject()(
       routeEntry.scalaClass != "controllers.Application" &&
       !routeEntry.uri.contains("<.+>")
  */
-    ).toList
+//    ).toList
+
+
+  @deprecated("Only to support Play 2.4.x in the future use getRoutes()")
+  def getRouteEntries(): List[RouteEntry] = {
+    import play.api.Play.current
+    getDocumentation(play.api.Play.routes.documentation)
+  }
 
   @Test(code="""
     self.urisMatches("/api/v1/50", "/api/v1/50") === true

@@ -8,6 +8,7 @@ import no.samordnaopptak.test.TestByAnnotation.Test
 
 
 class AnnotationHelper @Inject() (
+
   environment: play.api.Environment,
   apiDocValidation: ApiDocValidation,
   routesHelper: RoutesHelper
@@ -79,17 +80,43 @@ class AnnotationHelper @Inject() (
     annotations.exists(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc])
   }
 
-
-  def hasMethodAnnotation(className: String, methodName: String) = {
+  def methodAnnotationExists(className:String, methodName:String) = {
     val class_ = environment.classLoader.loadClass(className)
+
+    class_.getDeclaredMethods.exists(
+      method => method.getName==methodName && hasAnnotation(method)
+    )
+
+  }
+
+  def methodAnnotation(className: String, methodName: String) = {
+    val class_ = environment.classLoader.loadClass(className)
+
+    val method =
+      class_.getDeclaredMethods.find(
+        method => method.getName == methodName && hasAnnotation(method)
+      ).get
+
+    val rightAnnotation =
+      method.getAnnotations.find(
+        _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
+      ).get
+
+    rightAnnotation.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
+  }
+
+  @deprecated("Only to support Play 2.4.x in the future use ...")
+  def hasMethodAnnotation(className: String, methodName: String) = {
+    val class_ = play.api.Play.classloader.loadClass(className)
 
     class_.getDeclaredMethods.exists(
       method => method.getName==methodName && hasAnnotation(method)
     )
   }
 
+  @deprecated("Only to support Play 2.4.x in the future use ...")
   def getMethodAnnotation(className: String, methodName: String) = {
-    val class_ = environment.classLoader.loadClass(className)
+    val class_ = play.api.Play.classloader.loadClass(className)
 
     val method =
       class_.getDeclaredMethods.find(
@@ -203,5 +230,7 @@ class AnnotationHelper @Inject() (
 
     apiDocs
   }
+
+
 
 }
