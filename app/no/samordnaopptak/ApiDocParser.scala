@@ -399,15 +399,17 @@ object ApiDocParser {
         })
       )
 
-
-    private def getResults: Results =
+    private def getResults(): Results =
       Results(
         elements.map(element => {
+
           val splitted1 = element.trim.split(":")
-          val (code, varnameAndComment) = if (splitted1.size==1)
-                                          (200, element)
-                                        else 
-                                         (splitted1(0).trim.toInt, splitted1.tail.mkString.trim)
+
+          val (code, varnameAndComment) =
+            if (splitted1.size == 1)
+              (200, element)
+            else
+              (splitted1(0).trim.toInt, splitted1.tail.mkString.trim)
 
           val splitted2 = varnameAndComment.split("<-").map(_.trim)
 

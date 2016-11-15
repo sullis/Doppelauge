@@ -8,13 +8,10 @@ import no.samordnaopptak.test.TestByAnnotation.Test
 
 
 class AnnotationHelper @Inject() (
-
   environment: play.api.Environment,
-  apiDocValidation: ApiDocValidation,
+  val apiDocValidator: ApiDocValidation,
   routesHelper: RoutesHelper
 ) {
-
-  val apiDocValidator = apiDocValidation
 
   @Test(code="""
      self.hasSameUri("/api/v1/acl", "/api/v1/acl")   === true
@@ -80,6 +77,7 @@ class AnnotationHelper @Inject() (
     annotations.exists(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc])
   }
 
+  //TODO: When implementing support for Play 2.5 DI, use this
   def methodAnnotationExists(className:String, methodName:String) = {
     val class_ = environment.classLoader.loadClass(className)
 
@@ -89,20 +87,19 @@ class AnnotationHelper @Inject() (
 
   }
 
+  //TODO: When implementing support for Play 2.5 DI, use this
   def methodAnnotation(className: String, methodName: String) = {
     val class_ = environment.classLoader.loadClass(className)
 
-    val method =
-      class_.getDeclaredMethods.find(
-        method => method.getName == methodName && hasAnnotation(method)
-      ).get
-
-    val rightAnnotation =
-      method.getAnnotations.find(
+    for {
+      method <- class_.getDeclaredMethods.find( method =>
+          method.getName == methodName && hasAnnotation(method)
+      )
+      rightAnnotation <- method.getAnnotations.find(
         _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
-      ).get
+      )
+    } yield rightAnnotation.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
 
-    rightAnnotation.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
   }
 
   @deprecated("Only to support Play 2.4.x in the future use ...")
@@ -189,8 +186,8 @@ class AnnotationHelper @Inject() (
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
 
-      val apiDoc = ApiDocParser.getApiDoc(apiDocValidation, doc)
-      apiDocValidation.validate(apiDoc)
+      val apiDoc = ApiDocParser.getApiDoc(apiDocValidator, doc)
+      apiDocValidator.validate(apiDoc)
       val json = apiDoc.toJson
 
       val jsonMethod = json("method").asString
