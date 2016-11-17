@@ -6,11 +6,12 @@ package controllers
 
 import play.api.mvc._
 
-import no.samordnaopptak.apidoc.{ApiDoc, ApiDocUtil}
-import no.samordnaopptak.apidoc.{RoutesHelper, RouteEntry}
+import com.google.inject.Inject
+
+import no.samordnaopptak.apidoc._
 import no.samordnaopptak.json.J
 
-object ApiDocController extends Controller {
+class ApiDocController @Inject() (apiDocUtil: ApiDocUtil) extends Controller {
 
 /*
   private val AccessControlAllowOrigin = ("Access-Control-Allow-Origin", "*")
@@ -35,7 +36,7 @@ object ApiDocController extends Controller {
       You can add more detailed information here.
   """)
   def get() = Action { request =>
-    val generatedSwaggerDocs = ApiDocUtil.getSwaggerDocs()
+    val generatedSwaggerDocs = apiDocUtil.getSwaggerDocs()
     val json = generatedSwaggerDocs ++ swaggerInfoObject
     Ok(json.asJsValue)
 

@@ -199,7 +199,7 @@ object JsonMatcher{
     val regexp = new scala.util.matching.Regex(pattern)
 
     def check(string: String): Boolean =
-      regexp.findFirstIn(string) != None
+      regexp.findFirstIn(string).isDefined
 
     override def asJsValue = this
   }
@@ -411,9 +411,9 @@ object JsonMatcher{
       Seq(values.head) ++ getValuesWithoutNumsAndIgnores(values.tail)
 
   private def matchOrderedJsonArrays(json: JArray, allowOthers: Boolean, matchers: Seq[JValue], pos: Int, values: Seq[JValue], throwException: Boolean, path: String, errorMessage: Option[String]): Boolean = {
-    assert(errorMessage==None || allowOthers==false)
+    assert(errorMessage.isEmpty || !allowOthers)
 
-    if (matchers.isEmpty && !values.isEmpty && errorMessage!=None)
+    if (matchers.isEmpty && values.nonEmpty && errorMessage.isDefined)
       matchJsonFailed(errorMessage.get + s"First non-matching element found at position $pos, with value ${values.head.pp()}. The matcher doesn't have that many elements.", throwException, path)
 
     else if (matchers.isEmpty)
@@ -426,20 +426,20 @@ object JsonMatcher{
       matchJsonFailed(s"${matchers.head.pp()} is not present in the array ${json.pp()}", throwException, path)
 
     else if (allowOthers) {
-      val matches = matchJson(matchers.head, values.head, false, false, path+"("+pos+")")
-      if (matches==false)
+      val matches = matchJson(matchers.head, values.head, throwException = false, ignoreArrayOrder = false, path+"("+pos+")")
+      if (!matches)
         matchOrderedJsonArrays(json, allowOthers, matchers, pos, values.tail, throwException, path, errorMessage)
       else
         matchOrderedJsonArrays(json, allowOthers, matchers.tail, pos+1, values.tail, throwException, path, errorMessage)
 
     } else {
       val newPath = path+"("+pos+")"
-      val matches = matchJson(matchers.head, values.head, throwException, false, newPath)
-      if (matches==false && errorMessage!=None) {
+      val matches = matchJson(matchers.head, values.head, throwException, ignoreArrayOrder = false, newPath)
+      if (!matches && errorMessage.isDefined) {
         matchJsonFailed(errorMessage.get + s"First non-matching element found at position $pos. Expected ${matchers.head.pp()}, found ${values.head.pp()}.", throwException, newPath)
-      } else if (matches==false) {
+      } else if (!matches) {
         if (verbose && values.size==1)
-          matchJson(matchers.head, values.head, true, false, path)
+          matchJson(matchers.head, values.head, throwException = true, ignoreArrayOrder = false, path)
         matchJsonFailed(s"${values.head.pp()} in the array ${json.pp()} isn't ${matchers.head.pp()}", throwException, newPath)
       } else
         matchOrderedJsonArrays(json, allowOthers, matchers.tail, pos+1, values.tail, throwException, path, errorMessage)
@@ -460,11 +460,11 @@ object JsonMatcher{
     if (hasNumElements && getWantedNumArrayElements(matcher)!=cleanJson.size)
       matchJsonFailed(s"${json.pp()} contains wrong number of elements. Should contain ${getWantedNumArrayElements(matcher)}.", throwException, path)
 
-    else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size>cleanJson.size)      
+    else if (!hasAllowOthers && !hasNumElements && cleanMatcher.size > cleanJson.size)
       matchJsonFailed(s"${json.pp()}\n      *** contains less fields than ***\n ${matcher.pp()}.", throwException, path)
 
-    else if (hasAllowOthers==false && hasNumElements==false && cleanMatcher.size<cleanJson.size)
-      matchOrderedJsonArrays(json, false, cleanMatcher, 0, cleanJson, throwException, path,
+    else if (!hasAllowOthers && !hasNumElements && cleanMatcher.size < cleanJson.size)
+      matchOrderedJsonArrays(json, allowOthers = false, cleanMatcher, 0, cleanJson, throwException = throwException, path,
                              Some(s"Array contains more fields than matcher. Expected ${cleanMatcher.size}, found ${cleanJson.size}.\nMaybe you forgot to add an ___allowOtherValues value to the matcher?\n")
                             )
 
@@ -472,9 +472,9 @@ object JsonMatcher{
       cleanMatcher.forall( (matchValue: JValue) =>
         if (matchValue.asJsValue == ___allowOtherValues)
           true
-        else if (cleanJson.exists(matchJson(matchValue, _, false, ignoreArrayOrder, path))==false) {
+        else if (!cleanJson.exists(matchJson(matchValue, _, throwException = false, ignoreArrayOrder = ignoreArrayOrder, path))) {
           if (verbose && json.value.size==1)
-            matchJson(cleanJson.head, matchValue, true, ignoreArrayOrder, path)
+            matchJson(cleanJson.head, matchValue, throwException = true, ignoreArrayOrder = ignoreArrayOrder, path)
           matchJsonFailed(s"""${json.pp()} doesn't contain the value "${matchValue.pp()}"""", throwException, path)
         }else
           true
@@ -507,14 +507,14 @@ object JsonMatcher{
     if (hasNumElements && getWantedNumObjectElements(matcher.asMap) != json.size)
       matchJsonFailed(s"${matcher.pp()} contains wrong number of elements. Should contain ${getWantedNumObjectElements(matcher.asMap)}, contains ${json.size}.", throwException, path)
 
-    else if (hasAllowOthers==false && hasNumElements==false && matcher.size>json.size) {
+    else if (!hasAllowOthers && !hasNumElements && matcher.size > json.size) {
       val keys1 = json.keys
       val keys2 = matcher.keys
       val diff = keys2 -- keys1
 
       matchJsonFailed(s"In ${matcher.pp()}, the following fields are added: ${diff.mkString(", ")}\nMaybe you forgot to add an ___allowOtherFields value to the matcher.", throwException, path)
 
-    } else if (hasAllowOthers==false && hasNumElements==false && matcher.size<json.size) {
+    } else if (!hasAllowOthers && !hasNumElements && matcher.size < json.size) {
 
       val keys1 = json.keys
       val keys2 = matcher.keys
@@ -523,17 +523,17 @@ object JsonMatcher{
       matchJsonFailed(s"In ${matcher.pp()}, the following fields are missing: ${diff.mkString(", ")}", throwException, path)
 
     } else
-      matcher.asMap.forall(_ match{
+      matcher.asMap.forall {
         case (key: String, value: JValue) =>
           if (key == ___numElements)
             true
           else if (key == ___allowOtherJsonsKey)
             true
-          else if (json.keys.contains(key)==false)
+          else if (!json.keys.contains(key))
             matchJsonFailed(s"""${json.pp()} doesn't contain the key "$key", which is defined in the matcher: ${matcher.pp()}""", throwException, path)
           else
-            matchJson(value, json(key), throwException, ignoreArrayOrder, if (path=="") key else path+"."+key)
-      })
+            matchJson(value, json(key), throwException, ignoreArrayOrder, if (path == "") key else path + "." + key)
+      }
   }
 
   private def matchJsonObjects(matcher: JsObject, jsonWithoutMaybes: JsObject, throwException: Boolean, ignoreArrayOrder: Boolean, path: String): Boolean =
@@ -542,19 +542,18 @@ object JsonMatcher{
   private def getStackTraceString(t: Throwable) = {
     val sw = new java.io.StringWriter()
     t.printStackTrace(new java.io.PrintWriter(sw))
-    sw.toString()
+    sw.toString
   }
 
   private def matchCustom(custom: Custom, json: JValue, throwException: Boolean, path: String): Boolean = {
     val result = try{
       custom.func(json)
     } catch {
-      case e: Throwable => {
+      case e: Throwable =>
         matchJsonFailed(s""""The custom matcher $custom threw an exception: "${getStackTraceString(e)}" when called with "${json.pp()}".""", throwException, path)
-      }
     }
 
-    if (result==true)
+    if (result)
       true
     else
       matchJsonFailed(s""""The custom matcher function $custom returned false when called with "${json.pp()}".""", throwException, path)
@@ -566,7 +565,7 @@ object JsonMatcher{
         matchJsonFailed(s"""Doesn't match:\n${or.matchers.map(_.pp()).mkString("Or(", ", ", ")")}\n VS. ${json.pp()}""", throwException, path)
       else if (matchers.isEmpty)
         false
-      else if (matchJson(matchers.head, json, false, ignoreArrayOrder, path))
+      else if (matchJson(matchers.head, json, throwException = false, ignoreArrayOrder = ignoreArrayOrder, path))
         true
       else
         inner(matchers.tail)

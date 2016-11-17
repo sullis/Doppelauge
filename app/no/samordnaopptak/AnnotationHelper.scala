@@ -2,10 +2,17 @@ package no.samordnaopptak.apidoc
 
 import play.api.Play.current
 
+import com.google.inject.Inject
+
 import no.samordnaopptak.test.TestByAnnotation.Test
 
 
-object AnnotationHelper{
+class AnnotationHelper @Inject() (
+  environment: play.api.Environment,
+  val apiDocValidator: ApiDocValidation,
+  routesHelper: RoutesHelper
+) {
+
   @Test(code="""
      self.hasSameUri("/api/v1/acl", "/api/v1/acl")   === true
      self.hasSameUri("/1api/v1/acl", "/api/v1/acl")  =/= true
@@ -66,29 +73,55 @@ object AnnotationHelper{
 
 
   private def hasAnnotation(method: java.lang.reflect.Method) = {
-    val annotations = method.getAnnotations()
+    val annotations = method.getAnnotations
     annotations.exists(_.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc])
   }
 
+  //TODO: When implementing support for Play 2.5 DI, use this
+  def methodAnnotationExists(className:String, methodName:String) = {
+    val class_ = environment.classLoader.loadClass(className)
 
+    class_.getDeclaredMethods.exists(
+      method => method.getName==methodName && hasAnnotation(method)
+    )
+
+  }
+
+  //TODO: When implementing support for Play 2.5 DI, use this
+  def methodAnnotation(className: String, methodName: String) = {
+    val class_ = environment.classLoader.loadClass(className)
+
+    for {
+      method <- class_.getDeclaredMethods.find( method =>
+          method.getName == methodName && hasAnnotation(method)
+      )
+      rightAnnotation <- method.getAnnotations.find(
+        _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
+      )
+    } yield rightAnnotation.asInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
+
+  }
+
+  @deprecated("Only to support Play 2.4.x in the future use ...")
   def hasMethodAnnotation(className: String, methodName: String) = {
     val class_ = play.api.Play.classloader.loadClass(className)
 
-    class_.getDeclaredMethods().exists(
-      method => method.getName()==methodName && hasAnnotation(method)
+    class_.getDeclaredMethods.exists(
+      method => method.getName==methodName && hasAnnotation(method)
     )
   }
 
+  @deprecated("Only to support Play 2.4.x in the future use ...")
   def getMethodAnnotation(className: String, methodName: String) = {
     val class_ = play.api.Play.classloader.loadClass(className)
 
     val method =
-      class_.getDeclaredMethods().find(
-        method => (method.getName()==methodName && hasAnnotation(method))
+      class_.getDeclaredMethods.find(
+        method => method.getName == methodName && hasAnnotation(method)
       ).get
 
     val rightAnnotation =
-      method.getAnnotations().find(
+      method.getAnnotations.find(
         _.isInstanceOf[no.samordnaopptak.apidoc.ApiDoc]
       ).get
 
@@ -102,7 +135,7 @@ object AnnotationHelper{
 
       if (trimmed.startsWith("INCLUDE ")) {
 
-        val pathAndMethod = trimmed.drop("INCLUDE ".size).trim
+        val pathAndMethod = trimmed.drop("INCLUDE ".length).trim
 
         if (alreadyIncluded.contains(pathAndMethod)) {
 
@@ -153,8 +186,8 @@ object AnnotationHelper{
 
       val doc = getMethodAnnotationDoc(routeEntry.scalaClass, routeEntry.scalaMethod, alreadyIncluded)
 
-      val apiDoc = ApiDocParser.getApiDoc(doc)
-      ApiDocValidation.validate(apiDoc)
+      val apiDoc = ApiDocParser.getApiDoc(apiDocValidator, doc)
+      apiDocValidator.validate(apiDoc)
       val json = apiDoc.toJson
 
       val jsonMethod = json("method").asString
@@ -181,7 +214,7 @@ object AnnotationHelper{
   /**
     * @return List of strings with api docs text. INCLUDE is expanded. The returned value is not a list of lines, but a list of multiline strings. Each multiline string contains the ApiDoc annotation of a method.
     */
-  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = RoutesHelper.getRouteEntries()): List[String] = {
+  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = routesHelper.getRouteEntries()): List[String] = {
 
     val routeEntriesWithoutApiDocs = routeEntries.filter(routeEntry => hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
     validate(routeEntriesWithoutApiDocs)
@@ -194,5 +227,7 @@ object AnnotationHelper{
 
     apiDocs
   }
+
+
 
 }

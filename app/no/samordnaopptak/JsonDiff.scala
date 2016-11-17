@@ -111,7 +111,7 @@ object JsonDiff {
       else
         list.head :: remove_element(key, list.tail)
 
-    @tailrec def loop(aa: List[(String, JValue)], bb: List[(String, JValue)], result: List[(String, JValue)]): List[(String, JValue)] = (aa, bb) match {
+    @tailrec def loop(aaList: List[(String, JValue)], bb: List[(String, JValue)], result: List[(String, JValue)]): List[(String, JValue)] = (aaList, bb) match {
       case (`Nil`, _) =>
         result.reverse ++
         bb.map {
@@ -218,9 +218,9 @@ object JsonDiff {
 
       def find_iter_range(move: Move) =
         if (move.forward)
-          (move.pos_before to move.pos_after)
+          move.pos_before to move.pos_after
         else
-          (move.pos_after to move.pos_before)
+          move.pos_after to move.pos_before
 
       @tailrec def find_moves(diffs: List[Diff], result: List[Move] = List()): List[Move] = diffs match {
         case `Nil`                => result.reverse
@@ -233,7 +233,7 @@ object JsonDiff {
           .flatMap(move => find_iter_range(move).map((_, move))) // List((2,Move(2,4)), (3,Move(2,4)), (4,Move(2,4)), (1,Move(1,5)), ..., (5,Move(1,5))
           .groupBy(_._1)                                         // Map( 2 -> ..., 3, ..., ...)
           .map{
-            case (key, list) => (key -> list.map(_._2).toList)
+            case (key, list) => key -> list.map(_._2).toList
           }
 
       val ranges = find_ranges(diffs)
@@ -258,15 +258,15 @@ object JsonDiff {
 
     @tailrec def remove_unnecessary_moves(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
       case `Nil`                                            => result.reverse
-      case (m: Move) :: rest if (m.pos_before==m.pos_after) => remove_unnecessary_moves(rest, result)
+      case (m: Move) :: rest if m.pos_before == m.pos_after => remove_unnecessary_moves(rest, result)
       case d         :: rest                                => remove_unnecessary_moves(rest, d::result)
     }
 
     @tailrec def convert_as_much_as_possible_to_Changes(diffs: List[Diff], result: List[Diff] = List()): List[Diff] = diffs match {
       case `Nil`                                           => result.reverse
       case a                       :: `Nil`                => (a::result).reverse
-      case (a: Remove) :: (b: Add) :: aa if (a.pos==b.pos) => convert_as_much_as_possible_to_Changes(aa, Change(a.value, b.value, a.pos) :: result)
-      case (a: Add) :: (b: Remove) :: aa if (a.pos==b.pos) => convert_as_much_as_possible_to_Changes(aa, Change(b.value, a.value, b.pos) :: result)
+      case (a: Remove) :: (b: Add) :: aa if a.pos == b.pos => convert_as_much_as_possible_to_Changes(aa, Change(a.value, b.value, a.pos) :: result)
+      case (a: Add) :: (b: Remove) :: aa if a.pos == b.pos => convert_as_much_as_possible_to_Changes(aa, Change(b.value, a.value, b.pos) :: result)
       case a                       :: aa                   => convert_as_much_as_possible_to_Changes(aa, a::result)
     }
 
@@ -282,7 +282,7 @@ object JsonDiff {
 
     @tailrec def adjust_before_pos(diffs: List[Diff], result: List[Diff] = List(), skew: Int = 0, dontconvertpos: Int = -1): List[Diff] = diffs match {
       case `Nil`                                     => result.reverse
-      case (m: Move)   :: rest if m.maybe_be_removed => adjust_before_pos(rest, m.copy(pos_before = m.pos_after )        :: result, (m.pos_after - m.pos_before))
+      case (m: Move)   :: rest if m.maybe_be_removed => adjust_before_pos(rest, m.copy(pos_before = m.pos_after )        :: result, m.pos_after - m.pos_before)
       case (m: Move)   :: rest                       => adjust_before_pos(rest, m.copy(pos_before = m.pos_before + skew) :: result, skew)
       case (r: Remove) :: rest                       => adjust_before_pos(rest, r.copy(pos        = r.pos + skew)        :: result, skew)
       case d           :: rest                       => adjust_before_pos(rest, d                                        :: result, skew)
@@ -320,7 +320,7 @@ object JsonDiff {
       case _ => throw new Exception("internal error. something is wrong")
     }
 
-    @tailrec def find_Adds_and_Removes(pos: Int, aa: List[JValue], bb: List[JValue], result: List[Diff] = List()): List[Diff] = (aa, bb) match {
+    @tailrec def find_Adds_and_Removes(pos: Int, aaJList: List[JValue], bbJList: List[JValue], result: List[Diff] = List()): List[Diff] = (aaJList, bbJList) match {
       case   (  `Nil`,   `Nil`  )          =>   result.reverse
       case   (  `Nil`,   b::bb  )          =>   find_Adds_and_Removes(pos+1, Nil, bb,                  Add(b, pos)         :: result)
       case   (  a::aa,   `Nil`  )          =>   find_Adds_and_Removes(pos+1, aa,  Nil,                 Remove(a, pos, pos) :: result)
@@ -348,9 +348,9 @@ object JsonDiff {
   /**
     * Creates a json diff value from two json value. Look at the source code for [[createHtml]] for an example on how to parse the returned value.
     */
-  def apply(a: JValue, b: JValue): JValue = {
+  def apply(aJValue: JValue, bJValue: JValue): JValue = {
 
-    (a, b) match {
+    (aJValue, bJValue) match {
 
       case (a: JObject,  b: JObject )         => diffObject(a, b)
       case (a: JArray,   b: JArray  )         => diffArray(a, b)

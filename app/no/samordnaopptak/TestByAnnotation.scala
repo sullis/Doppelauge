@@ -354,7 +354,7 @@ object TestObject{
   def getStackTraceString(t: Throwable) = {
     val sw = new java.io.StringWriter()
     t.printStackTrace(new java.io.PrintWriter(sw))
-    sw.toString()
+    sw.toString
   }
 
   import scala.reflect.runtime.universe._
@@ -402,7 +402,7 @@ object TestObject{
     }
 
     def evalLines(lineNum: Int, codeLines: List[String]): Unit =
-      if (!codeLines.isEmpty) {
+      if (codeLines.nonEmpty) {
         val trimmedLine = codeLines.head.trim
         if (trimmedLine != "" && !trimmedLine.startsWith("//"))
           evalLine(lineNum, codeLines.head.trim)

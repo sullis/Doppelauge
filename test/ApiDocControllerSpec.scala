@@ -4,6 +4,8 @@ import play.api.Play.current
 
 import org.specs2.mutable._
 
+import com.google.inject.Inject
+
 import controllers.routes
 
 import play.api.test._
@@ -15,7 +17,10 @@ import no.samordnaopptak.apidoc.{RoutesHelper, ApiDocUtil}
 
 
 
-class ApiDocControllerSpec extends Specification {
+class ApiDocControllerSpec  extends Specification with InjectHelper {
+
+  lazy val apiDocUtil = inject[ApiDocUtil]
+  lazy val routesHelper = inject[RoutesHelper]
 
   def inCleanEnvironment(func: => Unit): Boolean = {
     running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
@@ -40,7 +45,7 @@ class ApiDocControllerSpec extends Specification {
 
     val result = route(request).get
 
-    if (contentType(result) != Some("application/json"))
+    if (!contentType(result).contains("application/json"))
       throw new Exception("contentType(result) is not Some(\"application/json\"), but "+contentType(result))
 
     val json = contentAsJson(result)
@@ -54,7 +59,7 @@ class ApiDocControllerSpec extends Specification {
   "ApiDoc controller" should {
 
     def routeEntries =
-      RoutesHelper.getRouteEntries()
+      routesHelper.getRouteEntries()
         .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
 
 
@@ -62,7 +67,7 @@ class ApiDocControllerSpec extends Specification {
       inCleanEnvironment {
 
         checkResult(
-          routes.ApiDocController.get,
+          routes.ApiDocController.get(),
           J.obj(
             "paths" -> J.obj(
               JsonMatcher.___allowOtherFields
@@ -75,7 +80,7 @@ class ApiDocControllerSpec extends Specification {
 
     "Validate swagger api docs" in {
       inCleanEnvironment {
-        ApiDocUtil.validate(routeEntries = routeEntries)
+        apiDocUtil.validate(routeEntries = routeEntries)
       }
     }
 

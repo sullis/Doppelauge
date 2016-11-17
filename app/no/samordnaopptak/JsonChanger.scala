@@ -495,7 +495,7 @@ object JsonChanger{
 
     def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       validate_input_output_types(expected_input_type, expected_output_type, json, path){
-        JsonChanger.apply(json, func(json), path, true)
+        JsonChanger.apply(json, func(json), path, allow_mismatched_types = true)
       }
   }
 
@@ -741,7 +741,7 @@ object JsonChanger{
       if (jsons.isEmpty)
         List()
       else
-        JsonChanger.apply(jsons.head, j_changer, path + "[" + n + "]", false) :: change(1+n, jsons.tail, path)
+        JsonChanger.apply(jsons.head, j_changer, path + "[" + n + "]", allow_mismatched_types = false) :: change(1+n, jsons.tail, path)
 
     def transform(json: JValue, path: String, allow_mismatched_types: Boolean) =
       if (json.isArray)
@@ -940,10 +940,9 @@ object JsonChanger{
       case (_, `allowOthers` :: rest) =>
         throwChangeException("Can not have values after ___allowOtherValues in an array: "+json.pp(), path)
 
-      case (j::js, (removeValue: RemoveValue) :: rest) => {
+      case (j::js, (removeValue: RemoveValue) :: rest) =>
         removeValue.type_.validate(j, path + "[" + n + "]")
         change(n, js, rest)
-      }
 
       case (j::js, c::cs) =>
         apply(j, c, path + "[" + n + "]") :: change(1+n, js, cs)
@@ -961,7 +960,7 @@ object JsonChanger{
     //println("changeObject. json: "+json.pp())
     //println("changeObject. changer: "+changer.pp())
 
-    val allowOtherFields = changer.asMap.get(___allowOtherFields._1) != None
+    val allowOtherFields = changer.asMap.get(___allowOtherFields._1).isDefined
 
     def applyChanger(key: String, value: JValue, changer: JValue): (String, JValue) = changer match {
       case changeThisField: ChangeThisField =>
@@ -978,10 +977,9 @@ object JsonChanger{
         else
           key -> value
 
-      case removeThisField: RemoveThisField => {
+      case removeThisField: RemoveThisField =>
         removeThisField.type_.validate(value, path+"."+key)
         key -> removeThisField
-      }
 
       case changer: JValue =>
         key -> apply(value, changer, path+"."+key)
@@ -1000,11 +998,10 @@ object JsonChanger{
           else
             throwChangeException("No changer for key \""+key+"\" in "+changer.pp(), path)
 
-        case Some(changer) => {
-          val res = applyChanger(key, value, changer)
+        case Some(change) =>
+          val res = applyChanger(key, value, change)
           usedChangerKeys += res._1
           res
-        }
 
       }
     }.filter(field =>
@@ -1017,7 +1014,7 @@ object JsonChanger{
       case _ => false
     }.map{
       case (key: String, newField: NewField)           => key -> newField.value
-      case (key: String, forceNewField: ForceNewField) => key -> apply(JUndefined(key, json), forceNewField.changer, path+"."+key, true)
+      case (key: String, forceNewField: ForceNewField) => key -> apply(JUndefined(key, json), forceNewField.changer, path+"."+key, allow_mismatched_types = true)
     }
 
     // Check that all changer keys are used (if there are bugs, it's probably better to rewrite than try to fix it)
@@ -1040,9 +1037,9 @@ object JsonChanger{
       //println("usedChangerKeys: "+usedChangerKeys)
       //println("maybeChangerKeys: "+maybeChangerKeys)
 
-      val unusedChangerKeys = changerKeys -- usedChangerKeys -- maybeChangerKeys -- Set(___allowOtherFields._1) -- addedFieldsInChanger.map(_._1)
+      val unusedChangerKeys = changerKeys -- usedChangerKeys -- maybeChangerKeys -- Set(___allowOtherFields._1) -- addedFieldsInChanger.keys
 
-      if ( unusedChangerKeys.size > 0)
+      if ( unusedChangerKeys.nonEmpty)
         throwChangeException("Unknown keys in changer: "+unusedChangerKeys.mkString(", "), path)
     }
 
