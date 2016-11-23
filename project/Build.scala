@@ -1,7 +1,6 @@
 import sbt._
 import Keys._
-import com.typesafe.config._
-import java.io.PrintWriter
+import play.sbt.PlayScala
 
 object ApplicationBuild extends Build {
 
@@ -10,7 +9,7 @@ object ApplicationBuild extends Build {
 
   val appDependencies = Seq()
 
-  val main = Project(appName, file(".")).enablePlugins(play.PlayScala).settings(
+  val main = Project(appName, file(".")).enablePlugins(PlayScala).settings(
     version := appVersion,
     libraryDependencies ++= appDependencies,
 
@@ -44,20 +43,5 @@ object ApplicationBuild extends Build {
     }
 
   )
-
-  def writeToFile(fileName: String, value: String) = {
-    val file = new PrintWriter(new java.io.File(fileName))
-    try { file.print(value+"\n")
-    } finally { file.close() }
-  }
-  def formatForConf(key: String, value: String): String = {
-    val ret = key+"=\""+value+'"'
-    //val ret = s"""$key="$value""""
-    ret
-  }
-
-  val conf = ConfigFactory.parseFile(new File("conf/application.conf")).resolve()
-  val _appVersionFilename = conf.getString("application.version.file")
-  writeToFile(_appVersionFilename, formatForConf("current", appVersion))
 
 }
