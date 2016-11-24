@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/sun-opsys/Doppelauge.svg?branch=travis%2Fintegration)](https://travis-ci.org/sun-opsys/Doppelauge)
 
 Doppelauge
 ==========
