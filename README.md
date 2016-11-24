@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/sun-opsys/Doppelauge.svg?branch=travis%2Fintegration)](https://travis-ci.org/sun-opsys/Doppelauge)
+[![Build Status](https://travis-ci.org/sun-opsys/Doppelauge.svg?branch=travis%2Fintegration)](https://travis-ci.org/sun-opsys/Doppelauge) [![](https://jitpack.io/v/sun-opsys/Doppelauge.svg)](https://jitpack.io/#sun-opsys/Doppelauge)
+
 
 Doppelauge
 ==========
