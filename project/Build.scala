@@ -5,7 +5,7 @@ import play.sbt.PlayScala
 object ApplicationBuild extends Build {
 
   val appName         = "doppelauge"
-  val appVersion      = "%s".format("git describe --tags --long --always".!!.trim)
+  val appVersion      = "%s".format("git describe --tags --always".!!.trim)
 
   val appDependencies = Seq()
 
@@ -17,17 +17,6 @@ object ApplicationBuild extends Build {
     organization := "no.samordnaopptak",
 
     publishMavenStyle := true,
-
-/*    
-
-    publishTo := {
-      val nexus = "https://repo.usit.uio.no/nexus/"
-      if (isSnapshot.value)
-        Some("snapshots" at nexus + "content/repositories/opsys-internal-snapshots")
-      else
-        Some("releases"  at nexus + "content/repositories/opsys-internal-release")
-    },
- */
 
     mappings in (Compile, packageBin) ~= { (ms: Seq[(File, String)]) =>
       ms filter {
@@ -45,3 +34,4 @@ object ApplicationBuild extends Build {
   )
 
 }
+
