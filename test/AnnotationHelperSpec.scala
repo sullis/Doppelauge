@@ -5,7 +5,7 @@ import org.specs2.mutable._
 import play.api.test._
 import play.api.test.Helpers._
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.apidoc._
 import no.samordnaopptak.test.TestByAnnotation
@@ -78,7 +78,7 @@ class AnnotationHelperSpec extends Specification with InjectHelper {
   }
 
   def routeEntries =
-    routesHelper.getRouteEntries()
+    routesHelper.getRoutes()
       .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
 
   "AnnotationHelper" should {

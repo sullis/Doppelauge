@@ -1,6 +1,6 @@
 package no.samordnaopptak.apidoc
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.json._
 
@@ -45,7 +45,7 @@ class ApiDocUtil @Inject() (
     *
     * @see [[https://github.com/sun-opsys/Doppelauge/blob/master/API_DOC.md#fixing-runtime-exceptions API_DOC.md ]] for instructions on how to handle runtime exceptions.
     */
-  def validate(routeEntries: List[RouteEntry] = routesHelper.getRouteEntries()): Unit = {
+  def validate(routeEntries: List[RouteEntry] = routesHelper.getRoutes()): Unit = {
     annotationHelper.validate(routeEntries)
     getSwaggerDocs("/")
   }

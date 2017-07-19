@@ -3,7 +3,7 @@ package test
 import org.specs2.mutable._
 import play.api.test._
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.apidoc.ApiDocValidation
 

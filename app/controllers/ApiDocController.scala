@@ -4,9 +4,9 @@ package controllers
 
 
 
-import play.api.mvc._
+import javax.inject.Inject
 
-import com.google.inject.Inject
+import play.api.mvc._
 
 import no.samordnaopptak.apidoc._
 import no.samordnaopptak.json.J

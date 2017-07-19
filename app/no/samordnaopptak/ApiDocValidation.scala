@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 
 import play.api.Play.current
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.json._
 
@@ -39,8 +39,6 @@ class ApiDocValidation @Inject() (
   class ClassNotFoundException(message: String) extends Exception(message)
 
 
-  //play.api.Play.classloader.loadClass(className)
-
   private def safeLoadClassThroughDependencyInjection(className: String): java.lang.Class[_] =
     try{
       environment.classLoader.loadClass(className)
@@ -50,7 +48,7 @@ class ApiDocValidation @Inject() (
 
   private def safeLoadClass(className: String): java.lang.Class[_] =
     try{
-      play.api.Play.classloader.loadClass(className)
+      play.api.Play.current.classloader.loadClass(className)
      } catch {
         case e: java.lang.ClassNotFoundException => null.asInstanceOf[java.lang.Class[_]]
     }
@@ -64,7 +62,7 @@ class ApiDocValidation @Inject() (
 
   private def loadClass(fullClassName: String, className: String): java.lang.Class[_] =
     try{
-      play.api.Play.classloader.loadClass(className)
+      play.api.Play.current.classloader.loadClass(className)
     } catch {
       case e: java.lang.ClassNotFoundException => throw new ClassNotFoundException("""The class with name """" + fullClassName + """" was not found""")
     }

@@ -2,7 +2,7 @@ package no.samordnaopptak.apidoc
 
 import play.api.Play.current
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.test.TestByAnnotation.Test
 
@@ -104,7 +104,7 @@ class AnnotationHelper @Inject() (
 
   @deprecated("Only to support Play 2.4.x in the future use ...")
   def hasMethodAnnotation(className: String, methodName: String) = {
-    val class_ = play.api.Play.classloader.loadClass(className)
+    val class_ = play.api.Play.current.classloader.loadClass(className)
 
     class_.getDeclaredMethods.exists(
       method => method.getName==methodName && hasAnnotation(method)
@@ -113,7 +113,7 @@ class AnnotationHelper @Inject() (
 
   @deprecated("Only to support Play 2.4.x in the future use ...")
   def getMethodAnnotation(className: String, methodName: String) = {
-    val class_ = play.api.Play.classloader.loadClass(className)
+    val class_ = play.api.Play.current.classloader.loadClass(className)
 
     val method =
       class_.getDeclaredMethods.find(
@@ -214,7 +214,7 @@ class AnnotationHelper @Inject() (
   /**
     * @return List of strings with api docs text. INCLUDE is expanded. The returned value is not a list of lines, but a list of multiline strings. Each multiline string contains the ApiDoc annotation of a method.
     */
-  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = routesHelper.getRouteEntries()): List[String] = {
+  def getApiDocsFromAnnotations(routeEntries: List[RouteEntry] = routesHelper.getRoutes()): List[String] = {
 
     val routeEntriesWithoutApiDocs = routeEntries.filter(routeEntry => hasMethodAnnotation(routeEntry.scalaClass, routeEntry.scalaMethod))
     validate(routeEntriesWithoutApiDocs)

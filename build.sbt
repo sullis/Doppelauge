@@ -1,16 +1,16 @@
 name := """doppelauge"""
 
-version := "1.4.0"
+version := "1.5.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.2"
+
+crossScalaVersions := Seq("2.11.11", "2.12.2")
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 
-libraryDependencies += specs2 % Test
-
-//libraryDependencies += "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
+libraryDependencies += "org.specs2" %% "specs2-core" % "3.9.1" % "test"
 
 scalacOptions in (Compile,doc) := Seq(
   "-deprecation",

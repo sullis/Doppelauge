@@ -565,7 +565,7 @@ object J {
       case `None` => JNull
       case Some(value) => apply(value)
       case _ if a==null => JNull
-      case value: Json.JsValueWrapper => apply(Json.arr(value)(0).get)
+      case value: Json.JsValueWrapper => apply(Json.arr(value)(0))
       case _ => throw new Exception(s"""Unable to convert "$a" to JValue. Class: ${a.getClass}""")
     }
 

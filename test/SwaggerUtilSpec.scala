@@ -4,7 +4,7 @@ import org.specs2.mutable._
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test._
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.json._
 
