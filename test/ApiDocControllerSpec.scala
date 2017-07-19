@@ -4,7 +4,7 @@ import play.api.Play.current
 
 import org.specs2.mutable._
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import controllers.routes
 
@@ -23,9 +23,9 @@ class ApiDocControllerSpec  extends Specification with InjectHelper {
   lazy val routesHelper = inject[RoutesHelper]
 
   def inCleanEnvironment(func: => Unit): Boolean = {
-    running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
+//    running(play.api.inject.guice.GuiceApplicationBuilder()/*(loadConfiguration = inMemoryDatabase())*/) {
       func
-    }
+//    }
     true
   }
 
@@ -43,7 +43,7 @@ class ApiDocControllerSpec  extends Specification with InjectHelper {
       play.api.mvc.AnyContentAsEmpty
     )
 
-    val result = route(request).get
+    val result = route(play.api.Play.current, request).get
 
     if (!contentType(result).contains("application/json"))
       throw new Exception("contentType(result) is not Some(\"application/json\"), but "+contentType(result))
@@ -59,7 +59,7 @@ class ApiDocControllerSpec  extends Specification with InjectHelper {
   "ApiDoc controller" should {
 
     def routeEntries =
-      routesHelper.getRouteEntries()
+      routesHelper.getRoutes()
         .filter(_.scalaClass != "controllers.Assets") // no api-doc for the static assets files
 
 

@@ -2,7 +2,7 @@ package no.samordnaopptak.apidoc
 
 import scala.reflect.ClassTag
 
-import com.google.inject.Inject
+import javax.inject.Inject
 
 import no.samordnaopptak.json._
 

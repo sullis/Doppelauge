@@ -1,11 +1,10 @@
 package no.samordnaopptak.apidoc
 
-import play.Routes
 import play.api.routing.{SimpleRouter, Router}
 import play.core.routing.Route
 import play.routing.Router.RouteDocumentation
 
-import com.google.inject.Inject
+import javax.inject.Inject
 import play.api.inject.RoutesProvider
 
 import no.samordnaopptak.test.TestByAnnotation.Test
@@ -114,12 +113,6 @@ class RoutesHelper @Inject()(
  */
 //    ).toList
 
-
-  @deprecated("Only to support Play 2.4.x in the future use getRoutes()")
-  def getRouteEntries(): List[RouteEntry] = {
-    import play.api.Play.current
-    getDocumentation(play.api.Play.routes.documentation)
-  }
 
   @Test(code="""
     self.urisMatches("/api/v1/50", "/api/v1/50") === true
