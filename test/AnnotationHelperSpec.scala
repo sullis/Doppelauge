@@ -2,6 +2,7 @@ package test
 
 import org.specs2.mutable._
 
+import play.api.inject.guice._
 import play.api.test._
 import play.api.test.Helpers._
 
@@ -71,7 +72,7 @@ class AnnotationHelperSpec extends Specification with InjectHelper {
   lazy val routesHelper = inject[RoutesHelper]
 
   def inCleanEnvironment()(func: => Unit): Boolean = {
-    running(FakeApplication(additionalConfiguration = inMemoryDatabase())) {
+    running(new GuiceApplicationBuilder().configure(inMemoryDatabase("test")).build()) {
       func
     }
     true

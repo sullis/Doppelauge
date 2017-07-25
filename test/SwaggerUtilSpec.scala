@@ -381,7 +381,7 @@ class SwaggerUtilSpec extends Specification with InjectHelper {
     }
 
     "validate that all used datatype are defined" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         val apidocstrings = apiDocSamples.allAndMissingDataTypes
         val apiDocs = ApiDocParser.getApiDocs(apiDocValidation, apidocstrings)
         val dataTypes = ApiDocParser.getDataTypes(apiDocValidation, apidocstrings)

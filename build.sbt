@@ -12,6 +12,8 @@ libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 
 libraryDependencies += "org.specs2" %% "specs2-core" % "3.9.1" % "test"
 
+libraryDependencies += "org.specs2" %% "specs2-junit" % "3.9.1" % "test"
+
 scalacOptions in (Compile,doc) := Seq(
   "-deprecation",
   "-encoding", "UTF-8",
