@@ -1,6 +1,6 @@
 name := """doppelauge"""
 
-version := "1.5.0"
+version := "2.0.0"
 
 scalaVersion := "2.12.2"
 
