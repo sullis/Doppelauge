@@ -8,6 +8,7 @@ import javax.inject.Inject
 
 import controllers.routes
 
+import play.api.inject.guice._
 import play.api.test._
 import play.api.test.Helpers._
 
@@ -23,9 +24,9 @@ class ApiDocControllerSpec  extends Specification with InjectHelper {
   lazy val routesHelper = inject[RoutesHelper]
 
   def inCleanEnvironment(func: => Unit): Boolean = {
-//    running(play.api.inject.guice.GuiceApplicationBuilder()/*(loadConfiguration = inMemoryDatabase())*/) {
+    running(new GuiceApplicationBuilder().configure(inMemoryDatabase("test")).build()) {
       func
-//    }
+    }
     true
   }
 
@@ -39,11 +40,13 @@ class ApiDocControllerSpec  extends Specification with InjectHelper {
     val request = FakeRequest(
       call.method,
       call.url,
-      FakeHeaders(),
+      FakeHeaders(Seq("HOST" -> "localhost")),
       play.api.mvc.AnyContentAsEmpty
     )
 
     val result = route(play.api.Play.current, request).get
+
+    println("res: " + contentAsString(result))
 
     if (!contentType(result).contains("application/json"))
       throw new Exception("contentType(result) is not Some(\"application/json\"), but "+contentType(result))

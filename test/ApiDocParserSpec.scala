@@ -2,6 +2,7 @@ package test
 
 import org.specs2.mutable._
 import play.api.test._
+import play.api.inject.guice._
 
 import javax.inject.Inject
 
@@ -326,7 +327,7 @@ class ApiDocParserSpec extends Specification with InjectHelper {
   "ApiDocParser" should {
 
     "pass the annotation tests" in { // First run the smallest unit tests.
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         TestByAnnotation.TestObject(ApiDocParser)
       }
     }
@@ -346,13 +347,13 @@ class ApiDocParserSpec extends Specification with InjectHelper {
     }
 
     "Get ClassNotFoundException for datatype with undefined corresponding scala class" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithUndefinedClass) must throwA[apiDocValidation.ClassNotFoundException]
       }
     }
 
     "Test getting class from models instead, if we get ClassNotFoundException" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
 
 //        if(configuration.getString())
 
@@ -363,13 +364,13 @@ class ApiDocParserSpec extends Specification with InjectHelper {
     }
 
     "Get ApiDocParser.MismatchFieldException for datatype with mismatched corresponding scala class" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithMismatchedClass) must throwA[apiDocValidation.MismatchFieldException]
       }
     }
 
     "Get ApiDocParser.MismatchPathParametersException for datatype with mismatched path parameters" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithMismatchedPathParameters1).validate(apiDocValidation) must throwA[apiDocValidation.MismatchPathParametersException]
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithMismatchedPathParameters2).validate(apiDocValidation) must throwA[apiDocValidation.MismatchPathParametersException]
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithMismatchedPathParameters3).validate(apiDocValidation) must throwA[apiDocValidation.MismatchPathParametersException]
@@ -378,7 +379,7 @@ class ApiDocParserSpec extends Specification with InjectHelper {
     }
 
     "Use class name with same name as datatype, if class name for datatype is undefined" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithClassWithSameName1)
         ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.docWithClassWithSameName2)
       }
@@ -386,7 +387,7 @@ class ApiDocParserSpec extends Specification with InjectHelper {
     }
 
     "validate that a datatype is only defined one place" in {
-      play.api.test.Helpers.running(FakeApplication()) {
+      play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
         val apidocstrings = apiDocSamples.allAndExtraDataType
 
         ApiDocParser.getDataTypes(apiDocValidation, apidocstrings) should throwA(new Exception("One or more ApiDoc datatypes defined more than once: List(Attributes)"))
@@ -503,7 +504,7 @@ class ApiDocParserSpec extends Specification with InjectHelper {
             )
           )
         ),
-        play.api.test.Helpers.running(FakeApplication()) {
+        play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
           ApiDocParser.getApiDoc(apiDocValidation, apiDocSamples.doc1).toJson
         }
       )
@@ -659,7 +660,7 @@ class ApiDocParserSpec extends Specification with InjectHelper {
             )
           )
         ),
-        play.api.test.Helpers.running(FakeApplication()) {
+        play.api.test.Helpers.running(GuiceApplicationBuilder().build()) {
           ApiDocParser.getDataTypes(apiDocValidation, List(apiDocSamples.doc1)).toJson
         }
       )
