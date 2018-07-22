@@ -9,8 +9,8 @@ cache:
 before_script:
   - sudo apt-get update -qq
   - sudo apt-get install -qq curl
-  - mkdir -p $HOME/.sbt/launchers/0.13.13/
-  - curl -L -o $HOME/.sbt/launchers/0.13.13/sbt-launch.jar http://dl.bintray.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.13.13/sbt-launch.jar
+  - mkdir -p $HOME/.sbt/launchers/0.13.17/
+  - curl -L -o $HOME/.sbt/launchers/0.13.17/sbt-launch.jar http://dl.bintray.com/typesafe/ivy-releases/org.scala-sbt/sbt-launch/0.13.17/sbt-launch.jar
 script:
   - sbt test
 matrix:
